@@ -1,0 +1,506 @@
+
+
+@extends('layouts.app')
+@section('title', 'Events - SteamIQ')
+
+
+@section('content')
+<div class="container">
+    <!-- Active Events -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <span class="icon">
+                    <i data-lucide="trophy"></i>
+                </span>
+                Events Management
+            </h2>
+            <button class="btn btn-primary" data-bs-target="#createEventModal" data-bs-toggle="modal">
+                <i data-lucide="plus"></i>
+                <span>Create New Event</span>
+            </button>
+        </div>
+        
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Spring Championship 2026</h3>
+                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">Tournament Event</p>
+                    </div>
+                    <span class="badge badge-live">Live</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-label">Teams</div>
+                        <div class="stat-value" style="font-size: 1.3rem;">32</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Players</div>
+                        <div class="stat-value" style="font-size: 1.3rem;">96</div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-icon btn-view" onclick="openModal('eventDetailsModal')" title="View Details">
+                        <i data-lucide="eye"></i>
+                    </button>
+                    <button class="btn btn-icon btn-edit" onclick="openModal('editEventModal')" title="Edit Event">
+                        <i data-lucide="edit-2"></i>
+                    </button>
+                    <button class="btn btn-secondary" style="flex: 1;" onclick="openModal('matchPinModal')">Generate PIN</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Winter Training Season</h3>
+                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">Season Tracking</p>
+                    </div>
+                    <span class="badge badge-live">Live</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-label">Teams</div>
+                        <div class="stat-value" style="font-size: 1.3rem;">24</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Weeks</div>
+                        <div class="stat-value" style="font-size: 1.3rem;">4/6</div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-icon btn-view" onclick="openModal('eventDetailsModal')" title="View Details">
+                        <i data-lucide="eye"></i>
+                    </button>
+                    <button class="btn btn-icon btn-edit" onclick="openModal('editEventModal')" title="Edit Event">
+                        <i data-lucide="edit-2"></i>
+                    </button>
+                    <button class="btn btn-primary" style="flex: 1;">Enter Scores</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Friday Night Matches</h3>
+                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">Match Event</p>
+                    </div>
+                    <span class="badge badge-draft">Draft</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-label">Teams</div>
+                        <div class="stat-value" style="font-size: 1.3rem;">8</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Matches</div>
+                        <div class="stat-value" style="font-size: 1.3rem;">4</div>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-icon btn-view" onclick="openModal('eventDetailsModal')" title="View Details">
+                        <i data-lucide="eye"></i>
+                    </button>
+                    <button class="btn btn-icon btn-edit" onclick="openModal('editEventModal')" title="Edit Event">
+                        <i data-lucide="edit-2"></i>
+                    </button>
+                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('event', 'E003', 'Friday Night Matches')" title="Delete">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                    <button class="btn btn-primary" style="flex: 1;">Go Live</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Event Operations Spreadsheet -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <span class="icon">
+                    <i data-lucide="clipboard-list"></i>
+                </span>
+                Event Operations
+            </h2>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('teams')">Teams</button>
+            <button class="tab" onclick="switchTab('scores')">Scores</button>
+            <button class="tab" onclick="switchTab('schedule')">Schedule</button>
+            <button class="tab" onclick="switchTab('challenges')">Challenges</button>
+
+        </div>
+
+        <!-- Teams Tab -->
+        <div id="teams-tab" class="tab-content active">
+            <div class="spreadsheet-container">
+                <div class="spreadsheet-toolbar">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
+                        <i data-lucide="plus"></i> Add Team
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="download"></i> Import CSV
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="upload"></i> Export
+                    </button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Team Name</th>
+                            <th>Members</th>
+                            <th>Total Points</th>
+                            <th>Rank</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" value="T001" readonly></td>
+                            <td><input type="text" value="Team Alpha"></td>
+                            <td>3</td>
+                            <td style="color: var(--primary); font-weight: 700;">3940</td>
+                            <td style="color: #FFD700; font-weight: 700;">1</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T001')" title="View">
+                                        <i data-lucide="eye"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T001')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T001', 'Team Alpha')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" value="T002" readonly></td>
+                            <td><input type="text" value="Team Beta"></td>
+                            <td>3</td>
+                            <td style="color: var(--primary); font-weight: 700;">3820</td>
+                            <td style="color: #C0C0C0; font-weight: 700;">2</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T002')" title="View">
+                                        <i data-lucide="eye"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T002')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T002', 'Team Beta')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" value="T003" readonly></td>
+                            <td><input type="text" value="Team Gamma"></td>
+                            <td>2</td>
+                            <td style="color: var(--primary); font-weight: 700;">3650</td>
+                            <td style="color: #CD7F32; font-weight: 700;">3</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T003')" title="View">
+                                        <i data-lucide="eye"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T003')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T003', 'Team Gamma')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+           <!-- Challenges Tab -->
+           <div id="challenges-tab" class="tab-content">
+            <div class="spreadsheet-container">
+                <div class="spreadsheet-toolbar">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createChallengeModal">
+                        <i data-lucide="plus"></i> Add Challenge
+                    </button>
+                  
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Challenge ID</th>
+                            <th>Pillar Type</th>
+                            <th>Name</th>
+                            <th>Max Points</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" value="01" readonly></td>
+                            <td><input type="text" value="Brain Games"></td>
+                            <td>Basket Ball</td>
+                           <td>
+1200
+                           </td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T001')" title="View">
+                                        <i data-lucide="eye"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T001')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T001', 'Team Alpha')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                       
+                      
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Scores Tab -->
+        <div id="scores-tab" class="tab-content">
+            <div class="spreadsheet-container">
+                <div class="spreadsheet-toolbar">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
+                        <i data-lucide="plus"></i> Add Score
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="download"></i> Bulk Import
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="refresh-cw"></i> Recalculate
+                    </button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>CAM Pillar</th>
+                            <th>Category/Game</th>
+                            <th>Points</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Alex Johnson</td>
+                            <td>Brain Games</td>
+                            <td><input type="text" value="Science"></td>
+                            <td><input type="number" value="150"></td>
+                            <td>2026-02-01</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-edit" onclick="editScore('S001')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('score', 'S001', 'Science - 150pts')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Maria Garcia</td>
+                            <td>E-Gaming</td>
+                            <td><input type="text" value="AquaBall Clash"></td>
+                            <td><input type="number" value="200"></td>
+                            <td>2026-02-01</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-edit" onclick="editScore('S002')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('score', 'S002', 'AquaBall - 200pts')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>James Chen</td>
+                            <td>Playground Games</td>
+                            <td><input type="text" value="Beach Balling"></td>
+                            <td><input type="number" value="180"></td>
+                            <td>2026-02-02</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-icon btn-edit" onclick="editScore('S003')" title="Edit">
+                                        <i data-lucide="edit-2"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('score', 'S003', 'Beach Balling - 180pts')" title="Delete">
+                                        <i data-lucide="trash-2"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Schedule Tab -->
+        <div id="schedule-tab" class="tab-content">
+            <div class="spreadsheet-container">
+                <div class="spreadsheet-toolbar">
+                    <button class="btn btn-primary" onclick="openModal('matchModal')">
+                        <i data-lucide="plus"></i> Schedule Match
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="shuffle"></i> Auto-Generate
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i data-lucide="upload"></i> Export Schedule
+                    </button>
+                </div>
+                <div class="schedule-grid">
+                    <div class="schedule-item">
+                        <div class="schedule-time">
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">FEB 02</div>
+                            <div>14:00</div>
+                        </div>
+                        <div class="schedule-match">
+                            <div class="schedule-match-title">Match #1 - Semifinals</div>
+                            <div class="schedule-match-teams">Team Alpha vs Team Beta</div>
+                        </div>
+                        <div class="schedule-actions">
+                            <button class="btn btn-icon btn-edit" onclick="editMatch('M001')" title="Edit">
+                                <i data-lucide="edit-2"></i>
+                            </button>
+                            <button class="btn btn-icon btn-delete" onclick="confirmDelete('match', 'M001', 'Match #1')" title="Delete">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                            <button class="btn btn-primary" onclick="generateMatchPIN('M001')">PIN</button>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">FEB 02</div>
+                            <div>15:30</div>
+                        </div>
+                        <div class="schedule-match">
+                            <div class="schedule-match-title">Match #2 - Semifinals</div>
+                            <div class="schedule-match-teams">Team Gamma vs Team Delta</div>
+                        </div>
+                        <div class="schedule-actions">
+                            <button class="btn btn-icon btn-edit" onclick="editMatch('M002')" title="Edit">
+                                <i data-lucide="edit-2"></i>
+                            </button>
+                            <button class="btn btn-icon btn-delete" onclick="confirmDelete('match', 'M002', 'Match #2')" title="Delete">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                            <button class="btn btn-primary" onclick="generateMatchPIN('M002')">PIN</button>
+                        </div>
+                    </div>
+                    <div class="schedule-item">
+                        <div class="schedule-time">
+                            <div style="font-size: 0.8rem; color: var(--text-dim);">FEB 03</div>
+                            <div>16:00</div>
+                        </div>
+                        <div class="schedule-match">
+                            <div class="schedule-match-title">Championship Final</div>
+                            <div class="schedule-match-teams">TBD vs TBD</div>
+                        </div>
+                        <div class="schedule-actions">
+                            <button class="btn btn-icon btn-edit" onclick="editMatch('M003')" title="Edit">
+                                <i data-lucide="edit-2"></i>
+                            </button>
+                            <button class="btn btn-icon btn-delete" onclick="confirmDelete('match', 'M003', 'Championship')" title="Delete">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                            <button class="btn btn-primary" onclick="generateMatchPIN('M003')">PIN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      
+    </section>
+
+    <!-- Leaderboard -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <span class="icon">
+                    <i data-lucide="award"></i>
+                </span>
+                Event Leaderboard
+            </h2>
+            <button class="btn btn-secondary">Export Rankings</button>
+        </div>
+
+        <div class="leaderboard">
+            <div class="leaderboard-item header">
+                <div>Rank</div>
+                <div>Team / Player</div>
+                <div>Brain</div>
+                <div>Play</div>
+                <div>E-Game</div>
+                <div>Esports</div>
+                <div>Total</div>
+            </div>
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank rank-1">1</div>
+                <div class="leaderboard-name">Team Alpha</div>
+                <div class="leaderboard-score">1240</div>
+                <div class="leaderboard-score">1150</div>
+                <div class="leaderboard-score">1550</div>
+                <div class="leaderboard-score">+500</div>
+                <div class="leaderboard-score leaderboard-total">4440</div>
+            </div>
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank rank-2">2</div>
+                <div class="leaderboard-name">Team Beta</div>
+                <div class="leaderboard-score">1180</div>
+                <div class="leaderboard-score">1220</div>
+                <div class="leaderboard-score">1480</div>
+                <div class="leaderboard-score">+400</div>
+                <div class="leaderboard-score leaderboard-total">4280</div>
+            </div>
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank rank-3">3</div>
+                <div class="leaderboard-name">Team Gamma</div>
+                <div class="leaderboard-score">1230</div>
+                <div class="leaderboard-score">1110</div>
+                <div class="leaderboard-score">1420</div>
+                <div class="leaderboard-score">+300</div>
+                <div class="leaderboard-score leaderboard-total">4060</div>
+            </div>
+            <div class="leaderboard-item">
+                <div class="leaderboard-rank">4</div>
+                <div class="leaderboard-name">Team Delta</div>
+                <div class="leaderboard-score">1090</div>
+                <div class="leaderboard-score">1200</div>
+                <div class="leaderboard-score">1390</div>
+                <div class="leaderboard-score">+200</div>
+                <div class="leaderboard-score leaderboard-total">3880</div>
+            </div>
+        </div>
+    </section>
+</div>
+@endsection
+
+
+
+@include('events.modals.create-team')
+@include('events.modals.create-event')
+@include('events.modals.create-challenge')
+@include('events.modals.create-scores')
+
+
+
