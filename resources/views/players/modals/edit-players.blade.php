@@ -13,12 +13,12 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="name" id="editPlayerName">
+                        <input type="text" class="form-input" name="name" id="editPlayerName">
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="email" id="editPlayerEmail">
+                        <input type="email" class="form-input" name="email" id="editPlayerEmail">
                     </div>
 
                     <div class="mb-3">

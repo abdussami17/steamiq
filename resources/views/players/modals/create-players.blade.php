@@ -12,12 +12,12 @@
                 <div class="modal-body">
                     <div class="form-group mb-2">
                         <label class="form-label">Player Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-input form-control" name="player_name" placeholder="Enter Player Name" required>
+                        <input type="text" class="form-input " name="player_name" placeholder="Enter Player Name" required>
                     </div>
 
                     <div class="form-group mb-2">
                         <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-input form-control" name="player_email" placeholder="Enter Player Email" required>
+                        <input type="email" class="form-input " name="player_email" placeholder="Enter Player Email" required>
                     </div>
 
                     <div class="form-group mb-2">
