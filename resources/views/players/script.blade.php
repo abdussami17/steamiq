@@ -89,6 +89,50 @@ document.addEventListener('DOMContentLoaded', function () {
             columnKeys: exportCols
         });
     };
+    window.startImport = function(){
+
+const file = document.getElementById('importFile').files[0];
+const eventId = document.getElementById('importEvent').value;
+
+if(!file || !eventId){
+    toastr.error('Select event and file');
+    return;
+}
+
+const loading = document.getElementById('importLoading');
+const result = document.getElementById('importResult');
+
+loading.classList.remove('d-none');
+result.classList.add('d-none');
+
+const formData = new FormData();
+formData.append('file', file);
+formData.append('event_id', eventId);
+
+fetch("{{ route('players.import') }}", {
+    method: "POST",
+    headers: {
+        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+    },
+    body: formData
+})
+.then(r => r.json())
+.then(data => {
+
+    loading.classList.add('d-none');
+
+    result.classList.remove('d-none');
+    result.innerHTML =
+        `Total rows: ${data.total}<br>
+         Inserted: ${data.inserted}<br>
+         Skipped duplicates: ${data.duplicates}<br>
+         Errors: ${data.errors}`;
+
+    refreshLeaderboard();
+});
+};
+
 
 });
 </script>
+

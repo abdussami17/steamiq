@@ -33,6 +33,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/events/{event}/players', [TeamController::class, 'playersByEvent'])->name('teams.get_players');
         Route::get('/event/{event}/leaderboard', [PlayerController::class, 'getPlayersLeaderboard'])
      ->name('players.leaderboard');
+     Route::post('/players/import', [PlayerController::class,'import'])->name('players.import');
+
     
 
 

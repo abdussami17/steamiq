@@ -21,6 +21,9 @@
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#playerModal">
                     <i data-lucide="plus"></i> Add Player
                 </button>
+                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
+                    Import Players
+                </button>
                 <button class="btn btn-secondary" onclick="exportGridToExcel()">
                     <i data-lucide="upload"></i> Export Excel
                 </button>
@@ -50,6 +53,7 @@
 
 
 @include('players.modals.create-players')
-
 @include('players.script')
+@include('players.modals.import-players')
+
 @endsection

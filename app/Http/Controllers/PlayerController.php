@@ -8,6 +8,8 @@ use App\Models\Player;
 
 use App\Models\TeamMember;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Collection;  
 
 class PlayerController extends Controller
 {
@@ -86,6 +88,61 @@ class PlayerController extends Controller
         }
     
         return response()->json($sorted);
+    }
+
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'event_id' => 'required|exists:events,id',
+            'file' => 'required|mimes:csv,xlsx,xls'
+        ]);
+    
+        $eventId = $request->event_id;
+    
+        $rows = Excel::toArray([], $request->file('file'))[0];
+    
+        $header = array_map('strtolower', $rows[0]);
+        unset($rows[0]);
+    
+        $total = 0;
+        $inserted = 0;
+        $duplicates = 0;
+        $errors = 0;
+    
+        foreach ($rows as $row) {
+    
+            $rowData = array_combine($header, $row);
+    
+            $name = trim($rowData['name'] ?? '');
+            $email = trim($rowData['email'] ?? '');
+    
+            if (!$name || !$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors++;
+                continue;
+            }
+    
+            if (Player::where('email', $email)->exists()) {
+                $duplicates++;
+                continue;
+            }
+    
+            Player::create([
+                'event_id' => $eventId,
+                'name' => $name,
+                'email' => $email
+            ]);
+    
+            $inserted++;
+            $total++;
+        }
+    
+        return response()->json([
+            'total' => $total,
+            'inserted' => $inserted,
+            'duplicates' => $duplicates,
+            'errors' => $errors
+        ]);
     }
     
 
