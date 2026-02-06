@@ -34,9 +34,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/event/{event}/leaderboard', [PlayerController::class, 'getPlayersLeaderboard'])
      ->name('players.leaderboard');
      Route::post('/players/import', [PlayerController::class,'import'])->name('players.import');
-
+     Route::get('/players/{player}/edit', [PlayerController::class,'edit'])->name('players.edit');
+     Route::post('/players/{player}/update', [PlayerController::class,'update'])->name('players.update');
+     Route::delete('/players/{player}', [PlayerController::class,'destroy'])->name('players.destroy');
+     
     
-
+     Route::get('/events/{event}/teams', function(\App\Models\Event $event) {
+        $teams = \App\Models\Team::where('event_id', $event->id)->get(['id','team_name']);
+        return response()->json(['teams' => $teams]);
+    })->name('events.teams');
+    
 
     });
 });

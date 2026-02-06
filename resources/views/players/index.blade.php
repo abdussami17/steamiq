@@ -51,9 +51,10 @@
     </section>
 </div>
 
-
-@include('players.modals.create-players')
 @include('players.script')
+@include('players.modals.create-players')
 @include('players.modals.import-players')
+@include('players.modals.edit-players')
+
 
 @endsection
