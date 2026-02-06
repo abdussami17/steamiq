@@ -14,56 +14,42 @@
             </button>
         </div>
 
-        <!-- Event Filter -->
-        <div class="mb-4">
-            <label for="eventFilter" class="form-label">Select Event <span class="text-danger">*</span></label>
-            <select id="eventFilter" class="form-select">
-                <option hidden>-- Select Event --</option>
-                @foreach($events as $event)
-                    <option value="{{ $event->id }}">{{ $event->name }}</option>
-                @endforeach
-            </select>
-        </div>
 
         <div class="spreadsheet-container">
+            <!-- Toolbar -->
             <div class="spreadsheet-toolbar mb-4">
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#playerModal">
                     <i data-lucide="plus"></i> Add Player
                 </button>
-                <button class="btn btn-secondary" onclick="importPlayers()">
-                    <i data-lucide="download"></i> Import CSV
-                </button>
-                <button class="btn btn-secondary">
-                    <i data-lucide="upload"></i> Export
+                <button class="btn btn-secondary" onclick="exportGridToExcel()">
+                    <i data-lucide="upload"></i> Export Excel
                 </button>
                 <button class="btn btn-secondary" onclick="refreshLeaderboard()">
                     <i data-lucide="refresh-cw"></i> Refresh
                 </button>
             </div>
-
-            <table class="data-table table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Player ID</th>
-                        <th>Name</th>
-                        <th>Team</th>
-                        <th>Brain Points</th>
-                        <th>Playground Points</th>
-                        <th>E-Gaming Points</th>
-                        <th>Total</th>
-                        <th>Rank</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="playersTableBody">
-                    <!-- Dynamically populated via JS -->
-                </tbody>
-            </table>
+        
+            <!-- Event Filter -->
+            <div class="mb-4">
+                <label for="eventFilter" class="form-label">Select Event <span class="text-danger">*</span></label>
+                <select id="eventFilter" class="form-select">
+                    <option hidden>-- Select Event --</option>
+                    @foreach($events as $event)
+                        <option value="{{ $event->id }}">{{ $event->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        
+            <!-- AG Grid Container -->
+            <div id="playersGrid" class="ag-theme-alpine" style="width:100%; height:400px;"></div>
         </div>
+        
+        
     </section>
 </div>
 
 
 @include('players.modals.create-players')
+
 @include('players.script')
 @endsection
