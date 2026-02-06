@@ -20,15 +20,15 @@
         <div class="stats-grid">
             <div class="stat">
                 <div class="stat-label">Active Events</div>
-                <div class="stat-value">12</div>
+                <div class="stat-value">{{ $activeEventsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Total Players</div>
-                <div class="stat-value">284</div>
+                <div class="stat-value">{{ $playersCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Teams Registered</div>
-                <div class="stat-value">96</div>
+                <div class="stat-value">{{ $teamsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Matches Today</div>
@@ -73,43 +73,42 @@
         </div>
     </section>
 
-    <!-- Recent Activity -->
-    <section class="section">
-        <div class="section-header">
-            <h2 class="section-title">
-                <span class="icon">
-                    <i data-lucide="activity"></i>
-                </span>
-                Recent Activity
-            </h2>
+<!-- Recent Activity -->
+<section class="section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <span class="icon">
+                <i data-lucide="activity"></i>
+            </span>
+            Recent Activity
+        </h2>
+    </div>
+
+    <div class="card">
+        <div class="notifications">
+            @forelse($recentActivities as $activity)
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <h6 class="notification-title">{{ $activity->type ?? 'N/A' }}</h6>
+                        <p class="notification-text">{{ $activity->description ?? 'N/A' }}</p>
+                    </div>
+                    <p class="notification-time">
+                        {{ $activity->created_at ? $activity->created_at->diffForHumans() : 'N/A' }}
+                    </p>
+                </div>
+            @empty
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <h6 class="notification-title">N/A</h6>
+                        <p class="notification-text">No recent activity</p>
+                    </div>
+                    <p class="notification-time">-</p>
+                </div>
+            @endforelse
         </div>
-        
-        <div class="card">
-            <div style="display: grid; gap: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--dark); border-radius: 8px;">
-                    <div>
-                        <div style="font-weight: 600;">Match #1 Completed</div>
-                        <div style="color: var(--text-dim); font-size: 0.85rem;">Team Alpha defeated Team Echo 2-0</div>
-                    </div>
-                    <div style="color: var(--text-dim); font-size: 0.85rem;">5 min ago</div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--dark); border-radius: 8px;">
-                    <div>
-                        <div style="font-weight: 600;">New Player Registered</div>
-                        <div style="color: var(--text-dim); font-size: 0.85rem;">Sarah Williams joined Team Gamma</div>
-                    </div>
-                    <div style="color: var(--text-dim); font-size: 0.85rem;">12 min ago</div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--dark); border-radius: 8px;">
-                    <div>
-                        <div style="font-weight: 600;">Score Updated</div>
-                        <div style="color: var(--text-dim); font-size: 0.85rem;">Brain Games scores processed for Event #1</div>
-                    </div>
-                    <div style="color: var(--text-dim); font-size: 0.85rem;">28 min ago</div>
-                </div>
-            </div>
-        </div>
-    </section>
+    </div>
+</section>
+
 
     <!-- Quick Actions -->
     <section class="section">
@@ -128,29 +127,32 @@
                     <div style="font-size: 3rem; margin-bottom: 1rem; display: flex; justify-content: center;">
                         <i data-lucide="calendar" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem;">Create Event</h3>
+                    <h3 style="margin-bottom: 0.5rem;color:var(--text);font-weight:700">Create Event</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Start a new tournament or season</p>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="openModal('createEventModal')">Create Event</button>
+                    <a href="{{ route('events.index') }}" class="btn btn-primary" style="width: 100%;">Create Event</a>
                 </div>
             </div>
+        
             <div class="card">
                 <div style="text-align: center; padding: 1rem;">
                     <div style="font-size: 3rem; margin-bottom: 1rem; display: flex; justify-content: center;">
                         <i data-lucide="users" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem;">Add Players</h3>
+                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Players</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Register new participants</p>
-                    <button class="btn btn-primary" style="width: 100%;" onclick="openPlayerModal('add')">Add Player</button>
+                    <a href="{{ route('player.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
+
                 </div>
             </div>
+        
             <div class="card">
                 <div style="text-align: center; padding: 1rem;">
                     <div style="font-size: 3rem; margin-bottom: 1rem; display: flex; justify-content: center;">
                         <i data-lucide="trophy" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem;">Generate Bracket</h3>
+                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Generate Bracket</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Create tournament brackets</p>
-                    <a href="tournaments.html" class="btn btn-primary" style="width: 100%;">View Tournaments</a>
+                    <a href="{{ route('tournaments.index') }}" class="btn btn-primary" style="width: 100%;">View Tournaments</a>
                 </div>
             </div>
         </div>
