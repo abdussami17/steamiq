@@ -43,6 +43,8 @@ Route::middleware('auth')->group(function () {
         $teams = \App\Models\Team::where('event_id', $event->id)->get(['id','team_name']);
         return response()->json(['teams' => $teams]);
     })->name('events.teams');
+    Route::get('/events/{event}', [EventController::class,'show'])->name('events.show');
+
     
 
     });

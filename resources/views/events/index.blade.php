@@ -22,96 +22,44 @@
         </div>
         
         <div class="card-grid">
-            <div class="card">
-                <div class="card-header">
-                    <div>
-                        <h3 class="card-title">Spring Championship 2026</h3>
-                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">Tournament Event</p>
+            @forelse($allevents as $allevent)
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3 class="card-title">{{ $allevent->name }}</h3>
+                            <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">
+                                {{ ucfirst($allevent->event_type) }}
+                            </p>
+                        </div>
+                        <span class="badge badge-{{ $allevent->status }}">{{ ucfirst($allevent->status) }}</span>
                     </div>
-                    <span class="badge badge-live">Live</span>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat">
-                        <div class="stat-label">Teams</div>
-                        <div class="stat-value" style="font-size: 1.3rem;">32</div>
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <div class="stat-label">Teams</div>
+                            <div class="stat-value" style="font-size: 1.3rem;">
+                                {{ $allevent->teams->count() ?: 'N/A' }}
+                            </div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Players</div>
+                            <div class="stat-value" style="font-size: 1.3rem;">
+                                {{ $allevent->teams->sum(fn($t)=>$t->players->count()) ?: 'N/A' }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat">
-                        <div class="stat-label">Players</div>
-                        <div class="stat-value" style="font-size: 1.3rem;">96</div>
-                    </div>
-                </div>
-                <div class="card-actions">
-                    <button class="btn btn-icon btn-view" onclick="openModal('eventDetailsModal')" title="View Details">
-                        <i data-lucide="eye"></i>
-                    </button>
-                    <button class="btn btn-icon btn-edit" onclick="openModal('editEventModal')" title="Edit Event">
-                        <i data-lucide="edit-2"></i>
-                    </button>
-                    <button class="btn btn-secondary" style="flex: 1;" onclick="openModal('matchPinModal')">Generate PIN</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div>
-                        <h3 class="card-title">Winter Training Season</h3>
-                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">Season Tracking</p>
-                    </div>
-                    <span class="badge badge-live">Live</span>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat">
-                        <div class="stat-label">Teams</div>
-                        <div class="stat-value" style="font-size: 1.3rem;">24</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-label">Weeks</div>
-                        <div class="stat-value" style="font-size: 1.3rem;">4/6</div>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" style="flex:1;"
+                            onclick="openEventModal({{ $allevent->id }})">
+                            View Event
+                        </button>
                     </div>
                 </div>
-                <div class="card-actions">
-                    <button class="btn btn-icon btn-view" onclick="openModal('eventDetailsModal')" title="View Details">
-                        <i data-lucide="eye"></i>
-                    </button>
-                    <button class="btn btn-icon btn-edit" onclick="openModal('editEventModal')" title="Edit Event">
-                        <i data-lucide="edit-2"></i>
-                    </button>
-                    <button class="btn btn-primary" style="flex: 1;">Enter Scores</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div>
-                        <h3 class="card-title">Friday Night Matches</h3>
-                        <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">Match Event</p>
-                    </div>
-                    <span class="badge badge-draft">Draft</span>
-                </div>
-                <div class="stats-grid">
-                    <div class="stat">
-                        <div class="stat-label">Teams</div>
-                        <div class="stat-value" style="font-size: 1.3rem;">8</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-label">Matches</div>
-                        <div class="stat-value" style="font-size: 1.3rem;">4</div>
-                    </div>
-                </div>
-                <div class="card-actions">
-                    <button class="btn btn-icon btn-view" onclick="openModal('eventDetailsModal')" title="View Details">
-                        <i data-lucide="eye"></i>
-                    </button>
-                    <button class="btn btn-icon btn-edit" onclick="openModal('editEventModal')" title="Edit Event">
-                        <i data-lucide="edit-2"></i>
-                    </button>
-                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('event', 'E003', 'Friday Night Matches')" title="Delete">
-                        <i data-lucide="trash-2"></i>
-                    </button>
-                    <button class="btn btn-primary" style="flex: 1;">Go Live</button>
-                </div>
-            </div>
+            @empty
+                <p>No events available</p>
+            @endforelse
         </div>
+
+        
     </section>
 
     <!-- Event Operations Spreadsheet -->
@@ -501,6 +449,8 @@
 @include('events.modals.create-event')
 @include('events.modals.create-challenge')
 @include('events.modals.create-scores')
+@include('events.modals.view-event')
+
 
 
 
