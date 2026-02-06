@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Event;
+use App\Models\Player;
+use App\Models\Challenges;
 use Illuminate\Database\Eloquent\Model;
 
 class Scores extends Model
@@ -16,4 +19,19 @@ class Scores extends Model
         'score_date',
         'notes',
     ];
+
+    public function player()
+    {
+        return $this->belongsTo(Player::class);
+    }
+
+    public function challenge()
+    {
+        return $this->belongsTo(Challenges::class, 'challenge_id');
+    }
+
+    public function event()
+    {
+        return $this->belongsTo(Event::class);
+    }
 }

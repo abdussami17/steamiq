@@ -31,7 +31,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/challenges/store', [ChallengeController::class, 'store'])->name('challenges.store');
         Route::post('/scores/store', [ScoreController::class,'store'])->name('scores.store');
         Route::get('/events/{event}/players', [TeamController::class, 'playersByEvent'])->name('teams.get_players');
-
+        Route::get('/event/{event}/leaderboard', [PlayerController::class, 'getPlayersLeaderboard'])
+     ->name('players.leaderboard');
+    
 
 
     });
