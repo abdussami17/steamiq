@@ -170,9 +170,10 @@
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
                 <i data-lucide="plus"></i> Add Score
             </button>
-            <button class="btn btn-secondary">
+            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importScoresModal">
                 <i data-lucide="download"></i> Bulk Import
             </button>
+            
             <button class="btn btn-secondary" onclick="fetchScores()">
                 <i data-lucide="refresh-cw"></i> Recalculate
             </button>
@@ -312,6 +313,7 @@
 @include('events.modals.edit-team')
 @include('events.modals.view-team')
 @include('events.modals.edit-score')
+@include('events.modals.import-scores')
 @include('events.score-script')
 
 
