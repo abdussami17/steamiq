@@ -3,11 +3,15 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TournamentController;
-use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\LeaderboardController;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
+use App\Exports\LeaderboardExport;
 
 
 Route::middleware('guest')->group(function () {
@@ -44,8 +48,22 @@ Route::middleware('auth')->group(function () {
         return response()->json(['teams' => $teams]);
     })->name('events.teams');
     Route::get('/events/{event}', [EventController::class,'show'])->name('events.show');
+    Route::get('/teams-data', [TeamController::class, 'teamsData'])->name('teams.data');
+// Route to fetch all events for the dropdown
+Route::get('/leaderboard-events', [LeaderboardController::class, 'events'])
+    ->name('leaderboard.events');
 
+// Route to fetch leaderboard data for a specific event
+Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])
+    ->name('leaderboard.data');
     
-
+    Route::get('/leaderboard-export', function(Request $request){
+        $eventId = $request->input('event_id'); // <-- safe
+        if(!$eventId || $eventId === '-- Select Event --') {
+            return redirect()->back()->with('error', 'Please select a valid event.');
+        }
+    
+        return Excel::download(new LeaderboardExport($eventId), 'leaderboard.xlsx');
+    });
     });
 });

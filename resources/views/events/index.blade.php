@@ -106,68 +106,9 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" value="T001" readonly></td>
-                            <td><input type="text" value="Team Alpha"></td>
-                            <td>3</td>
-                            <td style="color: var(--primary); font-weight: 700;">3940</td>
-                            <td style="color: #FFD700; font-weight: 700;">1</td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T001')" title="View">
-                                        <i data-lucide="eye"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T001')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T001', 'Team Alpha')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><input type="text" value="T002" readonly></td>
-                            <td><input type="text" value="Team Beta"></td>
-                            <td>3</td>
-                            <td style="color: var(--primary); font-weight: 700;">3820</td>
-                            <td style="color: #C0C0C0; font-weight: 700;">2</td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T002')" title="View">
-                                        <i data-lucide="eye"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T002')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T002', 'Team Beta')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><input type="text" value="T003" readonly></td>
-                            <td><input type="text" value="Team Gamma"></td>
-                            <td>2</td>
-                            <td style="color: var(--primary); font-weight: 700;">3650</td>
-                            <td style="color: #CD7F32; font-weight: 700;">3</td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T003')" title="View">
-                                        <i data-lucide="eye"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T003')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T003', 'Team Gamma')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="teamsTableBody"></tbody>
+                    @include('events.team-script')
+
                 </table>
             </div>
         </div>
@@ -389,57 +330,23 @@
                 </span>
                 Event Leaderboard
             </h2>
-            <button class="btn btn-secondary">Export Rankings</button>
+            <button class="btn btn-secondary" id="exportLeaderboard">Export Rankings</button>
         </div>
-
-        <div class="leaderboard">
-            <div class="leaderboard-item header">
-                <div>Rank</div>
-                <div>Team / Player</div>
-                <div>Brain</div>
-                <div>Play</div>
-                <div>E-Game</div>
-                <div>Esports</div>
-                <div>Total</div>
-            </div>
-            <div class="leaderboard-item">
-                <div class="leaderboard-rank rank-1">1</div>
-                <div class="leaderboard-name">Team Alpha</div>
-                <div class="leaderboard-score">1240</div>
-                <div class="leaderboard-score">1150</div>
-                <div class="leaderboard-score">1550</div>
-                <div class="leaderboard-score">+500</div>
-                <div class="leaderboard-score leaderboard-total">4440</div>
-            </div>
-            <div class="leaderboard-item">
-                <div class="leaderboard-rank rank-2">2</div>
-                <div class="leaderboard-name">Team Beta</div>
-                <div class="leaderboard-score">1180</div>
-                <div class="leaderboard-score">1220</div>
-                <div class="leaderboard-score">1480</div>
-                <div class="leaderboard-score">+400</div>
-                <div class="leaderboard-score leaderboard-total">4280</div>
-            </div>
-            <div class="leaderboard-item">
-                <div class="leaderboard-rank rank-3">3</div>
-                <div class="leaderboard-name">Team Gamma</div>
-                <div class="leaderboard-score">1230</div>
-                <div class="leaderboard-score">1110</div>
-                <div class="leaderboard-score">1420</div>
-                <div class="leaderboard-score">+300</div>
-                <div class="leaderboard-score leaderboard-total">4060</div>
-            </div>
-            <div class="leaderboard-item">
-                <div class="leaderboard-rank">4</div>
-                <div class="leaderboard-name">Team Delta</div>
-                <div class="leaderboard-score">1090</div>
-                <div class="leaderboard-score">1200</div>
-                <div class="leaderboard-score">1390</div>
-                <div class="leaderboard-score">+200</div>
-                <div class="leaderboard-score leaderboard-total">3880</div>
-            </div>
+    
+        <div class="form-group">
+            <label class="form-label">Select Event <span class="text-danger">*</span></label>
+            <select class="form-select" id="selectEvent">
+                <option value="" hidden>--Select Event--</option>
+            </select>
+        </div>
+    
+        <div class="leaderboard" id="leaderboardBody">
+            <div class="leaderboard-item"><div>Loading...</div></div>
         </div>
     </section>
+    
+    
+    @include('events.leaderboard-script')
 </div>
 @endsection
 
