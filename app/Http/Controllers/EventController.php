@@ -29,8 +29,9 @@ class EventController extends Controller
                    ")->get();
 
                        $challenges = Challenges::all();
+            
     
-        return view('events.index', compact('players', 'allevents','events','challenges','allplayers'));
+        return view('events.index', compact('players','allevents','events','challenges','allplayers'));
     }
     
 

@@ -88,12 +88,14 @@
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
                         <i data-lucide="plus"></i> Add Team
                     </button>
-                    <button class="btn btn-secondary">
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
                         <i data-lucide="download"></i> Import CSV
                     </button>
-                    <button class="btn btn-secondary">
-                        <i data-lucide="upload"></i> Export
-                    </button>
+                    <a href="{{ route('teams.export') }}" class="btn btn-secondary">
+                        <i data-lucide="upload"></i> Export Teams
+                    </a>
+                    
+                      
                 </div>
                 <table class="data-table">
                     <thead>
@@ -357,6 +359,7 @@
 @include('events.modals.create-challenge')
 @include('events.modals.create-scores')
 @include('events.modals.view-event')
+@include('events.modals.import-team')
 
 
 

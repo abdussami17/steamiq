@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Team;
 use App\Models\Player; 
+use App\Exports\TeamsExport;
+use App\Imports\TeamsImport;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+
+
 
 class TeamController extends Controller
 {
@@ -71,6 +76,53 @@ class TeamController extends Controller
     
         return response()->json($teams);
     }
+    public function export(Request $request)
+    {
+        $eventId = $request->input('event_id');
+
+        // If user did not select an event, export all events
+        return Excel::download(new TeamsExport($eventId), 'teams.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'event_id' => 'required|exists:events,id',
+            'file'     => 'required|file|mimes:xlsx,csv',
+        ]);
     
+        $eventId = $request->event_id;
+    
+        Excel::import(new class($eventId) implements \Maatwebsite\Excel\Concerns\ToCollection {
+            protected $eventId;
+            public function __construct($eventId) { $this->eventId = $eventId; }
+    
+            public function collection(\Illuminate\Support\Collection $rows)
+            {
+                foreach ($rows as $row) {
+                    $teamName = trim($row[0] ?? '');
+                    $emails   = trim($row[1] ?? '');
+    
+                    if (!$teamName || !$emails) continue;
+    
+                    // Create team
+                    $team = Team::create([
+                        'team_name' => $teamName,
+                        'event_id'  => $this->eventId,
+                    ]);
+    
+                    // Split emails and fetch IDs
+                    $emailArray = array_map('trim', explode(',', $emails));
+                    $playerIds  = Player::whereIn('email', $emailArray)->pluck('id')->toArray();
+    
+                    if ($playerIds) {
+                        $team->players()->attach($playerIds);
+                    }
+                }
+            }
+        }, $request->file('file'));
+    
+        return back()->with('success', 'Teams imported successfully.');
+    }
 
 }

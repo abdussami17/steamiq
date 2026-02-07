@@ -65,5 +65,10 @@ Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])
     
         return Excel::download(new LeaderboardExport($eventId), 'leaderboard.xlsx');
     });
+
+
+    Route::get('/teams-export', [TeamController::class, 'export'])->name('teams.export');
+Route::post('/teams-import', [TeamController::class, 'import'])->name('teams.import');
+
     });
 });
