@@ -163,87 +163,36 @@
             </div>
         </div>
 
-        <!-- Scores Tab -->
-        <div id="scores-tab" class="tab-content">
-            <div class="spreadsheet-container">
-                <div class="spreadsheet-toolbar">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                        <i data-lucide="plus"></i> Add Score
-                    </button>
-                    <button class="btn btn-secondary">
-                        <i data-lucide="download"></i> Bulk Import
-                    </button>
-                    <button class="btn btn-secondary">
-                        <i data-lucide="refresh-cw"></i> Recalculate
-                    </button>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Player</th>
-                            <th>CAM Pillar</th>
-                            <th>Category/Game</th>
-                            <th>Points</th>
-                            <th>Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Alex Johnson</td>
-                            <td>Brain Games</td>
-                            <td><input type="text" value="Science"></td>
-                            <td><input type="number" value="150"></td>
-                            <td>2026-02-01</td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-edit" onclick="editScore('S001')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('score', 'S001', 'Science - 150pts')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Maria Garcia</td>
-                            <td>E-Gaming</td>
-                            <td><input type="text" value="AquaBall Clash"></td>
-                            <td><input type="number" value="200"></td>
-                            <td>2026-02-01</td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-edit" onclick="editScore('S002')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('score', 'S002', 'AquaBall - 200pts')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>James Chen</td>
-                            <td>Playground Games</td>
-                            <td><input type="text" value="Beach Balling"></td>
-                            <td><input type="number" value="180"></td>
-                            <td>2026-02-02</td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-edit" onclick="editScore('S003')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('score', 'S003', 'Beach Balling - 180pts')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+<!-- Scores Tab -->
+<div id="scores-tab" class="tab-content">
+    <div class="spreadsheet-container">
+        <div class="spreadsheet-toolbar">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
+                <i data-lucide="plus"></i> Add Score
+            </button>
+            <button class="btn btn-secondary">
+                <i data-lucide="download"></i> Bulk Import
+            </button>
+            <button class="btn btn-secondary" onclick="fetchScores()">
+                <i data-lucide="refresh-cw"></i> Recalculate
+            </button>
         </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>CAM Pillar</th>
+                    <th>Category/Game</th>
+                    <th>Points</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="scoresTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
 
         <!-- Schedule Tab -->
         <div id="schedule-tab" class="tab-content">
@@ -362,6 +311,8 @@
 @include('events.modals.import-team')
 @include('events.modals.edit-team')
 @include('events.modals.view-team')
+@include('events.modals.edit-score')
+@include('events.score-script')
 
 
 

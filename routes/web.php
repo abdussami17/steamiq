@@ -73,5 +73,10 @@ Route::post('/update/{team}', [TeamController::class, 'update'])->name('teams.up
 Route::delete('/delete/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
 Route::get('/teams-data', [TeamController::class, 'teamsData'])->name('teams.data');
 
+
+Route::get('/scores-data', [ScoreController::class, 'scoresData'])->name('scores.data');
+Route::get('/scores/view/{score}', [ScoreController::class, 'view'])->name('scores.view');
+Route::post('/scores/update/{score}', [ScoreController::class, 'update'])->name('scores.update');
+Route::delete('/scores/delete/{score}', [ScoreController::class, 'destroy'])->name('scores.destroy');
     });
 });
