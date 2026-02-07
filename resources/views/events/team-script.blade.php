@@ -13,22 +13,17 @@
         return '#fff';
     }
     
+    // Fetch and populate teams table
     async function fetchTeams() {
-    
         const tbody = document.getElementById('teamsTableBody');
         if (!tbody) return;
     
         tbody.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
     
         try {
-    
             const res = await fetch('/teams-data', {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
+                headers: {'Accept': 'application/json','X-Requested-With': 'XMLHttpRequest'}
             });
-    
             if (!res.ok) throw new Error('Server error');
     
             const teams = await res.json();
@@ -39,39 +34,27 @@
             }
     
             let rows = '';
-    
             teams.forEach(team => {
-    
                 const id = safe(team.id);
                 const name = safe(team.team_name);
                 const members = safe(team.members_count ?? 0);
                 const points = safe(team.total_points ?? 0);
                 const rank = safe(team.rank ?? 0);
-    
                 const rankColor = getRankColor(Number(rank));
     
                 rows += `
                 <tr>
                     <td><input type="text" value="${id}" readonly></td>
-    
                     <td><input type="text" value="${name}"></td>
-    
                     <td>${members}</td>
-    
-                    <td style="color: var(--primary); font-weight:700;">
-                        ${points}
-                    </td>
-    
-                    <td style="color:${rankColor}; font-weight:700;font-size:22px">
-                        ${rank}
-                    </td>
-    
+                    <td style="color: var(--primary); font-weight:700;">${points}</td>
+                    <td style="color:${rankColor}; font-weight:700;font-size:22px">${rank}</td>
                     <td>
                         <div style="display:flex;gap:0.25rem;">
                             <button class="btn btn-icon btn-view" onclick="viewTeamDetails('${id}')">
                                 <i data-lucide="eye"></i>
                             </button>
-                            <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit','${id}')">
+                            <button class="btn btn-icon btn-edit" onclick="openEditTeamModal('${id}')">
                                 <i data-lucide="edit-2"></i>
                             </button>
                             <button class="btn btn-icon btn-delete" onclick="confirmDelete('team','${id}','${name}')">
@@ -79,24 +62,109 @@
                             </button>
                         </div>
                     </td>
-                </tr>
-                `;
+                </tr>`;
             });
     
             tbody.innerHTML = rows;
-    
             if (window.lucide) lucide.createIcons();
-    
         } catch (err) {
-    
             console.error(err);
-    
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6">N/A</td>
-                </tr>
-            `;
+            tbody.innerHTML = `<tr><td colspan="6">N/A</td></tr>`;
         }
+    }
+    
+    // Open Edit Team Modal
+    function openEditTeamModal(teamId){
+        const modal = new bootstrap.Modal(document.getElementById('editTeamModal'));
+        const editTeamId = document.getElementById('editTeamId');
+        const editTeamName = document.getElementById('editTeamName');
+        const editTeamEvent = document.getElementById('editTeamEvent');
+        const editTeamPlayers = document.getElementById('editTeamPlayers');
+    
+        document.getElementById('editTeamForm').reset();
+        editTeamId.value = teamId;
+    
+        fetch(`/view/${teamId}`)
+            .then(res => res.json())
+            .then(data => {
+                editTeamName.value = data.team.team_name;
+                editTeamEvent.value = data.team.event_id;
+    
+                Array.from(editTeamPlayers.options).forEach(opt => {
+                    opt.selected = data.members.some(m => m.id == opt.value);
+                });
+    
+                modal.show();
+            })
+            .catch(err => console.error(err));
+    }
+    
+    // Submit Edit Team Form
+    document.getElementById('editTeamForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const formData = new FormData(this);
+        const id = formData.get('team_id');
+    
+        fetch(`/update/${id}`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(res => res.json())
+          .then(data => {
+              if(data.success){
+                  fetchTeams();
+                  bootstrap.Modal.getInstance(document.getElementById('editTeamModal')).hide();
+              } else {
+                  alert('Failed to update team');
+              }
+          }).catch(err => console.error(err));
+    });
+    
+    // Delete Team
+    function confirmDelete(type,id,name){
+        if(confirm(`Are you sure you want to delete ${name}?`)){
+            fetch(`/delete/${id}`,{
+                method:'DELETE',
+                headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'}
+            }).then(res=>res.json()).then(data=>{
+                if(data.success) fetchTeams();
+            });
+        }
+    }
+    
+    // View Team
+    function viewTeamDetails(id){
+        const modalBody = document.getElementById('viewTeamBody');
+        modalBody.innerHTML = 'Loading...';
+    
+        fetch(`/view/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                let html = `<h5 class="mb-4" style="color:var(--text);font-weight:700">${data.team.team_name} (Event: ${data.team.event.name})</h5>
+                            <table class="table table-bordered table-dark">
+                            <thead>
+                                <tr><th>Player</th><th>Email</th><th>Scores</th></tr>
+                            </thead>
+                            <tbody>`;
+                data.members.forEach(member=>{
+                    const scores = member.scores.map(s=>`${s.challenge} (${s.pillar}): ${s.points}`).join('<br>');
+                    html += `<tr>
+                                <td>${member.name}</td>
+                                <td>${member.email}</td>
+                                <td>${scores || 'N/A'}</td>
+                             </tr>`;
+                });
+                html += `</tbody></table>`;
+                modalBody.innerHTML = html;
+                new bootstrap.Modal(document.getElementById('viewTeamModal')).show();
+            })
+            .catch(err => {
+                console.error(err);
+                modalBody.innerHTML = 'Failed to load team details.';
+            });
     }
     </script>
     

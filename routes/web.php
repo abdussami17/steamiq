@@ -48,7 +48,6 @@ Route::middleware('auth')->group(function () {
         return response()->json(['teams' => $teams]);
     })->name('events.teams');
     Route::get('/events/{event}', [EventController::class,'show'])->name('events.show');
-    Route::get('/teams-data', [TeamController::class, 'teamsData'])->name('teams.data');
 // Route to fetch all events for the dropdown
 Route::get('/leaderboard-events', [LeaderboardController::class, 'events'])
     ->name('leaderboard.events');
@@ -69,6 +68,10 @@ Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])
 
     Route::get('/teams-export', [TeamController::class, 'export'])->name('teams.export');
 Route::post('/teams-import', [TeamController::class, 'import'])->name('teams.import');
+Route::get('/view/{team}', [TeamController::class, 'view'])->name('teams.view');
+Route::post('/update/{team}', [TeamController::class, 'update'])->name('teams.update');
+Route::delete('/delete/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
+Route::get('/teams-data', [TeamController::class, 'teamsData'])->name('teams.data');
 
     });
 });

@@ -125,4 +125,55 @@ class TeamController extends Controller
         return back()->with('success', 'Teams imported successfully.');
     }
 
+
+
+
+    // View team details (for modal)
+    public function view(Team $team)
+    {
+        $team->load(['event', 'players.scores.challenge']); // eager load
+
+        return response()->json([
+            'team' => $team,
+            'members' => $team->players->map(function($player){
+                return [
+                    'id' => $player->id,
+                    'name' => $player->name,
+                    'email' => $player->email,
+                    'scores' => $player->scores->map(function($score){
+                        return [
+                            'challenge' => $score->challenge->name ?? 'N/A',
+                            'pillar' => $score->challenge->pillar_type ?? 'N/A',
+                            'points' => $score->points ?? 0
+                        ];
+                    })
+                ];
+            }),
+        ]);
+    }
+
+    // Update team
+    public function update(Request $request, Team $team)
+    {
+        $request->validate([
+            'team_name' => 'required|string|max:255',
+            'players' => 'required|array|min:1',
+            'players.*' => 'exists:players,id'
+        ]);
+
+        $team->update(['team_name' => $request->team_name]);
+        $team->players()->sync($request->players);
+
+        return response()->json(['success' => true, 'message' => 'Team updated successfully.']);
+    }
+
+    // Delete team
+    public function destroy(Team $team)
+    {
+        $team->players()->detach();
+        $team->delete();
+
+        return response()->json(['success' => true, 'message' => 'Team deleted successfully.']);
+    }
+
 }

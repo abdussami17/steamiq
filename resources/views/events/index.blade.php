@@ -360,6 +360,8 @@
 @include('events.modals.create-scores')
 @include('events.modals.view-event')
 @include('events.modals.import-team')
+@include('events.modals.edit-team')
+@include('events.modals.view-team')
 
 
 
