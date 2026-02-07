@@ -58,4 +58,60 @@ class ChallengeController extends Controller
             return back()->with('error', 'Something went wrong. Please try again.')->withInput();
         }
     }
+
+
+
+    public function fetch()
+    {
+        $challenges = Challenges::latest()->get();
+
+        return response()->json($challenges);
+    }
+
+    // Edit (return single challenge data)
+    public function edit(Challenges $challenge)
+    {
+        return response()->json($challenge);
+    }
+
+    // Update challenge
+    public function update(Request $request, Challenges $challenge)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'max_points' => 'required|integer|min:0',
+        ]);
+    
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()->all()
+            ], 422);
+        }
+    
+        $challenge->update([
+            'name' => $request->name,
+            'max_points' => $request->max_points,
+        ]);
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Challenge updated successfully!',
+            'challenge' => $challenge
+        ]);
+    }
+    
+    
+    
+
+    public function destroy(Challenges $challenge)
+    {
+        $challenge->delete();
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Challenge deleted successfully!'
+        ]);
+    }
+    
 }

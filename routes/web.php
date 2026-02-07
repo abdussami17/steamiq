@@ -61,7 +61,11 @@ Route::middleware('auth')->group(function () {
 
         // Challenges routes
         Route::post('/challenges/store', [ChallengeController::class, 'store'])->name('challenges.store');
-
+        Route::get('/challenges/fetch', [ChallengeController::class, 'fetch'])->name('challenges.fetch');
+        Route::get('/challenges/edit/{challenge}', [ChallengeController::class, 'edit'])->name('challenges.edit');
+        Route::post('/challenges/update/{challenge}', [ChallengeController::class, 'update'])->name('challenges.update');
+        Route::delete('/challenges/delete/{challenge}', [ChallengeController::class, 'destroy'])->name('challenges.destroy');
+       
         // Scores routes
         Route::post('/scores/store', [ScoreController::class, 'store'])->name('scores.store');
         Route::get('/scores-data', [ScoreController::class, 'scoresData'])->name('scores.data');

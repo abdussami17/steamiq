@@ -134,31 +134,9 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" value="01" readonly></td>
-                            <td><input type="text" value="Brain Games"></td>
-                            <td>Basket Ball</td>
-                           <td>
-1200
-                           </td>
-                            <td>
-                                <div style="display: flex; gap: 0.25rem;">
-                                    <button class="btn btn-icon btn-view" onclick="viewTeamDetails('T001')" title="View">
-                                        <i data-lucide="eye"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-edit" onclick="openTeamModal('edit', 'T001')" title="Edit">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-                                    <button class="btn btn-icon btn-delete" onclick="confirmDelete('team', 'T001', 'Team Alpha')" title="Delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                       
-                      
-                    </tbody>
+<tbody>
+    
+</tbody>
                 </table>
             </div>
         </div>
@@ -314,7 +292,10 @@
 @include('events.modals.view-team')
 @include('events.modals.edit-score')
 @include('events.modals.import-scores')
+@include('events.modals.edit-challenge')
 @include('events.score-script')
+@include('events.challenge-script')
+
 
 
 
