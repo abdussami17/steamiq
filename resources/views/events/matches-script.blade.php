@@ -8,7 +8,7 @@
             e.preventDefault();
     
             const formData = new FormData();
-            formData.append('event_id', 1);
+            formData.append('event_id', document.getElementById('matchEvent').value);
             formData.append('match_name', document.getElementById('matchName').value);
             formData.append('team_a', document.getElementById('matchTeamA').value);
             formData.append('team_b', document.getElementById('matchTeamB').value);

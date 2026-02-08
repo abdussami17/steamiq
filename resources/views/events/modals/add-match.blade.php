@@ -9,6 +9,16 @@
           <div class="modal-body">
             <input type="hidden" id="matchId">
             <div class="mb-3">
+                <label class="form-label">Select Event</label>
+                <select class="form-select" id="matchEvent" required>
+                  <option value="">-- Select Event --</option>
+                  @foreach($events as $event)
+                    <option value="{{ $event->id }}">{{ $event->name }}</option>
+                  @endforeach
+                </select>
+              </div>
+              
+            <div class="mb-3">
               <label class="form-label">Match Name/Number *</label>
               <input type="text" class="form-input" id="matchName" placeholder="Match #1 - Semifinals" required>
             </div>
