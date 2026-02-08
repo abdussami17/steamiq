@@ -5,6 +5,7 @@ namespace App\Exports;
 use Illuminate\Contracts\View\View;
 use Maatwebsite\Excel\Concerns\FromView;
 use App\Models\Team;
+use App\Models\EsportsPoints;
 
 class LeaderboardExport implements FromView
 {
@@ -17,15 +18,22 @@ class LeaderboardExport implements FromView
 
     public function view(): View
     {
+        // Fetch teams with player scores
         $teams = Team::with(['players' => function($q){
-            $q->with(['scores' => fn($sq)=>$sq->with('challenge')]);
+            $q->with(['scores' => fn($sq) => $sq->with('challenge')]);
         }])->where('event_id', $this->eventId)->get();
 
-        $teams = $teams->map(function($team){
+        // Fetch match esports points for this event
+        $esportsPoints = EsportsPoints::where('event_id', $this->eventId)
+            ->get()
+            ->groupBy('team_id');
+
+        $teams = $teams->map(function($team) use ($esportsPoints) {
             $brain = $play = $egame = $esports = 0;
 
-            foreach ($team->players as $player){
-                foreach ($player->scores as $score){
+            // Sum player scores
+            foreach ($team->players as $player) {
+                foreach ($player->scores as $score) {
                     $pillar = $score->challenge?->pillar_type ?? null;
                     $points = $score->points ?? 0;
 
@@ -36,19 +44,26 @@ class LeaderboardExport implements FromView
                 }
             }
 
-            $team->brain = $brain;
-            $team->play = $play;
-            $team->egame = $egame;
+            // Add match esports points
+            if (isset($esportsPoints[$team->id])) {
+                $esports += $esportsPoints[$team->id]->sum('points');
+            }
+
+            $team->brain   = $brain;
+            $team->play    = $play;
+            $team->egame   = $egame;
             $team->esports = $esports;
-            $team->total = $brain + $play + $egame + $esports;
+            $team->total   = $brain + $play + $egame + $esports;
 
             return $team;
         });
 
+        // Sort by total points
         $teams = $teams->sortByDesc('total')->values();
 
+        // Assign rank
         $rank = 1;
-        foreach ($teams as $team){
+        foreach ($teams as $team) {
             $team->rank = $rank++;
         }
 

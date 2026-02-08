@@ -1,17 +1,18 @@
 <?php
 
+use Illuminate\Http\Request;
+use App\Exports\LeaderboardExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\MatchController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\LeaderboardController;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Http\Request;
-use App\Exports\LeaderboardExport;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -73,6 +74,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/scores/update/{score}', [ScoreController::class, 'update']);
         Route::delete('/scores/delete/{score}', [ScoreController::class, 'destroy']);
         Route::post('/scores/import', [ScoreController::class, 'import'])->name('scores.import');
+
+        // Matches Routes
+        
+Route::post('/matches', [MatchController::class,'store'])->name('matches.store');
+Route::post('/matches/{id}/generate-pin', [MatchController::class,'generatePin'])->name('matches.generatePin');
+Route::post('/matches/{id}/round', [MatchController::class,'addRound'])->name('matches.addRound');
+Route::get('/matches/fetch', [MatchController::class,'fetch'])->name('matches.fetch');
+Route::delete('/matches/{id}', [MatchController::class,'destroy'])->name('matches.destroy');
+Route::get('/matches/teams', [MatchController::class, 'fetchTeams'])->name('matches.teams');
+// Add round
+Route::post('/matches/{match}/round', [MatchController::class, 'addRound'])->name('matches.round');
+Route::get('/matches/export/all', [MatchController::class, 'exportAllSchedule'])
+    ->name('matches.export.all');
+
+
 
         // Leaderboard routes
         Route::get('/leaderboard-events', [LeaderboardController::class, 'events'])->name('leaderboard.events');

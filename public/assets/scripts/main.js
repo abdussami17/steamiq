@@ -51,16 +51,6 @@ function switchTab(tabName) {
 
 
 
-function generateMatchPIN(matchId) {
-    const pin = Math.floor(1000 + Math.random() * 9000);
-    const pinElement = document.querySelector('.pin-value');
-    if (pinElement) {
-        pinElement.textContent = pin;
-    }
-    openModal('matchPinModal');
-}
-
-
 
 
 

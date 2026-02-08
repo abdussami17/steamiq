@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 Schedule::command('update:event-status')->hourly();
+Schedule::command('matches:update-status')->everyMinute();

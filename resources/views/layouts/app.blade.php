@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title')</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -137,5 +139,32 @@
     
     <!-- Main JavaScript -->
     <script src="{{asset('assets/scripts/main.js')}}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize all date inputs
+            flatpickr('input[type="date"]', {
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+        
+            // Initialize all time inputs
+            flatpickr('input[type="time"]', {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                allowInput: true
+            });
+        
+            // Initialize all datetime-local inputs
+            flatpickr('input[type="datetime-local"]', {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true,
+                allowInput: true
+            });
+        });
+        </script>
+        
 </body>
 </html>

@@ -173,81 +173,25 @@
 </div>
 
 
-        <!-- Schedule Tab -->
-        <div id="schedule-tab" class="tab-content">
-            <div class="spreadsheet-container">
-                <div class="spreadsheet-toolbar">
-                    <button class="btn btn-primary" onclick="openModal('matchModal')">
-                        <i data-lucide="plus"></i> Schedule Match
-                    </button>
-                    <button class="btn btn-secondary">
-                        <i data-lucide="shuffle"></i> Auto-Generate
-                    </button>
-                    <button class="btn btn-secondary">
-                        <i data-lucide="upload"></i> Export Schedule
-                    </button>
-                </div>
-                <div class="schedule-grid">
-                    <div class="schedule-item">
-                        <div class="schedule-time">
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">FEB 02</div>
-                            <div>14:00</div>
-                        </div>
-                        <div class="schedule-match">
-                            <div class="schedule-match-title">Match #1 - Semifinals</div>
-                            <div class="schedule-match-teams">Team Alpha vs Team Beta</div>
-                        </div>
-                        <div class="schedule-actions">
-                            <button class="btn btn-icon btn-edit" onclick="editMatch('M001')" title="Edit">
-                                <i data-lucide="edit-2"></i>
-                            </button>
-                            <button class="btn btn-icon btn-delete" onclick="confirmDelete('match', 'M001', 'Match #1')" title="Delete">
-                                <i data-lucide="trash-2"></i>
-                            </button>
-                            <button class="btn btn-primary" onclick="generateMatchPIN('M001')">PIN</button>
-                        </div>
-                    </div>
-                    <div class="schedule-item">
-                        <div class="schedule-time">
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">FEB 02</div>
-                            <div>15:30</div>
-                        </div>
-                        <div class="schedule-match">
-                            <div class="schedule-match-title">Match #2 - Semifinals</div>
-                            <div class="schedule-match-teams">Team Gamma vs Team Delta</div>
-                        </div>
-                        <div class="schedule-actions">
-                            <button class="btn btn-icon btn-edit" onclick="editMatch('M002')" title="Edit">
-                                <i data-lucide="edit-2"></i>
-                            </button>
-                            <button class="btn btn-icon btn-delete" onclick="confirmDelete('match', 'M002', 'Match #2')" title="Delete">
-                                <i data-lucide="trash-2"></i>
-                            </button>
-                            <button class="btn btn-primary" onclick="generateMatchPIN('M002')">PIN</button>
-                        </div>
-                    </div>
-                    <div class="schedule-item">
-                        <div class="schedule-time">
-                            <div style="font-size: 0.8rem; color: var(--text-dim);">FEB 03</div>
-                            <div>16:00</div>
-                        </div>
-                        <div class="schedule-match">
-                            <div class="schedule-match-title">Championship Final</div>
-                            <div class="schedule-match-teams">TBD vs TBD</div>
-                        </div>
-                        <div class="schedule-actions">
-                            <button class="btn btn-icon btn-edit" onclick="editMatch('M003')" title="Edit">
-                                <i data-lucide="edit-2"></i>
-                            </button>
-                            <button class="btn btn-icon btn-delete" onclick="confirmDelete('match', 'M003', 'Championship')" title="Delete">
-                                <i data-lucide="trash-2"></i>
-                            </button>
-                            <button class="btn btn-primary" onclick="generateMatchPIN('M003')">PIN</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div id="schedule-tab" class="tab-content">
+    <div class="spreadsheet-container">
+        <div class="spreadsheet-toolbar">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#matchModal">
+                <i data-lucide="plus"></i> Schedule Match
+            </button>
+      
+            <a href="{{ route('matches.export.all') }}" class="btn btn-secondary">
+                <i data-lucide="upload"></i> Export All Schedule
+            </a>
+            
+            
         </div>
+        <div class="schedule-grid" id="scheduleGrid">
+            <!-- Matches will be dynamically loaded here -->
+        </div>
+    </div>
+</div>
+
       
     </section>
 
@@ -293,8 +237,13 @@
 @include('events.modals.edit-score')
 @include('events.modals.import-scores')
 @include('events.modals.edit-challenge')
+@include('events.modals.add-match')
+@include('events.modals.match-pin')
+@include('events.modals.add-round')
 @include('events.score-script')
 @include('events.challenge-script')
+@include('events.matches-script')
+
 
 
 

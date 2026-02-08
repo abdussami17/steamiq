@@ -483,13 +483,13 @@ main {
     border: 1px solid var(--primary);
 }
 
-.badge-draft {
+.badge-draft , .badge-scheduled{
     background: rgba(139, 149, 171, 0.2);
     color: var(--text-dim);
     border: 1px solid var(--text-dim);
 }
 
-.badge-closed {
+.badge-closed ,  .badge-completed {
     background: rgba(255, 0, 128, 0.2);
     color: var(--secondary);
     border: 1px solid var(--secondary);
@@ -1153,9 +1153,10 @@ main {
     background: var(--dark);
     border: 1px solid var(--border);
     border-radius: 10px;
+    font-family: "Space Mono";
     padding: 1rem;
     display: grid;
-    grid-template-columns: 120px 1fr 150px;
+    grid-template-columns: 120px 1fr 240px;
     gap: 1.5rem;
     align-items: center;
     transition: all 0.3s ease;
@@ -1187,9 +1188,13 @@ main {
 }
 
 .schedule-actions {
-    display: flex;
-    gap: 0.5rem;
+    display: flex !important;  
+    gap: 0.5rem;                
+    /* flex-wrap: wrap;             */
+    align-items: center;       
+    justify-content: normal;
 }
+
 
 /* Responsive */
 @media (max-width: 1200px) {

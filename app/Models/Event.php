@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Matches;
 use App\Models\Challenges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,5 +43,11 @@ class Event extends Model
     {
         return $this->hasMany(Challenges::class);
     }
+
+    public function matches()
+{
+    return $this->hasMany(Matches::class);
+}
+
     
 }
