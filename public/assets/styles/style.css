@@ -847,7 +847,7 @@ main {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    min-width: 200px;
+    /* min-width: 200px; */
 }
 
 .bracket-round-title {

@@ -32,7 +32,7 @@
             </div>
             <div class="stat">
                 <div class="stat-label">Matches Today</div>
-                <div class="stat-value">18</div>
+                <div class="stat-value">{{ $todayMatchesCount ?: 'N/A' }}</div>
             </div>
         </div>
     </section>
