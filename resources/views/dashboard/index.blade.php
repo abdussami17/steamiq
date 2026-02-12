@@ -108,7 +108,32 @@
         </div>
     </div>
 </section>
-
+    <!-- Leaderboard -->
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <span class="icon">
+                    <i data-lucide="award"></i>
+                </span>
+                Event Leaderboard
+            </h2>
+            <button class="btn btn-secondary" id="exportLeaderboard">Export Rankings</button>
+        </div>
+    
+        <div class="form-group">
+            <label class="form-label">Select Event <span class="text-danger">*</span></label>
+            <select class="form-select" id="selectEvent">
+                <option value="" hidden>--Select Event--</option>
+            </select>
+        </div>
+    
+        <div class="leaderboard" id="leaderboardBody">
+            <div class="leaderboard-item"><div>Loading...</div></div>
+        </div>
+    </section>
+@include('leaderboard.leaderboard-script')
+    
+   
 
     <!-- Quick Actions -->
     <section class="section">
@@ -159,3 +184,5 @@
     </section>
 </div>
 @endsection
+
+ 
