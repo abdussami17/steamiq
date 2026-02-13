@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
-use App\Models\Player;
 use App\Models\Challenges;
+use App\Models\Event;
+use App\Models\Organization;
+use App\Models\Player;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
@@ -29,9 +30,10 @@ class EventController extends Controller
                    ")->get();
 
                        $challenges = Challenges::all();
+                       $organizations = Organization::all(); // fetch all
             
     
-        return view('events.index', compact('players','allevents','events','challenges','allplayers'));
+        return view('events.index', compact('players','organizations','allevents','events','challenges','allplayers'));
     }
     
 

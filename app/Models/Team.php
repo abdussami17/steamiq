@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Group;
+use App\Models\Organization;
 use App\Models\Player;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Team extends Model
 {
@@ -13,6 +15,7 @@ class Team extends Model
     protected $fillable = [
         'team_name',
         'event_id',
+        'organization_id',
     ];
 
     // Team has multiple players (many-to-many)
@@ -36,6 +39,14 @@ class Team extends Model
 public function matchesB()
 {
     return $this->hasMany(MatchModel::class, 'team_b_id');
+}
+
+public function organization(){
+    return $this->belongsTo(Organization::class);
+}
+
+public function groups(){
+    return $this->hasMany(Group::class);
 }
 
 }

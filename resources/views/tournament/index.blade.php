@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Tournaments - SteamIQ')
-
+@include('tournament.style')
 @section('content')
     <div class="container">
         <section class="section">
@@ -14,75 +14,138 @@
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTournamentModal">Create
                     Tournament</button>
             </div>
-            <div class="container py-4">
-                <div class="row g-4">
+            <div>
+                <div class="tournament-all-matches-section">
                     @forelse($tournaments as $tournament)
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card bg-dark text-white h-100 shadow-sm p-3">
-                                <div class="card-body d-flex flex-column">
-                                    <h4 class="card-title mb-1">{{ $tournament->name }} ({{ ucfirst($tournament->type) }})</h4>
-                                    <small class="text-white mb-3">Event: {{ $tournament->event->name ?? 'N/A' }}</small>
-            
-                                    <div class="bracket-container mt-2">
-                                        <div class="bracket d-flex flex-column gap-3">
-                                            @foreach ($tournament->matches->groupBy('round_no') as $roundNo => $matches)
-                                                <div class="bracket-round">
-                                                    <div class="bracket-round-title fw-bold mb-2">
-                                                        @php
-                                                            $maxRound = $tournament->matches->max('round_no');
-                                                        @endphp
-            
-                                                        @if ($roundNo == $maxRound)
-                                                            Champion
-                                                        @elseif($roundNo == $maxRound - 1)
-                                                            Finals
-                                                        @elseif($roundNo == $maxRound - 2)
-                                                            Semifinals
-                                                        @else
-                                                            Round {{ $roundNo }}
-                                                        @endif
-                                                    </div>
-            
-                                                    @foreach ($matches as $match)
-                                                        <div class="bracket-match d-flex align-items-center justify-content-between mb-2 p-3 rounded border"
-                                                            style="@if ($match->winner_team_id) background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.1)); border-color: #0d6efd; @endif">
-            
-                                                            <!-- Team A -->
-                                                            <div class="bracket-team d-flex align-items-center gap-2 {{ $match->winner_team_id == $match->team_a_id ? 'fw-bold text-success' : '' }}">
-                                                                <span class="bracket-team-name">{{ $match->teamA->team_name ?? 'TBD' }}</span>
-                                                                @if (isset($match->score_a))
-                                                                    <span class="badge bg-secondary">{{ $match->score_a }}</span>
-                                                                @endif
-                                                            </div>
-            
-                                                            <!-- VS / Buttons -->
-                                                            <div class="d-flex gap-2">
-                                                                <button class="btn btn-primary btn-sm text-white" onclick="generateMatchPIN({{ $match->id }})">PIN</button>
-                                                                @if ($match->status != 'completed')
-                                                                    <button class="btn btn-secondary btn-sm text-white" onclick="openAddRoundModal({{ $match->id }})">Add Winner</button>
-                                                                @endif
-                                                            </div>
-            
-                                                            <!-- Team B -->
-                                                            <div class="bracket-team d-flex align-items-center gap-2 {{ $match->winner_team_id == $match->team_b_id ? 'fw-bold text-success' : '' }}">
-                                                                <span class="bracket-team-name">{{ $match->teamB->team_name ?? 'TBD' }}</span>
-                                                                @if (isset($match->score_b))
-                                                                    <span class="badge bg-secondary">{{ $match->score_b }}</span>
-                                                                @endif
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endforeach
+                        <div class="tournament-match-card-container">
+                
+                            {{-- Header --}}
+                            <div class="tournament-match-header-section">
+                                <h2 class="tournament-match-name-primary">
+                                    {{ $tournament->name }}
+                                </h2>
+                
+                                <span class="tournament-match-type-label">
+                                    {{ ucfirst($tournament->type) }}
+                                    • {{ $tournament->event->name ?? 'N/A' }}
+                                </span>
+                            </div>
+                
+                
+                            {{-- Rounds --}}
+                            <div class="d-flex flex-column gap-4">
+                
+                                @foreach ($tournament->matches->groupBy('round_no') as $roundNo => $matches)
+                
+                                    @php
+                                        $maxRound = $tournament->matches->max('round_no');
+                                    @endphp
+                
+                                    <div>
+                                        <div class="fw-bold mb-3 text-center text-secondary">
+                                            @if ($roundNo == $maxRound)
+                                                Champion
+                                            @elseif($roundNo == $maxRound - 1)
+                                                Finals
+                                            @elseif($roundNo == $maxRound - 2)
+                                                Semifinals
+                                            @else
+                                                Round {{ $roundNo }}
+                                            @endif
                                         </div>
+                
+                
+                                        @foreach ($matches as $match)
+                
+                                            <div class="tournament-match-card-container {{ $match->winner_team_id ? 'tournament-completed-match-state' : '' }} mb-3">
+                
+                                                {{-- Teams layout (uses your dashboard structure exactly) --}}
+                                                <div class="tournament-teams-versus-section">
+                
+                                                    {{-- Team A --}}
+                                                    <div
+                                                        class="tournament-team-display-block
+                                                        {{ $match->winner_team_id == $match->team_a_id ? 'tournament-winning-team-state' : '' }}
+                                                        {{ $match->winner_team_id && $match->winner_team_id != $match->team_a_id ? 'tournament-losing-team-state' : '' }}">
+                
+                                                        <div class="tournament-team-name-text">
+                                                            {{ $match->teamA->team_name ?? 'TBD' }}
+                                                            @if(isset($match->score_a))
+                                                                ({{ $match->score_a }})
+                                                            @endif
+                                                        </div>
+                
+                                                        <div class="tournament-winner-badge-indicator">★</div>
+                                                    </div>
+                
+                
+                                                    {{-- VS Badge --}}
+                                                    <div class="tournament-versus-image-container">
+                                                        <div class="tournament-versus-badge-graphic">
+                                                            VS
+                                                        </div>
+                                                    </div>
+                
+                
+                                                    {{-- Team B --}}
+                                                    <div
+                                                        class="tournament-team-display-block
+                                                        {{ $match->winner_team_id == $match->team_b_id ? 'tournament-winning-team-state' : '' }}
+                                                        {{ $match->winner_team_id && $match->winner_team_id != $match->team_b_id ? 'tournament-losing-team-state' : '' }}">
+                
+                                                        <div class="tournament-team-name-text">
+                                                            {{ $match->teamB->team_name ?? 'TBD' }}
+                                                            @if(isset($match->score_b))
+                                                                ({{ $match->score_b }})
+                                                            @endif
+                                                        </div>
+                
+                                                        <div class="tournament-winner-badge-indicator">★</div>
+                                                    </div>
+                
+                                                </div>
+                
+                
+                                                {{-- Actions (same backend calls preserved) --}}
+                                                <div class="tournament-match-actions-section">
+                
+                                                    <button
+                                                        class="tournament-pin-match-button"
+                                                        onclick="generateMatchPIN({{ $match->id }})">
+                                                        Pin Match
+                                                    </button>
+                
+                                                    @if ($match->status != 'completed')
+                                                        <button
+                                                            class="tournament-select-winner-button"
+                                                            onclick="openAddRoundModal({{ $match->id }})">
+                                                            Select Winner
+                                                        </button>
+                                                    @else
+                                                        <button
+                                                            class="tournament-select-winner-button"
+                                                            disabled>
+                                                            Winner Selected
+                                                        </button>
+                                                    @endif
+                
+                                                </div>
+                
+                                            </div>
+                
+                                        @endforeach
                                     </div>
-                                </div>
+                
+                                @endforeach
+                
                             </div>
                         </div>
+                
                     @empty
                         <p class="text-center text-white">No tournaments found.</p>
                     @endforelse
                 </div>
+                
             </div>
             
         </section>

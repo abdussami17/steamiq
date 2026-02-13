@@ -1,18 +1,19 @@
 <?php
 
-use Illuminate\Http\Request;
 use App\Exports\LeaderboardExport;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TeamController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\MatchController;
-use App\Http\Controllers\ScoreController;
-use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\LeaderboardController;
+use App\Http\Controllers\MatchController;
+use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PlayerController;
+use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TournamentController;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -91,6 +92,15 @@ Route::get('/matches/teams', [MatchController::class, 'fetchTeams'])->name('matc
 Route::post('/matches/{match}/round', [MatchController::class, 'addRound'])->name('matches.round');
 Route::get('/matches/export/all', [MatchController::class, 'exportAllSchedule'])
     ->name('matches.export.all');
+
+
+
+    // Organization Routes
+    Route::post('/organization/store',[OrganizationController::class,'store'])->name('organizations.store');
+    Route::delete('/organizations/{organization}', 
+    [OrganizationController::class, 'destroy']
+)->name('organizations.destroy');
+Route::get('/organizations/list', [TeamController::class, 'list']);
 
 
 
