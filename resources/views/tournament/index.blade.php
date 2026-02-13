@@ -19,7 +19,6 @@
                     @forelse($tournaments as $tournament)
                         <div class="tournament-match-card-container">
                 
-                            {{-- Header --}}
                             <div class="tournament-match-header-section">
                                 <h2 class="tournament-match-name-primary">
                                     {{ $tournament->name }}
@@ -31,8 +30,6 @@
                                 </span>
                             </div>
                 
-                
-                            {{-- Rounds --}}
                             <div class="d-flex flex-column gap-4">
                 
                                 @foreach ($tournament->matches->groupBy('round_no') as $roundNo => $matches)
@@ -54,21 +51,18 @@
                                             @endif
                                         </div>
                 
-                
                                         @foreach ($matches as $match)
                 
-                                            <div class="tournament-match-card-container {{ $match->winner_team_id ? 'tournament-completed-match-state' : '' }} mb-3">
+                                            <div class="tournament-match-card-container {{ $match->winner_team_id ? 'tournament-completed-match-state' : '' }} mb-3" id="match-{{ $match->id }}">
                 
-                                                {{-- Teams layout (uses your dashboard structure exactly) --}}
                                                 <div class="tournament-teams-versus-section">
                 
-                                                    {{-- Team A --}}
                                                     <div
                                                         class="tournament-team-display-block
                                                         {{ $match->winner_team_id == $match->team_a_id ? 'tournament-winning-team-state' : '' }}
                                                         {{ $match->winner_team_id && $match->winner_team_id != $match->team_a_id ? 'tournament-losing-team-state' : '' }}">
                 
-                                                        <div class="tournament-team-name-text">
+                                                        <div class="tournament-team-name-text" data-team-id="{{ $match->team_a_id }}">
                                                             {{ $match->teamA->team_name ?? 'TBD' }}
                                                             @if(isset($match->score_a))
                                                                 ({{ $match->score_a }})
@@ -78,22 +72,18 @@
                                                         <div class="tournament-winner-badge-indicator">★</div>
                                                     </div>
                 
-                
-                                                    {{-- VS Badge --}}
                                                     <div class="tournament-versus-image-container">
                                                         <div class="tournament-versus-badge-graphic">
-                                                            VS
+                                                            <img src="{{ asset('assets/vers.png') }}" alt="image">
                                                         </div>
                                                     </div>
                 
-                
-                                                    {{-- Team B --}}
                                                     <div
                                                         class="tournament-team-display-block
                                                         {{ $match->winner_team_id == $match->team_b_id ? 'tournament-winning-team-state' : '' }}
                                                         {{ $match->winner_team_id && $match->winner_team_id != $match->team_b_id ? 'tournament-losing-team-state' : '' }}">
                 
-                                                        <div class="tournament-team-name-text">
+                                                        <div class="tournament-team-name-text" data-team-id="{{ $match->team_b_id }}">
                                                             {{ $match->teamB->team_name ?? 'TBD' }}
                                                             @if(isset($match->score_b))
                                                                 ({{ $match->score_b }})
@@ -105,8 +95,6 @@
                 
                                                 </div>
                 
-                
-                                                {{-- Actions (same backend calls preserved) --}}
                                                 <div class="tournament-match-actions-section">
                 
                                                     <button
@@ -118,7 +106,7 @@
                                                     @if ($match->status != 'completed')
                                                         <button
                                                             class="tournament-select-winner-button"
-                                                            onclick="openAddRoundModal({{ $match->id }})">
+                                                            onclick="openSelectWinnerModal({{ $match->id }})">
                                                             Select Winner
                                                         </button>
                                                     @else
@@ -151,36 +139,46 @@
         </section>
     </div>
 
-
-    <!-- Add Winner Modal -->
-    <div class="modal fade" id="addRoundModal" tabindex="-1" aria-labelledby="addRoundModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal fade" id="selectWinnerModal" tabindex="-1" aria-labelledby="selectWinnerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addRoundModalLabel">Select Winner</h5>
+                    <h5 class="modal-title" id="selectWinnerModalLabel">Select Winner</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="roundWinner" class="form-label">Winner</label>
-                        <select class="form-select" id="roundWinner">
+                        <label for="winnerSelect" class="form-label">Choose winning team</label>
+                        <select class="form-select" id="winnerSelect">
                             <option value="">-- Select Winner --</option>
-                            <!-- Options dynamically filled via JS -->
                         </select>
                     </div>
                 </div>
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary w-100" onclick="submitRound()">Submit</button>
+                    <button type="button" class="btn btn-primary" onclick="submitWinner()">Submit Winner</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="modal fade" id="pinModal" tabindex="-1" aria-labelledby="pinModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pinModalLabel">Match PIN</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div id="pinDisplay" style="font-size: 36px; font-weight: bold; letter-spacing: 5px;color:#fff"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Create Tournament Modal -->
     <div id="createTournamentModal" class="modal fade" tabindex="-1">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content p-3">
@@ -224,63 +222,94 @@
     </div>
 
     <script>
-        let currentMatchId;
+        let currentMatchIdForWinner = null;
+        let currentMatchIdForPin = null;
 
-        function openAddRoundModal(matchId) {
-            currentMatchId = matchId;
-
-            const matchRow = document.querySelector(`.bracket-match button[onclick="openAddRoundModal(${matchId})"]`)
-                .closest('.bracket-match');
-            const teamA = matchRow.querySelectorAll('.bracket-team .bracket-team-name')[0].innerText;
-            const teamB = matchRow.querySelectorAll('.bracket-team .bracket-team-name')[1].innerText;
-
-            const select = document.getElementById('roundWinner');
-            select.innerHTML = `<option value="">-- Select Winner --</option>
-                        <option value="teamA">${teamA}</option>
-                        <option value="teamB">${teamB}</option>`;
-
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('addRoundModal')).show();
+        function openSelectWinnerModal(matchId) {
+            currentMatchIdForWinner = matchId;
+            const matchElement = document.getElementById(`match-${matchId}`);
+            const teamElements = matchElement.querySelectorAll('.tournament-team-name-text');
+            
+            const teamAElement = teamElements[0];
+            const teamBElement = teamElements[1];
+            
+            const teamAName = teamAElement.childNodes[0].nodeValue.trim();
+            const teamBName = teamBElement.childNodes[0].nodeValue.trim();
+            const teamAId = teamAElement.getAttribute('data-team-id');
+            const teamBId = teamBElement.getAttribute('data-team-id');
+            
+            const select = document.getElementById('winnerSelect');
+            select.innerHTML = `
+                <option value="">-- Select Winner --</option>
+                <option value="${teamAId}">${teamAName}</option>
+                <option value="${teamBId}">${teamBName}</option>
+            `;
+            
+            const modal = new bootstrap.Modal(document.getElementById('selectWinnerModal'));
+            modal.show();
         }
 
-        async function submitRound() {
-            const winnerOption = document.getElementById('roundWinner').value;
-            if (!winnerOption) return alert('Select winner');
+        async function submitWinner() {
+            const winnerId = document.getElementById('winnerSelect').value;
+            if (!winnerId) {
+                alert('Please select a winner');
+                return;
+            }
 
-            const matchRow = document.querySelector(
-                `.bracket-match button[onclick="openAddRoundModal(${currentMatchId})"]`).closest('.bracket-match');
-            const teamId = winnerOption === 'teamA' ?
-                matchRow.querySelectorAll('.bracket-team')[0].dataset.id :
-                matchRow.querySelectorAll('.bracket-team')[1].dataset.id;
+            try {
+                const response = await fetch(`/tournament-match/${currentMatchIdForWinner}/winner`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ winner_team_id: winnerId })
+                });
 
-            const res = await fetch(`/tournament-match/${currentMatchId}/winner`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    winner_team_id: teamId
-                })
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                alert('Winner updated!');
-                location.reload();
-            } else {
-                alert('Failed to update winner');
+                const data = await response.json();
+                
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('selectWinnerModal')).hide();
+                    location.reload();
+                } else {
+                    alert('Failed to update winner: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error updating winner: ' + error.message);
             }
         }
 
         async function generateMatchPIN(matchId) {
-            const res = await fetch(`/tournament-match/${matchId}/pin`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                }
-            });
-            const data = await res.json();
-            if (data.success) alert('Match PIN: ' + data.pin);
+    try {
+        const response = await fetch(`/tournament-match/${matchId}/pin`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Server error: ' + response.status);
         }
+
+        const { success, pin } = await response.json();
+
+        if (!success) {
+            throw new Error('Failed to generate PIN');
+        }
+
+        document.getElementById('pinDisplay').textContent = pin;
+
+        bootstrap.Modal
+            .getOrCreateInstance(document.getElementById('pinModal'))
+            .show();
+
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+
     </script>
 @endsection

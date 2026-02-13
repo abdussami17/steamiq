@@ -31,9 +31,10 @@ class EventController extends Controller
 
                        $challenges = Challenges::all();
                        $organizations = Organization::all(); // fetch all
+                       $groups = \App\Models\Group::with('team')->latest()->get();
             
     
-        return view('events.index', compact('players','organizations','allevents','events','challenges','allplayers'));
+        return view('events.index', compact('players','groups','organizations','allevents','events','challenges','allplayers'));
     }
     
 

@@ -187,4 +187,12 @@ class TeamController extends Controller
     );
 }
 
+
+public function listTeam()
+{
+    return response()->json(
+        \App\Models\Team::select('id','team_name')->get()
+    );
+}
+
 }

@@ -82,9 +82,16 @@ class TournamentController extends Controller
     public function generatePIN($matchId)
     {
         $match = TournamentMatch::findOrFail($matchId);
+    
         $match->pin = rand(1000,9999);
         $match->save();
-
-        return response()->json(['success'=>true,'pin'=>$match->pin]);
+    
+        return response()->json([
+            'success' => true,
+            'pin' => $match->pin
+        ]);
     }
+    
+    
+    
 }

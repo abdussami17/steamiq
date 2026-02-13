@@ -1,14 +1,17 @@
 :root {
-    --primary: #00ff88;
-    --secondary: #ff0080;
-    --accent: #00d4ff;
+    --primary: #ffffff;
+
+    --secondary: #b0b0b0;
+    --accent: #e0e0e0;
+    
     --dark: #0a0e1a;
     --darker: #050810;
     --card: #151b2e;
     --text: #e8edf5;
     --text-dim: #8b95ab;
-    --border: rgba(0, 255, 136, 0.2);
-    --glow: rgba(0, 255, 136, 0.3);
+    --border: rgba(255, 255, 255, 0.2);
+    --glow: rgba(255, 255, 255, 0.3);
+
 }
 
 * {
@@ -29,21 +32,27 @@ body {
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', sans-serif;
 }
-
-.bg-pattern {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: 
-        radial-gradient(circle at 20% 30%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(255, 0, 128, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 70%),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 136, 0.03) 2px, rgba(0, 255, 136, 0.03) 4px);
-    pointer-events: none;
-    z-index: 0;
-}
+    .bg-pattern {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #0d0d0d;
+        background:
+            radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 0%, transparent 50%),
+            radial-gradient(circle at 80% 70%, rgba(200,200,200,0.04) 0%, transparent 50%),
+            radial-gradient(circle at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 70%),
+            repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(255,255,255,0.02) 2px,
+                rgba(255,255,255,0.02) 4px
+            );
+        pointer-events: none;
+        z-index: 0;
+    }
 
 .bg-pattern::before {
     content: '';
@@ -52,9 +61,9 @@ h1, h2, h3, h4, h5, h6 {
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
-        radial-gradient(circle at 10% 80%, rgba(255, 0, 128, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 90% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 40%);
+    background:
+        radial-gradient(circle at 10% 80%, rgba(255,255,255,0.06) 0%, transparent 40%),
+        radial-gradient(circle at 90% 20%, rgba(180,180,180,0.05) 0%, transparent 40%);
     animation: bgPulse 10s ease-in-out infinite;
 }
 
@@ -73,18 +82,19 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Header */
 header {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(21, 27, 46, 0.95) 100%);
+    background: linear-gradient(135deg, #161616 0%, rgba(28, 28, 28, 0.96) 100%);
     border-bottom: 2px solid var(--border);
     padding: 1.5rem 0;
     position: sticky;
     top: 0;
     z-index: 100;
     backdrop-filter: blur(20px);
-    box-shadow: 
-        0 10px 40px rgba(0, 0, 0, 0.3),
-        0 0 100px rgba(0, 255, 136, 0.05),
-        inset 0 -1px 0 rgba(0, 255, 136, 0.1);
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.55),
+        0 0 80px rgba(255,255,255,0.03),
+        inset 0 -1px 0 rgba(255,255,255,0.05);
 }
+
 
 header::before {
     content: '';
@@ -93,9 +103,10 @@ header::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.03), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
     animation: headerShimmer 3s ease-in-out infinite;
 }
+
 
 @keyframes headerShimmer {
     0%, 100% { transform: translateX(-100%); }
@@ -129,7 +140,7 @@ header::before {
     box-shadow: 
         0 0 30px var(--glow),
         0 10px 30px rgba(0, 0, 0, 0.4),
-        inset 0 -5px 15px rgba(0, 0, 0, 0.2),
+        inset 0 -5px 15px rgba(0, 0, 0, 0.2),   
         inset 0 5px 15px rgba(255, 255, 255, 0.1);
     animation: pulse 3s ease-in-out infinite;
     position: relative;
@@ -143,7 +154,7 @@ header::before {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     animation: logoShine 3s ease-in-out infinite;
 }
 
@@ -154,8 +165,9 @@ header::before {
 
 @keyframes pulse {
     0%, 100% { box-shadow: 0 0 20px var(--glow); }
-    50% { box-shadow: 0 0 30px var(--glow), 0 0 40px rgba(0, 255, 136, 0.2); }
+    50% { box-shadow: 0 0 30px var(--glow), 0 0 40px rgba(255, 255, 255, 0.2); }
 }
+
 
 .logo-text h1 {
     font-size: 1.8rem;
@@ -251,6 +263,8 @@ main {
     border-radius: 10px;
     display: flex;
     align-items: center;
+    color: #000;
+    fill: #000;
     justify-content: center;
     font-size: 1.2rem;
 }
@@ -292,45 +306,36 @@ main {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: var(--dark);
-    box-shadow: 
-        0 4px 15px rgba(0, 255, 136, 0.4),
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        inset 0 -2px 8px rgba(0, 0, 0, 0.2),
-        inset 0 2px 8px rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+color: var(--dark);
 }
 
 .btn-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 
-        0 8px 25px rgba(0, 255, 136, 0.5),
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 -2px 8px rgba(0, 0, 0, 0.2),
-        inset 0 2px 8px rgba(255, 255, 255, 0.3);
-        color: var(--dark);
+color: #000;
 }
 
 .btn-primary:active {
     transform: translateY(-1px);
 }
-
 .btn-secondary {
-    background: linear-gradient(135deg, var(--card), rgba(21, 27, 46, 0.8));
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a, rgba(28, 28, 28, 0.8));
+    color: #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 
         0 2px 10px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-    border-color: var(--primary);
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.1));
+    border-color: rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
     box-shadow: 
-        0 4px 15px rgba(0, 255, 136, 0.2),
+        0 4px 15px rgba(255, 255, 255, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
+
 
 .btn-danger {
     background: linear-gradient(135deg, var(--secondary), #ff4444);
@@ -356,10 +361,9 @@ main {
     gap: 1.5rem;
 }
 
-
 .card {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(21, 27, 46, 0.8) 100%);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a 0%, rgba(28, 28, 28, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 1.5rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -367,7 +371,7 @@ main {
     overflow: hidden;
     box-shadow: 
         0 4px 20px rgba(0, 0, 0, 0.3),
-        0 0 40px rgba(0, 255, 136, 0.05),
+        0 0 40px rgba(255, 255, 255, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -378,10 +382,10 @@ main {
     left: 0;
     width: 100%;
     height: 3px;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), rgba(230, 230, 230, 0.3));
     transform: scaleX(0);
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 0 10px var(--glow);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
 }
 
 .card::after {
@@ -391,18 +395,18 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(0, 255, 136, 0.08) 0%, transparent 50%);
+    background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.08) 0%, transparent 50%);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
 }
 
 .card:hover {
-    border-color: var(--primary);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-8px) scale(1.02);
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.5),
-        0 0 60px rgba(0, 255, 136, 0.2),
+        0 0 60px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -426,8 +430,9 @@ main {
     gap: 0.5rem;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(0, 255, 136, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 
 .btn-icon {
     width: 36px;
@@ -448,19 +453,19 @@ main {
 .btn-edit {
     background: rgba(0, 212, 255, 0.2);
     color: var(--accent);
-    border: 1px solid var(--accent);
+    /* border: 1px solid var(--accent); */
 }
 
 .btn-delete {
     background: rgba(255, 0, 128, 0.2);
     color: var(--secondary);
-    border: 1px solid var(--secondary);
+    /* border: 1px solid var(--secondary); */
 }
 
 .btn-view {
     background: rgba(0, 255, 136, 0.2);
     color: var(--primary);
-    border: 1px solid var(--primary);
+    /* border: 1px solid var(--primary); */
 }
 
 .card-title {
@@ -470,7 +475,7 @@ main {
 }
 
 .badge {
-    padding: 0.25rem 0.75rem;
+    padding: 0.50rem 1rem;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -482,19 +487,19 @@ main {
 .badge-live {
     background: rgba(0, 255, 136, 0.2);
     color: var(--primary);
-    border: 1px solid var(--primary);
+    /* border: 1px solid var(--primary); */
 }
 
 .badge-draft , .badge-scheduled{
     background: rgba(139, 149, 171, 0.2);
     color: var(--text-dim);
-    border: 1px solid var(--text-dim);
+    /* border: 1px solid var(--text-dim); */
 }
 
 .badge-closed ,  .badge-completed {
     background: rgba(255, 0, 128, 0.2);
     color: var(--secondary);
-    border: 1px solid var(--secondary);
+    /* border: 1px solid var(--secondary); */
 }
 
 /* Stats */
@@ -504,26 +509,29 @@ main {
     gap: 1rem;
     margin-top: 1rem;
 }
-
 .stat {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 255, 136, 0.03));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
     padding: 1rem;
     border-radius: 10px;
-    border: 1px solid rgba(0, 255, 136, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.3s ease;
     box-shadow: 
         0 4px 15px rgba(0, 0, 0, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        cursor: pointer;
 }
 
 .stat:hover {
-    transform: translateY(-2px);
-    border-color: var(--primary);
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.3);
     box-shadow: 
-        0 8px 25px rgba(0, 0, 0, 0.3),
-        0 0 30px rgba(0, 255, 136, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        0 12px 35px rgba(0, 0, 0, 0.35),
+        0 0 50px rgba(255, 255, 255, 0.15),
+        inset 0 1px 2px rgba(255, 255, 255, 0.15),
+        inset 0 -2px 5px rgba(255, 255, 255, 0.08);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 
 .stat-label {
     font-size: 0.85rem;
@@ -542,19 +550,17 @@ main {
 
 /* Modal */
 
-
 .modal-content {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(21, 27, 46, 0.98) 100%);
-    border: 2px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a 0%, rgba(28, 28, 28, 0.98) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
     padding: 2rem;
-    
     overflow-y: auto;
     animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.5),
-        0 0 80px rgba(0, 255, 136, 0.1),
+        0 0 80px rgba(255, 255, 255, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -565,7 +571,7 @@ main {
     left: 0;
     width: 100%;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), rgba(230, 230, 230, 0.2), transparent);
 }
 
 @keyframes slideUp {
@@ -585,8 +591,9 @@ main {
     align-items: center;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 
 .modal-title {
     font-size: 1.8rem;
@@ -613,16 +620,15 @@ main {
     color: var(--text);
     font-size: 0.95rem;
 }
-
 .form-input,
 .form-select,
 .form-textarea {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: var(--dark);
-    border: 1px solid var(--border);
+    background: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    color: var(--text);
+    color: #e0e0e0;
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
     transition: all 0.3s ease;
@@ -632,8 +638,8 @@ main {
 .form-select:focus,
 .form-textarea:focus {
     outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .form-textarea {
@@ -641,16 +647,16 @@ main {
     min-height: 100px;
 }
 
-/* Table / Spreadsheet Grid */
+
 .spreadsheet-container {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(21, 27, 46, 0.95) 100%);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a 0%, rgba(28, 28, 28, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 1.5rem;
     overflow-x: auto;
     box-shadow: 
         0 10px 40px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(0, 255, 136, 0.05),
+        0 0 60px rgba(255, 255, 255, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -669,8 +675,8 @@ main {
 }
 
 .data-table th {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: var(--dark);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(230, 230, 230, 0.1));
+    color: #e0e0e0;
     padding: 0.75rem 1rem;
     text-align: left;
     font-weight: 700;
@@ -693,14 +699,16 @@ main {
 
 .data-table td {
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(0, 255, 136, 0.1);
-    background: var(--dark);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1a1a1a;
     font-family: "Space Mono" !important;
+    color: #e0e0e0;
 }
 
 .data-table tr:hover td {
-    background: rgba(0, 255, 136, 0.05);
+    background: rgba(255, 255, 255, 0.05);
 }
+
 
 .data-table input {
     background: transparent;
@@ -725,10 +733,9 @@ main {
     gap: 1.5rem;
     margin-top: 2rem;
 }
-
 .cam-card {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(21, 27, 46, 0.9) 100%);
-    border: 2px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a 0%, rgba(28, 28, 28, 0.9) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     padding: 1.5rem;
     text-align: center;
@@ -737,7 +744,7 @@ main {
     overflow: hidden;
     box-shadow: 
         0 8px 30px rgba(0, 0, 0, 0.3),
-        0 0 40px rgba(0, 255, 136, 0.05),
+        0 0 40px rgba(255, 255, 255, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -748,7 +755,7 @@ main {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
     opacity: 0;
     transition: opacity 0.4s ease;
 }
@@ -760,7 +767,7 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, transparent 30%, rgba(0, 255, 136, 0.1) 50%, transparent 70%);
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
     transform: translateX(-100%);
     transition: transform 0.6s ease;
 }
@@ -774,11 +781,11 @@ main {
 }
 
 .cam-card:hover {
-    border-color: var(--primary);
+    border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-10px) scale(1.03);
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.5),
-        0 0 80px rgba(0, 255, 136, 0.3),
+        0 0 80px rgba(255, 255, 255, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -786,29 +793,30 @@ main {
     width: 80px;
     height: 80px;
     margin: 0 auto 1rem;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: linear-gradient(135deg, #e0e0e0, #ffffff);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 2rem;
     position: relative;
+    color: #000;
     z-index: 1;
     box-shadow: 
-        0 10px 30px rgba(0, 255, 136, 0.4),
-        0 0 40px rgba(0, 255, 136, 0.2),
+        0 10px 30px rgba(255, 255, 255, 0.2),
+        0 0 40px rgba(255, 255, 255, 0.1),
         inset 0 -5px 20px rgba(0, 0, 0, 0.3),
-        inset 0 5px 20px rgba(255, 255, 255, 0.2);
+        inset 0 5px 20px rgba(255, 255, 255, 0.1);
     transition: all 0.4s ease;
 }
 
 .cam-card:hover .cam-icon {
     transform: scale(1.1) rotateY(180deg);
     box-shadow: 
-        0 15px 40px rgba(0, 255, 136, 0.6),
-        0 0 60px rgba(0, 255, 136, 0.3),
+        0 15px 40px rgba(255, 255, 255, 0.25),
+        0 0 60px rgba(255, 255, 255, 0.15),
         inset 0 -5px 20px rgba(0, 0, 0, 0.3),
-        inset 0 5px 20px rgba(255, 255, 255, 0.3);
+        inset 0 5px 20px rgba(255, 255, 255, 0.15);
 }
 
 .cam-title {
@@ -910,17 +918,15 @@ main {
     color: var(--primary);
     margin-left: 1rem;
 }
-
-/* Leaderboard */
 .leaderboard {
-    background: linear-gradient(135deg, var(--card) 0%, rgba(21, 27, 46, 0.95) 100%);
-    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a 0%, rgba(28, 28, 28, 0.95) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
     overflow: hidden;
     font-family: "Space Mono";
     box-shadow: 
         0 10px 40px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(0, 255, 136, 0.05),
+        0 0 60px rgba(255, 255, 255, 0.05),
         inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
@@ -929,24 +935,25 @@ main {
     grid-template-columns: 60px 1fr 100px 100px 100px 100px 120px;
     gap: 1rem;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     align-items: center;
     transition: all 0.3s ease;
 }
 
 .leaderboard-item:hover {
-    background: rgba(0, 255, 136, 0.05);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .leaderboard-item.header {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
-    color: var(--dark);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(230, 230, 230, 0.1));
+    color: #e0e0e0;
     font-weight: 700;
     font-family: 'Poppins', sans-serif;
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 1px;
 }
+
 
 .leaderboard-rank {
     font-size: 1.5rem;
@@ -1261,8 +1268,8 @@ main {
 }
 
 .nav-link-custom:hover {
-    color: var(--primary);
-    background: rgba(0, 255, 136, 0.1);
+    color: #000;
+    background: #fff;
 }
 
 button.nav-link-custom

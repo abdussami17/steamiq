@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\GroupController;
 use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\OrganizationController;
@@ -102,6 +103,11 @@ Route::get('/matches/export/all', [MatchController::class, 'exportAllSchedule'])
 )->name('organizations.destroy');
 Route::get('/organizations/list', [TeamController::class, 'list']);
 
+
+// Groupes Routes
+Route::post('/groups', [GroupController::class, 'store'])->name('groups.store');
+Route::get('/teams/list', [TeamController::class, 'listTeam'])->name('teams.list');
+Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
 
 
         // Leaderboard routes

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class TournamentMatch extends Model
 {
     protected $fillable = [
-        'tournament_id','team_a_id','team_b_id','winner_team_id','round_no','status','game_title','format','scheduled_at'
+        'tournament_id','team_a_id','team_b_id','winner_team_id','round_no','status','game_title','format','pin','scheduled_at'
     ];
 
     public function tournament()

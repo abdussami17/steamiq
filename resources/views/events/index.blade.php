@@ -190,82 +190,138 @@
                     </div>
                 </div>
             </div>
-   <!-- Organizations Tab -->
-   <div id="organizations-tab" class="tab-content">
-    <div class="spreadsheet-container">
-        <div class="spreadsheet-toolbar">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrganizationModal">
-                <i data-lucide="plus"></i> Add Organization
-            </button>
+            <!-- Organizations Tab -->
+            <div id="organizations-tab" class="tab-content">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrganizationModal">
+                            <i data-lucide="plus"></i> Add Organization
+                        </button>
 
-        </div>
+                    </div>
 
 
-<table class="data-table">
-<thead>
-    <tr>
-        <th>Profile</th>
-        <th>Name</th>
-        <th>Address</th>
-        <th>Email</th>
-        <th width="120">Actions</th>
-    </tr>
-</thead>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Email</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
 
-<tbody>
-    @forelse($organizations as $org)
-        <tr>
+                        <tbody>
+                            @forelse($organizations as $org)
+                                <tr>
 
-            {{-- Profile --}}
-            <td>
-                @if($org->profile)
-                    <img src="{{ asset('storage/'.$org->profile) }}"
-                         width="50"
-                         height="50"
-                         style="object-fit:cover;border-radius:50%;">
-                @else
-                    N/A
-                @endif
-            </td>
+                                    {{-- Profile --}}
+                                    <td>
+                                        @if ($org->profile)
+                                            <img src="{{ asset('storage/' . $org->profile) }}" width="50"
+                                                height="50" style="object-fit:cover;border-radius:50%;">
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
 
-            {{-- Name --}}
-            <td>{{ $org->name ?: 'N/A' }}</td>
+                                    {{-- Name --}}
+                                    <td>{{ $org->name ?: 'N/A' }}</td>
 
-            {{-- Address --}}
-            <td>{{ $org->address ?: 'N/A' }}</td>
+                                    {{-- Address --}}
+                                    <td>{{ $org->address ?: 'N/A' }}</td>
 
-            {{-- Email --}}
-            <td>{{ $org->email ?: 'N/A' }}</td>
+                                    {{-- Email --}}
+                                    <td>{{ $org->email ?: 'N/A' }}</td>
 
-            {{-- Delete --}}
-            <td>
-                <form action="{{ route('organizations.destroy', $org->id) }}"
-                      method="POST"
-                      onsubmit="return confirm('Are you sure you want to delete this organization?')">
+                                    {{-- Delete --}}
+                                    <td>
+                                        <form action="{{ route('organizations.destroy', $org->id) }}" method="POST"
+                                            onsubmit="return confirm('Are you sure you want to delete this organization?')">
 
-                    @csrf
-                    @method('DELETE')
+                                            @csrf
+                                            @method('DELETE')
 
-                    <button type="submit" class="btn btn-icon btn-delete">
-                        <i data-lucide="trash-2"></i>
-                    </button>
-                </form>
-            </td>
+                                            <button type="submit" class="btn btn-icon btn-delete">
+                                                <i data-lucide="trash-2"></i>
+                                            </button>
+                                        </form>
+                                    </td>
 
-        </tr>
-    @empty
-        <tr>
-            <td colspan="5" class="text-center text-muted py-4">
-                No organizations available
-            </td>
-        </tr>
-    @endforelse
-</tbody>
-</table>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No organizations available
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
 
-        
-    </div>
-</div>
+
+                </div>
+            </div>
+              <!-- Organizations Tab -->
+              <div id="groups-tab" class="tab-content">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                            <i data-lucide="plus"></i> Add Group
+                        </button>
+
+                    </div>
+
+
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Group Name</th>
+                            <th>Team Name</th>
+                            <th width="120">Actions</th>
+                        </tr>
+                    </thead>
+                
+                    <tbody>
+                        @forelse($groups as $group)
+                            <tr>
+                                <td>{{ $group->id }}</td>
+                
+                                <td>{{ $group->group_name ?: 'N/A' }}</td>
+                
+                                <td>{{ $group->team->team_name ?? 'N/A' }}</td>
+                
+                                <td>
+                                    <form action="{{ route('groups.destroy', $group->id) }}"
+                                          method="POST"
+                                          onsubmit="return confirm('Delete this group?')">
+                
+                                        @csrf
+                                        @method('DELETE')
+                
+                                        <button class="btn btn-icon btn-delete">
+                                            <i data-lucide="trash-2"></i>
+
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center text-white py-4">
+                                    No groups available
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                
+
+                </div>
+            </div>
 
         </section>
 
@@ -290,6 +346,7 @@
 @include('events.modals.match-pin')
 @include('events.modals.add-round')
 @include('events.modals.create-organization')
+@include('events.modals.create-group')
 @include('events.score-script')
 @include('events.challenge-script')
 @include('events.matches-script')

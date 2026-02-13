@@ -65,27 +65,7 @@
             overflow: hidden;
         }
 
-        .tournament-match-card-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ffffff 0%, #666666 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
 
-        .tournament-match-card-container:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-            border-color: #3a3a3a;
-        }
-
-        .tournament-match-card-container:hover::before {
-            opacity: 1;
-        }
 
         .tournament-match-card-container.tournament-pinned-match-state {
             border-color: #ffffff;
@@ -194,28 +174,13 @@
         }
 
         .tournament-versus-badge-graphic {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 3px solid #3a3a3a;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-            position: relative;
-            transition: all 0.3s ease;
-        }
+            width: 100px;
+            height: 100px;
 
-        .tournament-versus-badge-graphic::before {
-            content: '';
-            position: absolute;
-            inset: -6px;
-            background: linear-gradient(135deg, #ffffff 0%, #666666 100%);
-            border-radius: 50%;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        }
+        .tournament-versus-badge-graphic img{
+            widows: 100%;
+            height: 100%
         }
 
         .tournament-match-card-container:hover .tournament-versus-badge-graphic::before {
