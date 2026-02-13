@@ -8,6 +8,8 @@ use App\Exports\TeamsExport;
 use App\Imports\TeamsImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+
 
 
 
@@ -22,28 +24,38 @@ class TeamController extends Controller
         return response()->json($players);
     }
 
+
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'team_name'       => 'required|string|max:255',
             'event_id'        => 'required|exists:events,id',
             'organization_id' => 'required|exists:organizations,id',
             'players'         => 'required|array|min:1',
-            'players.*'       => 'exists:players,id'
+            'players.*'       => 'exists:players,id',
+    
+            // NEW
+            'profile'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
+    
+        $profilePath = null;
+    
+        if ($request->hasFile('profile')) {
+            $profilePath = $request->file('profile')->store('teams', 'public');
+        }
     
         $team = Team::create([
-            'team_name'       => $request->team_name,
-            'event_id'        => $request->event_id,
-            'organization_id' => $request->organization_id,
+            'team_name'       => $validated['team_name'],
+            'event_id'        => $validated['event_id'],
+            'organization_id' => $validated['organization_id'],
+            'profile'         => $profilePath,
         ]);
     
-        $team->players()->attach($request->players);
+        $team->players()->attach($validated['players']);
     
         return back()->with('success', 'Team created successfully.');
     }
     
-
    
 
     public function teamsData()
@@ -65,7 +77,8 @@ class TeamController extends Controller
                 'id' => $team->id,
                 'team_name' => $team->team_name ?? 'N/A',
                 'members_count' => $memberCount ?: 0,
-                'total_points' => $totalPoints ?: 0
+                'total_points' => $totalPoints ?: 0,
+                'profile' => $team->profile
             ];
         });
     

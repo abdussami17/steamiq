@@ -1,6 +1,6 @@
 <div class="modal fade" id="add_team" tabindex="-1" aria-labelledby="teamModalTitle" aria-hidden="true">
 
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -9,15 +9,25 @@
             </div>
 
             <div class="modal-body">
-                <form id="teamForm" method="POST" action="{{ route('teams.store') }}">
+                <form id="teamForm" method="POST" action="{{ route('teams.store') }}" enctype="multipart/form-data">
+
                     @csrf
 
-                    <div class="mb-3">
+                   <div class="row g-3">
+                    <div class="mb-3 col-md-4">
                         <label class="form-label">Team Name <span class="text-danger">*</span></label>
                         <input type="text" name="team_name" class="form-input" required>
                     </div>
-
-                    <div class="mb-3">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label">Team Avatar</label>
+                        <input type="file"
+                               name="profile"
+                               class="form-input"
+                               accept="image/*">
+                        <small class="text-muted">jpg, jpeg, png (max 2MB)</small>
+                    </div>
+                    
+                    <div class="mb-3 col-md-4">
                         <label class="form-label">Event <span class="text-danger">*</span></label>
                         <select class="form-select" id="eventSelect" name="event_id" required>
                             <option hidden>-- Select Event --</option>
@@ -27,14 +37,14 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3 col-md-4">
                         <label class="form-label">Organization <span class="text-danger">*</span>   </label>
                         <select class="form-select" id="organizationSelect" name="organization_id">
                             <option value="">-- Select Organization --</option>
                         </select>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3 col-md-4">
                         <label class="form-label">Team Members <span class="text-danger">*</span></label>
                         <div id="teamMembersContainer" class="d-grid gap-2">
                             <select name="players[]" class="form-select" required>
@@ -46,6 +56,7 @@
                         </button>
                     </div>
 
+                   </div>
                 </form>
             </div>
 

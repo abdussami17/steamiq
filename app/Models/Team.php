@@ -16,6 +16,7 @@ class Team extends Model
         'team_name',
         'event_id',
         'organization_id',
+        'profile',
     ];
 
     // Team has multiple players (many-to-many)

@@ -932,7 +932,7 @@ color: #000;
 
 .leaderboard-item {
     display: grid;
-    grid-template-columns: 60px 1fr 100px 100px 100px 100px 120px;
+    grid-template-columns: 80px 100px 1fr 100px 100px 100px 100px 120px;
     gap: 1rem;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -958,7 +958,7 @@ color: #000;
 .leaderboard-rank {
     font-size: 1.5rem;
     font-weight: 900;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Space Mono', sans-serif;
 }
 
 .rank-1 { color: #FFD700; }
@@ -971,7 +971,7 @@ color: #000;
 
 .leaderboard-score {
     text-align: center;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Space Mono', sans-serif;
     font-weight: 700;
 }
 

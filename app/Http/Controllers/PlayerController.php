@@ -12,6 +12,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Collection;  
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+
 
 class PlayerController extends Controller
 {
@@ -30,23 +32,35 @@ class PlayerController extends Controller
             'player_email' => 'required|email|unique:players,email',
             'assign_team'  => 'nullable|exists:teams,id',
             'event_id'     => 'nullable|exists:events,id',
+    
+            // NEW
+            'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
+    
+        $profilePath = null;
+    
+        if ($request->hasFile('profile')) {
+            $profilePath = $request->file('profile')
+                                   ->store('players', 'public');
+        }
+    
         $player = Player::create([
             'name'     => $validated['player_name'],
             'email'    => $validated['player_email'],
             'event_id' => $validated['event_id'] ?? 1,
+            'profile'  => $profilePath,
         ]);
-
+    
         if (!empty($validated['assign_team'])) {
             TeamMember::create([
                 'player_id' => $player->id,
                 'team_id'   => $validated['assign_team'],
             ]);
         }
-
-        return redirect()->back()->with('success', 'Player added successfully!');
+    
+        return back()->with('success', 'Player added successfully!');
     }
+    
 
     public function getPlayersLeaderboard($eventId)
     {

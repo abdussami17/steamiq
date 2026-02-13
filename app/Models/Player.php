@@ -13,6 +13,7 @@ class Player extends Model
         'name',
         'email',
         'event_id',
+        'profile',
     ];
 
     // Event relationship

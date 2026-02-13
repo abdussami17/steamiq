@@ -46,7 +46,8 @@ async function fetchLeaderboard(eventId){
 
         let html = `<div class="leaderboard-item header">
             <div>Rank</div>
-            <div>Team / Player</div>
+            <div>Avatar</div>
+            <div>Team Name</div>
             <div class="text-center">Brain</div>
             <div class="text-center">Play</div>
             <div class="text-center">E-Game</div>
@@ -60,9 +61,19 @@ async function fetchLeaderboard(eventId){
             if(rank === 1) rankClass = 'rank-1';
             else if(rank === 2) rankClass = 'rank-2';
             else if(rank === 3) rankClass = 'rank-3';
+            const img = team.profile
+    ? `/storage/${team.profile}`
+    : `/assets/avatar-default.png`;
+
 
             html += `<div class="leaderboard-item">
                 <div class="leaderboard-rank ${rankClass}">${team.rank ?? 'N/A'}</div>
+                <div class="leaderboard-img"><img src="${img}"
+         width="50"
+         height="50"
+         style="object-fit:cover"
+         class="rounded-circle"
+         onerror="this.src='/assets/avatar-default.png'"></div>
                 <div class="leaderboard-name">${team.team_name ?? 'N/A'}</div>
                 <div class="leaderboard-score">${team.brain ?? 0}</div>
                 <div class="leaderboard-score">${team.play ?? 0}</div>

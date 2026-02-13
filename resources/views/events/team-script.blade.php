@@ -41,9 +41,23 @@
                 const points = safe(team.total_points ?? 0);
                 const rank = safe(team.rank ?? 0);
                 const rankColor = getRankColor(Number(rank));
+                const img = team.profile
+    ? `/storage/${team.profile}`
+    : `/assets/avatar-default.png`;
+
     
                 rows += `
                 <tr>
+                    <td>
+                  
+    <img src="${img}"
+         width="40"
+         height="40"
+         class="rounded-circle"
+         style="object-fit:cover"
+         onerror="this.src='/assets/avatar-default.png'">
+</td>
+
                     <td><input type="text" value="${id}" readonly></td>
                     <td><input type="text" value="${name}"></td>
                     <td>${members}</td>

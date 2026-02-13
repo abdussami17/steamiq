@@ -99,6 +99,7 @@
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>Avatar</th>
                                 <th>Team ID</th>
                                 <th>Team Name</th>
                                 <th>Members</th>
@@ -219,8 +220,10 @@
                                     {{-- Profile --}}
                                     <td>
                                         @if ($org->profile)
-                                            <img src="{{ asset('storage/' . $org->profile) }}" width="50"
-                                                height="50" style="object-fit:cover;border-radius:50%;">
+                                            <img src="{{ asset('storage/' . $org->profile) }}" height="40" width="40"
+                                            class="rounded-circle"
+                                            style="object-fit: cover"
+                                            onerror="this.src='/assets/avatar-default.png'">
                                         @else
                                             N/A
                                         @endif
