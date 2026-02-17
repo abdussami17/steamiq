@@ -68,7 +68,11 @@ class EventController extends Controller
             'registration_count' => 0,
         ]);
     
-        return redirect()->back()->with('success', 'Event created successfully.');
+        return redirect()
+        ->back()
+        ->with('success', 'Event created successfully.')
+        ->header('Content-Type', 'text/html');
+    
     }
     public function show(Event $event)
     {

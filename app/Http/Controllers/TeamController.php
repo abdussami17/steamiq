@@ -53,7 +53,7 @@ class TeamController extends Controller
     
         $team->players()->attach($validated['players']);
     
-        return back()->with('success', 'Team created successfully.');
+        return back()->with('success', 'Team created successfully.')->header('Content-Type', 'text/html');
     }
     
    

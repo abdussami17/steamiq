@@ -6,7 +6,6 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title')</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
 <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -25,6 +24,7 @@
     .toast-error {
         background-color: #BD362F !important;
     }
+    body { visibility:hidden; }
 </style>
 
 </head>
@@ -139,6 +139,8 @@
     
     <!-- Main JavaScript -->
     <script src="{{asset('assets/scripts/main.js')}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize all date inputs
@@ -165,6 +167,11 @@
             });
         });
         </script>
+        <script>
+            window.addEventListener('load', () => {
+              document.body.style.visibility = 'visible';
+            });
+            </script>
         
 </body>
 </html>

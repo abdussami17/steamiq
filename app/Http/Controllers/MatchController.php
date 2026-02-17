@@ -49,7 +49,7 @@ class MatchController extends Controller
             'time'=>$request->time
         ]);
 
-        return response()->json(['success'=>true,'message'=>'Match created successfully','match'=>$match]);
+        return response()->json(['success'=>true,'message'=>'Match created successfully','match'=>$match])->header('Content-Type', 'text/html');
     }
 
     public function generatePin($id)

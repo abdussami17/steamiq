@@ -19,7 +19,7 @@ class GroupController extends Controller
             'team_id'    => $request->team_id,
         ]);
     
-        return back()->with('success', 'Group created successfully.');
+        return back()->with('success', 'Group created successfully.')->header('Content-Type', 'text/html');
     }
 
 

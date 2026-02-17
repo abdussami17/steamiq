@@ -42,7 +42,7 @@ class TournamentController extends Controller
         // Generate first round matches automatically
         $this->generateBracket($tournament);
 
-        return redirect()->route('tournaments.index')->with('success','Tournament created!');
+        return redirect()->route('tournaments.index')->with('success','Tournament created!')->header('Content-Type', 'text/html');
     }
 
     private function generateBracket(Tournament $tournament)

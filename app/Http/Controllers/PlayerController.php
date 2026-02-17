@@ -29,7 +29,7 @@ class PlayerController extends Controller
     {
         $validated = $request->validate([
             'player_name'  => 'required|string|max:255',
-            'player_email' => 'required|email|unique:players,email',
+            'player_email' => 'nullable|email|unique:players,email',
             'assign_team'  => 'nullable|exists:teams,id',
             'event_id'     => 'nullable|exists:events,id',
     
@@ -58,7 +58,8 @@ class PlayerController extends Controller
             ]);
         }
     
-        return back()->with('success', 'Player added successfully!');
+        return back()->with('success', 'Player added successfully!')
+        ->header('Content-Type', 'text/html');
     }
     
 

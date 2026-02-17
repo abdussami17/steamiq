@@ -55,7 +55,7 @@ class ChallengeController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            return back()->with('error', 'Something went wrong. Please try again.')->withInput();
+            return back()->with('error', 'Something went wrong. Please try again.')->withInput()->header('Content-Type', 'text/html');
         }
     }
 

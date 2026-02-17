@@ -26,7 +26,8 @@ class OrganizationController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'Organization created successfully!');
+            ->with('success', 'Organization created successfully!')
+            ->header('Content-Type', 'text/html');
     }
     public function destroy(Organization $organization)
     {

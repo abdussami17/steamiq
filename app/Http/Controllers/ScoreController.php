@@ -61,7 +61,8 @@ class ScoreController extends Controller
                 Scores::create($validated);
             });
 
-            return back()->with('success', 'Score added successfully');
+            return back()->with('success', 'Score added successfully')
+            ->header('Content-Type', 'text/html');
 
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();

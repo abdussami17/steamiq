@@ -17,7 +17,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                        <label class="form-label">Email </label>
                         <input type="email" class="form-input" name="email" id="editPlayerEmail">
                     </div>
 

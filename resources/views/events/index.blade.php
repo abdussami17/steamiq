@@ -71,8 +71,8 @@
             </div>
 
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('teams')">Teams</button>
-                <button class="tab " onclick="switchTab('organizations')">Organizations</button>
+                <button class="tab active" onclick="switchTab('organizations')">Organizations</button>
+                <button class="tab " onclick="switchTab('teams')">Teams</button>
                 <button class="tab " onclick="switchTab('groups')">Groups</button>
                 <button class="tab" onclick="switchTab('scores')">Scores</button>
                 <button class="tab" onclick="switchTab('schedule')">Schedule</button>
@@ -81,7 +81,7 @@
             </div>
 
             <!-- Teams Tab -->
-            <div id="teams-tab" class="tab-content active">
+            <div id="teams-tab" class="tab-content">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
@@ -192,7 +192,7 @@
                 </div>
             </div>
             <!-- Organizations Tab -->
-            <div id="organizations-tab" class="tab-content">
+            <div id="organizations-tab" class="tab-content active">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrganizationModal">
@@ -266,7 +266,7 @@
 
                 </div>
             </div>
-              <!-- Organizations Tab -->
+              <!-- Groups Tab -->
               <div id="groups-tab" class="tab-content">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">

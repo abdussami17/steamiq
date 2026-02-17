@@ -18,8 +18,8 @@
                     </div>
             
                     <div class="form-group mb-2">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-input" name="player_email" required>
+                        <label class="form-label">Email </label>
+                        <input type="email" class="form-input" name="player_email" >
                     </div>
             
                     <div class="form-group mb-2">
