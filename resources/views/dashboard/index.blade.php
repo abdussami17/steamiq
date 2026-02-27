@@ -131,8 +131,11 @@
             </select>
         </div>
     
-        <div class="leaderboard" id="leaderboardBody">
-            <div class="leaderboard-item"><div>Loading...</div></div>
+        <div class="table-responsive">
+            <table class="data-table">
+<thead></thead>
+<tbody id="leaderboardBody"></tbody>
+            </table>
         </div>
     </section>
 @include('leaderboard.leaderboard-script')
@@ -167,9 +170,9 @@
                     <div style="font-size: 3rem; margin-bottom: 1rem; display: flex; justify-content: center;">
                         <i data-lucide="users" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Players</h3>
+                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Students</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Register new participants</p>
-                    <a href="{{ route('student.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
+                    <a href="{{ route('student.index') }}" class="btn btn-primary" style="width: 100%;">Add Students</a>
 
                 </div>
             </div>
@@ -179,9 +182,9 @@
                     <div style="font-size: 3rem; margin-bottom: 1rem; display: flex; justify-content: center;">
                         <i data-lucide="trophy" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Generate Bracket</h3>
-                    <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Create tournament brackets</p>
-                    <a href="{{ route('tournaments.index') }}" class="btn btn-primary" style="width: 100%;">View Tournaments</a>
+                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Assign Scores</h3>
+                    <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Assign Student/Team Score</p>
+                    <a href="{{ route('events.index') }}" class="btn btn-primary" style="width: 100%;">Assign Scores</a>
                 </div>
             </div>
         </div>

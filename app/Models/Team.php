@@ -6,7 +6,9 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Organization;
 use App\Models\Player;
+use App\Models\Score;
 use App\Models\Student;
+use App\Models\SubGroup;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -52,7 +54,7 @@ public function groups(){
     return $this->hasMany(Group::class);
 }
 
-public function subgroup() { return $this->belongsTo(Subgroup::class); }
-public function students() { return $this->hasMany(Student::class); }
+public function subgroup() { return $this->belongsTo(SubGroup::class,'sub_group_id'); }
+public function students() { return $this->hasMany(Student::class,'team_id'); }
 public function scores() { return $this->hasMany(Score::class); }
 }

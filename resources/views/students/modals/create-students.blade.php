@@ -12,7 +12,7 @@
                 <div class="modal-body">
 
                     <div class="mb-3">
-                        <label class="form-label">Select Team <span class="text-danger">*</span></label>
+                        <label class="form-label">Select Team </label>
                         <select class="form-select" id="teamSelect" name="team_id" required>
                             <option hidden>-- Select Team --</option>
                             @foreach($teams as $team)

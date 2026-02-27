@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Exports\TeamsExport;
 use App\Imports\TeamsImport;
 use App\Models\Player; 
+use App\Models\Score;
+use App\Models\Student;
 use App\Models\SubGroup;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -70,48 +72,91 @@ class TeamController extends Controller
     
    
 
-    public function teamsData()
+    public function teamsData(Request $request)
     {
-        $teams = Team::with([
-            'players.scores',
-            'event'
-        ])->get();
-    
-        $teams = $teams->map(function ($team) {
-    
-            $memberCount = $team->players->count();
-    
-            $totalPoints = $team->players->sum(function ($player) {
-                return $player->scores->sum('points');
+        try {
+
+            // =============================
+            // 1) Load teams + subgroup
+            // =============================
+            $teams = Team::with(['subgroup'])
+                ->get();
+
+            // =============================
+            // 2) Get total points per team (SCORES TABLE ONLY)
+            // =============================
+            $pointsMap = Score::selectRaw('team_id, SUM(points) as total_points')
+                ->groupBy('team_id')
+                ->pluck('total_points', 'team_id');
+
+            // =============================
+            // 3) Count students per team
+            // =============================
+            $membersMap = Student::selectRaw('team_id, COUNT(*) as total')
+                ->groupBy('team_id')
+                ->pluck('total', 'team_id');
+
+            // =============================
+            // 4) Build rows
+            // =============================
+            $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
+
+                return [
+                    'id' => $team->id,
+                    'team_name' => $team->team_name ?? 'N/A',
+                    'subgroup_name' => $team->subgroup->name ?? 'N/A',
+                    'members_count' => $membersMap[$team->id] ?? 0,
+                    'total_points' => $pointsMap[$team->id] ?? 0,
+                    'profile' => $team->profile ?? null,
+                ];
             });
-    
-            return [
-                'id' => $team->id,
-                'team_name' => $team->team_name ?? 'N/A',
-                'members_count' => $memberCount ?: 0,
-                'total_points' => $totalPoints ?: 0,
-                'profile' => $team->profile
-            ];
-        });
-    
-        $teams = collect($teams)->sortByDesc('total_points')->values();
-    
-        $rank = 1;
-        $teams = $teams->map(function ($team) use (&$rank) {
-            $team['rank'] = $rank++;
-            return $team;
-        });
-    
-        return response()->json($teams);
+
+            // =============================
+            // 5) Sort by points DESC
+            // =============================
+            $rows = $rows->sortByDesc('total_points')->values();
+
+            // =============================
+            // 6) Assign rank (CORRECT way)
+            // =============================
+            $rows = $rows->map(function ($row, $index) {
+                $row['rank'] = $index + 1;
+                return $row;
+            });
+
+            return response()->json($rows);
+
+        } catch (\Throwable $e) {
+
+            \Log::error('Teams Data Error', [
+                'message' => $e->getMessage()
+            ]);
+
+            return response()->json([]);
+        }
     }
+
     public function export(Request $request)
     {
-        $eventId = $request->input('event_id');
-
-        // If user did not select an event, export all events
-        return Excel::download(new TeamsExport($eventId), 'teams.xlsx');
+        $eventId = $request->event_id;
+    
+        return Excel::download(
+            new TeamsExport($eventId),
+            'teams.xlsx'
+        );
     }
-
+    public function bulkDelete(Request $request)
+    {
+        $ids = $request->ids;
+    
+        if (!is_array($ids) || empty($ids)) {
+            return response()->json(['success' => false]);
+        }
+    
+        Team::whereIn('id', $ids)->delete();
+    
+        return response()->json(['success' => true]);
+    }
     public function import(Request $request)
     {
         $request->validate([
@@ -156,30 +201,37 @@ class TeamController extends Controller
 
 
 
-    // View team details (for modal)
     public function view(Team $team)
     {
-        $team->load(['event', 'players.scores.challenge']); // eager load
-
+        $team->load([
+            'event',
+            'students.scores.challengeActivity'
+        ]);
+    
+        $members = $team->students->map(function ($student) {
+    
+            // 🔥 calculate total properly
+            $totalPoints = (int) $student->scores->sum('points');
+    
+            return [
+                'id' => $student->id,
+                'name' => $student->name ?? 'N/A',
+                'email' => $student->email ?? 'N/A',
+                'total_points' => $totalPoints, // ALWAYS exists
+                'scores' => $student->scores->map(function ($score) {
+                    return [
+                        'challenge' => $score->challengeActivity->name ?? 'N/A',
+                        'points' => (int) ($score->points ?? 0)
+                    ];
+                })->values()
+            ];
+        })->values();
+    
         return response()->json([
             'team' => $team,
-            'members' => $team->players->map(function($player){
-                return [
-                    'id' => $player->id,
-                    'name' => $player->name,
-                    'email' => $player->email,
-                    'scores' => $player->scores->map(function($score){
-                        return [
-                            'challenge' => $score->challenge->name ?? 'N/A',
-                            'pillar' => $score->challenge->pillar_type ?? 'N/A',
-                            'points' => $score->points ?? 0
-                        ];
-                    })
-                ];
-            }),
+            'members' => $members
         ]);
     }
-
     // Update team
     public function edit(Team $team)
     {

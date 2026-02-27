@@ -19,9 +19,9 @@
             <!-- Toolbar -->
             <div class="spreadsheet-toolbar mb-4">
                 
-                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
+                {{-- <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
                     Import Players
-                </button>
+                </button> --}}
                 <button class="btn btn-secondary" onclick="exportGridToExcel()">
                     <i data-lucide="upload"></i> Export Excel
                 </button>
@@ -48,8 +48,8 @@
         
     </section>
 </div>
-{{-- 
-@include('students.script') --}}
+
+@include('students.script')
 @include('students.modals.create-students')
 {{-- @include('students.modals.import-students')
 @include('students.modals.edit-players') --}}

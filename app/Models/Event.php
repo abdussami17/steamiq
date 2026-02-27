@@ -23,11 +23,15 @@ class Event extends Model
         'name',
         'organization_id',
         'event_type',
-        'start_date',
-        'end_date',
         'location',
         'registration_count',
-        'status'
+        'status',
+        'start_date',
+        'end_date'
+    ];
+    protected $dates = [
+        'start_date',
+        'end_date'
     ];
 
     public function organization() { return $this->belongsTo(Organization::class); }

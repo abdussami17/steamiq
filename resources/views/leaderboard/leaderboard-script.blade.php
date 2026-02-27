@@ -1,101 +1,83 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-
-const selectEvent = document.getElementById('selectEvent');
-const leaderboardBody = document.getElementById('leaderboardBody');
-
-// Fetch events for dropdown
-fetch('/leaderboard-events')
-    .then(res => res.json())
-    .then(events => {
-        if(!events.length) return;
-        events.forEach(ev => {
-            const option = document.createElement('option');
-            option.value = ev.id;
-            option.textContent = ev.name;
-            selectEvent.appendChild(option);
+    
+        const selectEvent = document.getElementById('selectEvent');
+        const leaderboardTable = document.querySelector('.data-table');
+        const leaderboardBody = document.getElementById('leaderboardBody');
+    
+        // Load events
+        fetch('/leaderboard-events')
+            .then(res => res.json())
+            .then(events => {
+                events.forEach(ev => {
+                    const opt = document.createElement('option');
+                    opt.value = ev.id;
+                    opt.textContent = ev.name;
+                    selectEvent.appendChild(opt);
+                });
+                if(events.length) fetchLeaderboard(events[0].id);
+            })
+            .catch(console.error);
+    
+        selectEvent.addEventListener('change', () => {
+            fetchLeaderboard(selectEvent.value);
         });
-
-        // Select latest event by default
-        selectEvent.selectedIndex = 1; 
-        fetchLeaderboard(selectEvent.value);
-    })
-    .catch(err => console.error(err));
-
-// Fetch leaderboard when event changes
-selectEvent.addEventListener('change', () => {
-    fetchLeaderboard(selectEvent.value);
-});
-
-// Fetch leaderboard function
-async function fetchLeaderboard(eventId){
-    if(!leaderboardBody) return;
-    leaderboardBody.innerHTML = `<div class="leaderboard-item"><div>Loading...</div></div>`;
-
-    try {
-        const res = await fetch(`/leaderboard-data?event_id=${eventId}`, {
-            headers:{ 'Accept':'application/json' }
-        });
-        if(!res.ok) throw new Error();
-        const data = await res.json();
-
-        if(!data.length){
-            leaderboardBody.innerHTML = `<div class="leaderboard-item"><div>N/A</div></div>`;
-            return;
+    
+        async function fetchLeaderboard(eventId){
+            if(!leaderboardBody || !leaderboardTable) return;
+    
+            leaderboardBody.innerHTML = `<tr><td colspan="100%">Loading...</td></tr>`;
+    
+            try {
+                const res = await fetch(`/leaderboard-data?event_id=${eventId}`, { headers:{'Accept':'application/json'} });
+                if(!res.ok) throw new Error('Failed to fetch leaderboard');
+                const data = await res.json();
+    
+                if(!data.rows.length){
+                    leaderboardBody.innerHTML = `<tr><td colspan="100%">No data available</td></tr>`;
+                    return;
+                }
+    
+                // Build table header
+                let theadHtml = `<tr style="white-space:nowrap">
+                    <th>Rank</th>
+                    <th>Event</th>
+                    <th>Organization</th>
+                    <th>Group</th>
+                    <th>Subgroup</th>
+                    <th>Team</th>
+                    <th>Student</th>
+                    ${data.categories.map(c => `<th>${c}</th>`).join('')}
+                    <th>Total Points</th>
+                </tr>`;
+                leaderboardTable.querySelector('thead').innerHTML = theadHtml;
+    
+                // Build table body
+                let tbodyHtml = '';
+                data.rows.forEach(row => {
+                    tbodyHtml += `<tr style="white-space:nowrap">
+                        <td>${row.rank ?? '-'}</td>
+                        <td>${row.event ?? '-'}</td>
+                        <td>${row.organization ?? '-'}</td>
+                        <td>${row.group ?? '-'}</td>
+                        <td>${row.subgroup ?? '-'}</td>
+                        <td>${row.team_name ?? '-'}</td>
+                        <td>${row.student_name ?? '-'}</td>
+                        ${data.categories.map(c => `<td>${row.scores[c] ?? 0}</td>`).join('')}
+                        <td>${row.total_points ?? 0}</td>
+                    </tr>`;
+                });
+    
+                leaderboardBody.innerHTML = tbodyHtml;
+    
+            } catch(e){
+                console.error(e);
+                leaderboardBody.innerHTML = `<tr><td colspan="100%">Error loading leaderboard</td></tr>`;
+            }
         }
-
-        let html = `<div class="leaderboard-item header">
-            <div>Rank</div>
-            <div>Avatar</div>
-            <div>Team Name</div>
-            <div class="text-center">Brain</div>
-            <div class="text-center">Play</div>
-            <div class="text-center">E-Game</div>
-            <div class="text-center">Esports</div>
-            <div class="text-center">Total</div>
-        </div>`;
-
-        data.forEach(team => {
-            const rank = Number(team.rank);
-            let rankClass = '';
-            if(rank === 1) rankClass = 'rank-1';
-            else if(rank === 2) rankClass = 'rank-2';
-            else if(rank === 3) rankClass = 'rank-3';
-            const img = team.profile
-    ? `/storage/${team.profile}`
-    : `/assets/avatar-default.png`;
-
-
-            html += `<div class="leaderboard-item">
-                <div class="leaderboard-rank ${rankClass}">${team.rank ?? 'N/A'}</div>
-                <div class="leaderboard-img"><img src="${img}"
-         width="50"
-         height="50"
-         style="object-fit:cover"
-         class="rounded-circle"
-         onerror="this.src='/assets/avatar-default.png'"></div>
-                <div class="leaderboard-name">${team.team_name ?? 'N/A'}</div>
-                <div class="leaderboard-score">${team.brain ?? 0}</div>
-                <div class="leaderboard-score">${team.play ?? 0}</div>
-                <div class="leaderboard-score">${team.egame ?? 0}</div>
-                <div class="leaderboard-score">${team.esports ?? 0}</div>
-                <div class="leaderboard-score leaderboard-total">${team.total ?? 0}</div>
-            </div>`;
-        });
-
-        leaderboardBody.innerHTML = html;
-        if(window.lucide) lucide.createIcons();
-
-    } catch(err){
-        console.error(err);
-        leaderboardBody.innerHTML = `<div class="leaderboard-item"><div>N/A</div></div>`;
-    }
-}
-
-});
-
-</script>
-
+    
+    });
+    </script>
 
 <script>
 document.getElementById('exportLeaderboard').addEventListener('click', function(){

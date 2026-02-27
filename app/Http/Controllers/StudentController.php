@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Score;
+use App\Models\SteamCategory;
 use App\Models\Student;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -58,4 +60,74 @@ class StudentController extends Controller
             return back()->with('error', 'Failed to add students.');
         }
     }
+
+    public function leaderboard($eventId)
+    {
+        $categories = SteamCategory::orderBy('id')->get(); // dynamic
+    
+        $students = Student::with([
+            'team.subgroup',
+            'scores.challengeActivity'
+        ])
+        ->where('event_id', $eventId)
+        ->get();
+    
+        $rows = [];
+    
+        foreach ($students as $student) {
+    
+            $scoreMap = $student->scores->keyBy('steam_category_id');
+    
+            $row = [
+                'id' => $student->id,
+                'student' => $student->name,
+                'team' => $student->team->team_name ?? 'N/A',
+                'activity' => optional($student->scores->first()?->challengeActivity)->name ?? 'N/A',
+                'total' => 0
+            ];
+    
+            foreach ($categories as $cat) {
+                $points = (int) optional($scoreMap->get($cat->id))->points ?? 0;
+    
+                $row[$cat->name] = $points;
+                $row['total'] += $points;
+            }
+    
+            $rows[] = $row;
+        }
+    
+        // sort + rank
+        $rows = collect($rows)->sortByDesc('total')->values();
+    
+        $rank = 1;
+        foreach ($rows as $i => $r) {
+            $r['rank'] = $rank++;
+            $rows[$i] = $r;
+        }
+    
+        return response()->json([
+            'categories' => $categories->pluck('name'),
+            'rows' => $rows
+        ]);
+    }
+    public function updateScoreInline(Request $request)
+{
+    $studentId = $request->student_id;
+    $categoryName = $request->category;
+    $points = (int) $request->points;
+
+    $category = \App\Models\SteamCategory::where('name', $categoryName)->first();
+
+    Score::updateOrCreate(
+        [
+            'student_id' => $studentId,
+            'steam_category_id' => $category->id
+        ],
+        [
+            'points' => $points
+        ]
+    );
+
+    return response()->json(['success' => true]);
+}
 }

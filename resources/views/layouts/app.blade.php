@@ -116,10 +116,10 @@
                             Students
                         </a>
 
-                        <a href="{{ route('tournaments.index') }}"
+                        {{-- <a href="{{ route('tournaments.index') }}"
                             class="nav-link-custom {{ request()->routeIs('tournaments.*') ? 'active' : '' }}">
                             Tournaments
-                        </a>
+                        </a> --}}
 
 
                         @auth

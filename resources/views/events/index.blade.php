@@ -29,7 +29,17 @@
                                     {{ ucfirst($allevent->event_type) }}
                                 </p>
                             </div>
-                            <span class="badge badge-{{ $allevent->status }}">{{ ucfirst($allevent->status) }}</span>
+                            <div class="d-flex ">
+                            <span class="badge me-2 badge-{{ $allevent->status }}">{{ ucfirst($allevent->status) }}</span>
+
+                            <form action="{{ route('events.destroy', $allevent->id) }}" method="POST" style="display:inline; height:0" onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-link p-0 m-0 align-baseline">
+                                    <i data-lucide="trash" class="text-danger"></i>
+                                </button>
+                            </form>
+                            </div>
                         </div>
                         <div class="stats-grid">
                             <div class="stat">
@@ -41,7 +51,19 @@
                             <div class="stat">
                                 <div class="stat-label">Players</div>
                                 <div class="stat-value" style="font-size: 1.3rem;">
-                                    {{ $allevent->teams->sum(fn($t) => $t->players->count()) ?: 'N/A' }}
+                                    {{ $allevent->teams->sum(fn($t) => $t->students->count()) ?: 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Groups</div>
+                                <div class="stat-value" style="font-size: 1.3rem;">
+                                    {{ $allevent->groups->count() ?: 'N/A' }}
+                                </div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Sub Groups</div>
+                                <div class="stat-value" style="font-size: 1.3rem;">
+                                    {{ $allevent->subgroups->count() ?: 'N/A' }}
                                 </div>
                             </div>
                         </div>
@@ -88,29 +110,37 @@
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
                             <i data-lucide="plus"></i> Add Team
                         </button>
-                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
-                            <i data-lucide="download"></i> Import CSV
+                        <button class="btn btn-danger" onclick="deleteSelectedTeams()">
+                            Delete Selected
                         </button>
+                        {{-- <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
+                            <i data-lucide="download"></i> Import CSV
+                        </button> --}}
                         <a href="{{ route('teams.export') }}" class="btn btn-secondary">
                             <i data-lucide="upload"></i> Export Teams
                         </a>
+                        
 
 
                     </div>
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllTeams">
+                                </th>
                                 <th>Avatar</th>
                                 <th>Team ID</th>
                                 <th>Team Name</th>
+                                <th>Sub Group</th>
                                 <th>Members</th>
                                 <th>Total Points</th>
                                 <th>Rank</th>
                                 <th>Actions</th>
                             </tr>
-                        </thead>
+                            </thead>
                         <tbody id="teamsTableBody"></tbody>
-                      
+
 
                     </table>
                 </div>
@@ -165,50 +195,57 @@
                 </div>
             </div>
 
-         <!-- Scores Tab -->
-         <div id="scores-tab" class="tab-content">
-            <div class="spreadsheet-container">
-                <div class="spreadsheet-toolbar">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                        <i data-lucide="plus"></i> Add Score
-                    </button>
-                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importScoresModal">
-                        <i data-lucide="download"></i> Bulk Import
-                    </button>
-                    <button class="btn btn-secondary" onclick="fetchScores()">
-                        <i data-lucide="refresh-cw"></i> Recalculate
-                    </button>
-                </div>
-        
-                <select id="eventSelect" class="form-select mb-3">
-                    <option value="">Select Event</option>
-                    @foreach ($events as $event)
-                        <option value="{{ $event->id }}">{{ $event->name }}</option>
-                    @endforeach
-                </select>
-        
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead id="scoreHead">
-                            <tr>
-                                <th>Type</th>
-                                <th>Team</th>
-                                <th>Name</th>
-                                <th>Science</th>
-                                <th>Technology</th>
-                                <th>Engineering</th>
-                                <th>Art</th>
-                                <th>Math</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scoreBody">
-                            <tr><td colspan="9">Select event to load scores...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+           <!-- Scores Tab -->
+<div id="scores-tab" class="tab-content">
+    <div class="spreadsheet-container">
+        <div class="spreadsheet-toolbar" id="scoreToolbar">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
+                <i data-lucide="plus"></i> Add Score
+            </button>
+            {{-- <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importScoresModal">
+                <i data-lucide="download"></i> Bulk Import
+            </button> --}}
+            <button class="btn btn-secondary" onclick="fetchScores()">
+                <i data-lucide="refresh-cw"></i> Refresh
+            </button>
         </div>
+
+        <select id="eventSelect" class="form-select mb-3">
+            <option value="">Select Event</option>
+            @foreach ($events as $event)
+                <option value="{{ $event->id }}">{{ $event->name }}</option>
+            @endforeach
+        </select>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead id="scoreHead">
+                    <tr>
+                        <th>Type</th>
+                        <th>Team</th>
+                        <th>Name</th>
+                        <th>Science</th>
+                        <th>Technology</th>
+                        <th>Engineering</th>
+                        <th>Art</th>
+                        <th>Math</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="scoreBody">
+                    <tr>
+                        <td colspan="9">Select event to load scores...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
+
+
 
 
             <div id="schedule-tab" class="tab-content">
@@ -430,33 +467,31 @@
 
 
 @push('modals')
-
-@include('events.modals.create-team')
-@include('events.modals.create-event')
-@include('events.modals.create-activity')
-@include('events.modals.create-scores')
-@include('events.modals.view-event')
-@include('events.modals.import-team')
-@include('events.modals.edit-team')
-@include('events.modals.view-team')
-@include('events.modals.edit-score')
-{{-- @include('events.modals.import-scores') --}}
-@include('events.modals.edit-activity')
-@include('events.modals.add-match')
-@include('events.modals.match-pin')
-@include('events.modals.add-round')
-@include('events.modals.create-organization')
-@include('events.modals.create-group')
-@include('events.modals.edit-organization')
-@include('events.modals.edit-group')
-@include('events.modals.create-subgroup')
-@include('events.modals.edit-subgroup')    
+    @include('events.modals.create-team')
+    @include('events.modals.create-event')
+    @include('events.modals.create-activity')
+    @include('events.modals.create-scores')
+    @include('events.modals.view-event')
+    @include('events.modals.import-team')
+    @include('events.modals.edit-team')
+    @include('events.modals.view-team')
+    @include('events.modals.edit-score')
+    {{-- @include('events.modals.import-scores') --}}
+    @include('events.modals.edit-activity')
+    @include('events.modals.add-match')
+    @include('events.modals.match-pin')
+    @include('events.modals.add-round')
+    @include('events.modals.create-organization')
+    @include('events.modals.create-group')
+    @include('events.modals.edit-organization')
+    @include('events.modals.edit-group')
+    @include('events.modals.create-subgroup')
+    @include('events.modals.edit-subgroup')
 @endpush
 
 @push('scripts')
-@include('events.team-script')
-@include('events.score-script')
-@include('events.matches-script')
-@include('events.edit-subgroup-script')
+    @include('events.team-script')
+    @include('events.score-script')
+    @include('events.matches-script')
+    @include('events.edit-subgroup-script')
 @endpush
-

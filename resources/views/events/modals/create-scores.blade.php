@@ -13,7 +13,7 @@
                     <!-- Event -->
                     <div class="mb-3">
                         <label class="form-label">Event </label>
-                        <select id="eventSelect" class="form-select" required>
+                        <select id="modalEventSelect" class="form-select" required>
                             <option value="">-- Select Event --</option>
                             @foreach($events as $event)
                                 <option value="{{ $event->id }}">{{ $event->name }}</option>
@@ -76,7 +76,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const eventSelect = document.getElementById('eventSelect');
+        const eventSelect = document.getElementById('modalEventSelect');
         const typeDiv = document.getElementById('typeDiv');
         const entityType = document.getElementById('entityType');
         const studentDiv = document.getElementById('studentDiv');
@@ -198,6 +198,7 @@
                         toastr.success(d.message);
                         form.reset(); resetAll(); eventSelect.value='';
                         const modal = bootstrap.Modal.getInstance(document.getElementById('scoreModal'));
+                        fetchScores();
                         modal.hide();
                     } else {
                         toastr.error(d.message||'Failed');

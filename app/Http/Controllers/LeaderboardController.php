@@ -2,96 +2,134 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Team;
+use App\Models\Event;
 use App\Models\Score;
+use App\Models\SteamCategory;
+use App\Models\Team;
+use Illuminate\Http\Request;
 
 class LeaderboardController extends Controller
 {
     // Fetch all events for dropdown
     public function events()
     {
-        $events = \App\Models\Event::orderByDesc('start_date')->get(['id','name']);
+        $events = Event::orderByDesc('start_date')->get(['id','name']);
         return response()->json($events);
     }
 
-    // Fetch leaderboard for a specific event
     public function data(Request $request)
     {
+        $eventId = $request->event_id;
+    
+        if (!$eventId) return response()->json([]);
+    
         try {
-            $eventId = $request->event_id;
+            // Load event with nested relationships
+            $event = Event::with([
+                'organization',
+                'groups.subgroups.teams.students'
+            ])->findOrFail($eventId);
     
-            if (!$eventId) {
-                return response()->json([], 200);
-            }
+            // Map categories from steam_categories table
+            $categories = SteamCategory::pluck('name')->toArray();
     
-            // Fetch all teams for this event
-            $teams = Team::with(['players' => function($q) use($eventId) {
-                $q->where('event_id', $eventId)
-                  ->with(['scores' => function($sq) use($eventId) {
-                      $sq->where('event_id', $eventId)
-                         ->with('challenge');
-                  }]);
-            }])->where('event_id', $eventId)
-              ->get();
+            $rows = [];
     
-            // Fetch esports points from team_esport_points table
-            $esportsPoints = \App\Models\EsportsPoints::where('event_id', $eventId)
-                ->get()
-                ->groupBy('team_id');
+            foreach ($event->groups as $group) {
+                foreach ($group->subgroups as $subgroup) {
+                    foreach ($subgroup->teams as $team) {
+                        // Fetch team scores
+                        $teamScores = Score::where('event_id', $eventId)
+                            ->where('team_id', $team->id)
+                            ->whereNull('student_id')
+                            ->get()
+                            ->keyBy('steam_category_id');
     
-            // Calculate scores per team
-            $teams = $teams->map(function($team) use($esportsPoints) {
-                $brain = 0;
-                $play = 0;
-                $egame = 0;
-                $esports = 0;
+                        // Prepare team row
+                        $teamRow = [
+                            'type' => 'team',
+                            'id' => $team->id,
+                            'event' => $event->name,
+                            'organization' => $event->organization->name ?? 'N/A',
+                            'group' => $group->group_name ?? '-',
+                            'subgroup' => $subgroup->name ?? '-',
+                            'team_name' => $team->team_name,
+                            'student_name' => null,
+                            'scores' => [],
+                            'total_points' => 0
+                        ];
     
-                // Sum player scores
-                foreach ($team->players as $player) {
-                    foreach ($player->scores as $score) {
-                        $pillar = $score->challenge?->pillar_type ?? null;
-                        $points = $score->points ?? 0;
+                        foreach ($categories as $catName) {
+                            $steamCat = SteamCategory::where('name', $catName)->first();
+                            $points = optional($teamScores->get($steamCat->id))->points ?? 0;
+                            $teamRow['scores'][$catName] = $points;
+                            $teamRow['total_points'] += $points;
+                        }
     
-                        if ($pillar === 'brain') $brain += $points;
-                        elseif ($pillar === 'playground') $play += $points;
-                        elseif ($pillar === 'egame') $egame += $points;
-                        elseif ($pillar === 'esports') $esports += $points;
+                        $rows[] = $teamRow;
+    
+                        // Students
+                        foreach ($team->students as $student) {
+                            $studentScores = Score::where('event_id', $eventId)
+                                ->where('student_id', $student->id)
+                                ->get()
+                                ->keyBy('steam_category_id');
+    
+                            $studentRow = [
+                                'type' => 'student',
+                                'id' => $student->id,
+                                'event' => $event->name,
+                                'organization' => $event->organization->name ?? 'N/A',
+                                'group' => $group->group_name ?? '-',
+                                'subgroup' => $subgroup->name ?? '-',
+                                'team_name' => $team->team_name,
+                                'student_name' => $student->name,
+                                'scores' => [],
+                                'total_points' => 0
+                            ];
+    
+                            foreach ($categories as $catName) {
+                                $steamCat = SteamCategory::where('name', $catName)->first();
+                                $points = optional($studentScores->get($steamCat->id))->points ?? 0;
+                                $studentRow['scores'][$catName] = $points;
+                                $studentRow['total_points'] += $points;
+                            }
+    
+                            $rows[] = $studentRow;
+                        }
                     }
                 }
-    
-                // Add team esports points from matches
-                if (isset($esportsPoints[$team->id])) {
-                    $esports += $esportsPoints[$team->id]->sum('points');
-                }
-    
-                $team->brain   = $brain;
-                $team->play    = $play;
-                $team->egame   = $egame;
-                $team->esports = $esports;
-                $team->total   = $brain + $play + $egame + $esports;
-    
-                return $team;
-            });
-    
-            // Rank teams by total points
-            $teams = $teams->sortByDesc('total')->values();
-    
-            $rank = 1;
-            foreach ($teams as $team) {
-                $team->rank = $rank++;
             }
     
-            return response()->json($teams);
+            // Sort by total points descending
+            $rows = collect($rows)->sortByDesc('total_points')->values();
+    
+            // Assign proper ranks
+            $rank = 1;
+            $previousPoints = null;
+            foreach ($rows as $index => $row) {
+                if ($previousPoints !== null && $row['total_points'] == $previousPoints) {
+                    $row['rank'] = $rows[$index - 1]['rank']; // tie
+                } else {
+                    $row['rank'] = $rank;
+                }
+                $previousPoints = $row['total_points'];
+                $rank++;
+                $rows[$index] = $row;
+            }
+    
+            return response()->json([
+                'categories' => $categories,
+                'rows' => $rows
+            ]);
     
         } catch (\Throwable $e) {
-            \Log::error('Leaderboard Error', [
-                'event_id' => $request->event_id,
+            \Log::error('Leaderboard fetch error', [
+                'event_id' => $eventId,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return response()->json([], 200); // never break UI
+            return response()->json([]);
         }
     }
-    
 }

@@ -3,6 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Team;
+use App\Models\Score;
+use App\Models\Student;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -12,12 +14,15 @@ class TeamsExport implements FromCollection, WithHeadings
 
     public function __construct($eventId = null)
     {
-        $this->eventId = $eventId; // null = export all events
+        $this->eventId = $eventId;
     }
 
     public function collection()
     {
-        $query = Team::with(['players.scores', 'event']);
+        // =============================
+        // 1) Base query (same as table)
+        // =============================
+        $query = Team::with(['subgroup']);
 
         if ($this->eventId) {
             $query->where('event_id', $this->eventId);
@@ -25,41 +30,76 @@ class TeamsExport implements FromCollection, WithHeadings
 
         $teams = $query->get();
 
-        // Calculate total points per team
-        $teams = $teams->map(function ($team) {
-            $totalPoints = $team->players->sum(function ($player) {
-                return $player->scores->sum('points');
-            });
+        // =============================
+        // 2) Points sum from scores table
+        // =============================
+        $pointsMap = Score::selectRaw('team_id, SUM(points) as total_points')
+            ->groupBy('team_id')
+            ->pluck('total_points', 'team_id');
 
-            $team->total_points = $totalPoints;
-            return $team;
+        // =============================
+        // 3) Students count
+        // =============================
+        $membersMap = Student::selectRaw('team_id, COUNT(*) as total')
+            ->groupBy('team_id')
+            ->pluck('total', 'team_id');
+
+        // =============================
+        // 4) Build rows
+        // =============================
+        $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
+            return [
+                'id' => $team->id,
+                'team_name' => $team->team_name ?? 'N/A',
+                'subgroup' => $team->subgroup->name ?? 'N/A',
+                'members' => $membersMap[$team->id] ?? 0,
+                'points' => $pointsMap[$team->id] ?? 0,
+                'profile' => $team->profile ?? 'N/A',
+            ];
         });
 
-        // Sort by total_points desc and assign rank
-        $rank = 1;
-        $teams = $teams->sortByDesc('total_points')->map(function ($team) use (&$rank) {
-            $team->rank = $rank++;
-            return $team;
+        // =============================
+        // 5) Sort DESC
+        // =============================
+        $rows = $rows->sortByDesc('points')->values();
+
+        // =============================
+        // 6) Rank
+        // =============================
+        $rows = $rows->map(function ($row, $index) {
+            $row['rank'] = $index + 1;
+            return $row;
         });
 
-        // Convert each team into a flat array row
-        $rows = collect();
-        foreach ($teams as $team) {
-            $rows->push([
-                'Event Name'     => $team->event?->name ?? 'N/A',
-                'Team Name'      => $team->team_name,
-                'Members Count'  => $team->players->count(),
-                'Players Emails' => $team->players->pluck('email')->implode(', '),
-                'Total Points'   => $team->total_points ?? 0,
-                'Rank'           => $team->rank ?? 0,
-            ]);
-        }
-
-        return $rows;
+        // =============================
+        // 7) Format for Excel
+        // =============================
+        return $rows->map(function ($row) {
+            return [
+                $row['profile'] ?? 'N/A',
+                $row['id'],
+                $row['team_name'],
+                $row['subgroup'],
+                $row['members'],
+                $row['points'],
+                $row['rank'],
+            ];
+        });
     }
 
+    // =============================
+    // SAME HEADINGS AS TABLE
+    // =============================
     public function headings(): array
     {
-        return ['Event Name', 'Team Name', 'Members Count', 'Players Emails', 'Total Points', 'Rank'];
+        return [
+            'Avatar',
+            'Team ID',
+            'Team Name',
+            'Sub Group',
+            'Members',
+            'Total Points',
+            'Rank',
+        ];
     }
 }

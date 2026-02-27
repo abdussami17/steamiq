@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Player;
 use App\Models\SubGroup;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -78,48 +79,56 @@ class EventController extends Controller
     }
     public function show(Event $event)
     {
-        $event->load([
-            'teams.players',
-            'challenges'
-        ]);
-           // Count of players with at least one score recorded
-           $completedPlayers = \App\Models\Scores::where('event_id', $event->id)
-           ->whereIn('player_id', $event->teams->pluck('players.*.id')->flatten())
-           ->distinct('player_id')
-           ->count('player_id');
+        try {
+            $event->load([
+                'teams.students',
+                'challengeactivity'
+            ]);
     
-        return response()->json([
-            'id' => $event->id,
-            'name' => $event->name ?? 'N/A',
-            'event_type' => $event->event_type ?? 'N/A',
-            'status' => $event->status ?? 'N/A',
-            'start_date' => $event->start_date ? date('M d, Y', strtotime($event->start_date)) : 'N/A',
-            'end_date' => $event->end_date ? date('M d, Y', strtotime($event->end_date)) : 'N/A',
-            'location' => $event->location ?? 'N/A',
-            'completed_players' => $completedPlayers,
-            'notes' => $event->notes ?? '-',
-            'teams' => $event->teams->map(function($team){
-                return [
+            // Count of students with at least one score
+            $studentIds = $event->teams->flatMap(fn($t) => $t->students->pluck('id'));
+            $completedStudents = \App\Models\Score::where('event_id', $event->id)
+                ->whereIn('student_id', $studentIds)
+                ->distinct('student_id')
+                ->count('student_id');
+    
+            return response()->json([
+                'id' => $event->id,
+                'name' => $event->name ?? 'N/A',
+                'event_type' => $event->event_type ?? 'N/A',
+                'status' => $event->status ?? 'N/A',
+                'start_date' => $event->start_date ? Carbon::parse($event->start_date)->format('M d, Y') : 'N/A',
+                'end_date' => $event->end_date ? Carbon::parse($event->end_date)->format('M d, Y') : 'N/A',
+                'location' => $event->location ?? 'N/A',
+                'completed_students' => $completedStudents,
+                'notes' => $event->notes ?? '-',
+                'teams' => $event->teams->map(fn($team) => [
                     'id' => $team->id,
                     'team_name' => $team->team_name ?? 'N/A',
-                    'players' => $team->players->map(fn($p) => [
-                        'id' => $p->id,
-                        'name' => $p->name ?? 'N/A'
+                    'students' => $team->students->map(fn($s) => [
+                        'id' => $s->id,
+                        'name' => $s->name ?? 'N/A'
                     ])
-                ];
-            }),
-            'challenges' => $event->challenges->map(function($c) {
-                return [
+                ]),
+                'challenges' => $event->challengeactivity->map(fn($c) => [
                     'id' => $c->id,
-                    'name' => $c->name ?? 'N/A',
-                    'pillar_type' => $c->pillar_type ?? 'N/A',
-                    'sub_category' => $c->pillar_type === 'brain' ? ($c->sub_category ?? 'N/A') : null
-                ];
-            })
-            
-        ]);
+                    'name' => $c->name ?? 'N/A'
+                ])
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Event modal fetch error: '.$e->getMessage());
+            return response()->json(['error' => 'Server error'], 500);
+        }
     }
-    
-
+    public function destroy(Event $event)
+    {
+        try {
+            $event->delete();
+            return redirect()->back()->with('success', 'Event deleted successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Event deletion error: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Failed to delete event.');
+        }
+    }
 
 }

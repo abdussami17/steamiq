@@ -52,11 +52,14 @@ Route::middleware('auth')->group(function () {
         Route::delete('/delete/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
         Route::get('/teams-export', [TeamController::class, 'export'])->name('teams.export');
         Route::post('/teams-import', [TeamController::class, 'import'])->name('teams.import');
-
+        Route::post('/teams/bulk-delete', [TeamController::class, 'bulkDelete'])
+        ->name('teams.bulkDelete');
         // Events routes
         Route::get('/events', [EventController::class, 'index'])->name('events.index');
         Route::post('/events/store', [EventController::class, 'store'])->name('events.store');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+        Route::delete('/events/{event}', [EventController::class, 'destroy'])
+    ->name('events.destroy');
         Route::get('/events/{event}/players', [TeamController::class, 'playersByEvent'])->name('teams.get_players');
         Route::get('/events/{event}/teams', function (\App\Models\Event $event) {
             $teams = \App\Models\Team::where('event_id', $event->id)->get(['id', 'team_name']);
@@ -86,8 +89,9 @@ Route::middleware('auth')->group(function () {
   Route::prefix('scores')->name('scores.')->group(function () {
     Route::post('/', [ScoreController::class, 'store'])->name('store');
 });
-    Route::post('/scores/fetch', [ScoreController::class, 'fetchScores'])->name('scores.fetch');
-    
+Route::post('/scores/fetch', [App\Http\Controllers\ScoreController::class, 'fetchScores']);
+Route::post('/scores/update', [App\Http\Controllers\ScoreController::class, 'updateScore']);
+Route::post('/scores/bulk-update', [App\Http\Controllers\ScoreController::class, 'bulkUpdate']);
 
 // API routes for AJAX dropdowns
 Route::prefix('api')->name('api.')->group(function () {
@@ -133,7 +137,8 @@ Route::put('subgroup/update/{subgroup}', [SubGroupController::class, 'update'])-
         // Leaderboard routes
         Route::get('/leaderboard-events', [LeaderboardController::class, 'events'])->name('leaderboard.events');
         Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])->name('leaderboard.data');
-        Route::get('/event/{event}/leaderboard', [PlayerController::class, 'getPlayersLeaderboard'])->name('players.leaderboard');
+        Route::get('/event/{event}/students-leaderboard', [StudentController::class, 'leaderboard']);
+        Route::post('/score/update-inline', [StudentController::class, 'updateScoreInline']);
 
         Route::get('/leaderboard-export', function (Request $request) {
             $eventId = $request->input('event_id');

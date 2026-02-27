@@ -79,7 +79,6 @@ class ScoreController extends Controller
 
 
 
-    
     public function fetchScores(Request $request)
     {
         $event_id = $request->event_id;
@@ -106,7 +105,7 @@ class ScoreController extends Controller
                 'type' => 'team',
                 'id' => $team->id,
                 'name' => $team->team_name,
-                'team_name' => $team->null, // Changed from null to actual team name
+                'team_name' => $team->team_name,
                 'scores' => []
             ];
     
@@ -128,6 +127,7 @@ class ScoreController extends Controller
                     'id' => $student->id,
                     'name' => $student->name,
                     'team_name' => $team->team_name,
+                    'team_id' => $team->id,
                     'scores' => []
                 ];
     
@@ -144,5 +144,116 @@ class ScoreController extends Controller
             'categories' => $categories
         ]);
     }
- 
+
+    public function updateScore(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'event_id' => 'required|integer',
+                'team_id' => 'nullable|integer',
+                'student_id' => 'nullable|integer',
+                'category_id' => 'required|integer',
+                'points' => 'required|numeric|min:0|max:1200' // Changed max to 1200
+            ]);
+
+            // Find or create the score
+            $score = Score::updateOrCreate(
+                [
+                    'event_id' => $validated['event_id'],
+                    'team_id' => $validated['team_id'],
+                    'student_id' => $validated['student_id'],
+                    'steam_category_id' => $validated['category_id']
+                ],
+                [
+                    'points' => $validated['points']
+                ]
+            );
+
+            // Calculate new totals
+            $total = $this->calculateTotal($validated['event_id'], $validated['team_id'], $validated['student_id']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Score updated successfully',
+                'total' => $total
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating score: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'event_id' => 'required|integer',
+                'updates' => 'required|array',
+                'updates.*.team_id' => 'nullable|integer',
+                'updates.*.student_id' => 'nullable|integer',
+                'updates.*.category_id' => 'required|integer',
+                'updates.*.points' => 'required|numeric|min:0|max:1200' // Changed max to 1200
+            ]);
+
+            $updatedTotals = [];
+
+            foreach ($validated['updates'] as $update) {
+                $score = Score::updateOrCreate(
+                    [
+                        'event_id' => $validated['event_id'],
+                        'team_id' => $update['team_id'],
+                        'student_id' => $update['student_id'],
+                        'steam_category_id' => $update['category_id']
+                    ],
+                    [
+                        'points' => $update['points']
+                    ]
+                );
+
+                // Track updated totals
+                $key = ($update['student_id'] ? 'student_' : 'team_') . ($update['student_id'] ?? $update['team_id']);
+                $updatedTotals[$key] = $this->calculateTotal(
+                    $validated['event_id'], 
+                    $update['team_id'], 
+                    $update['student_id']
+                );
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk update completed successfully',
+                'totals' => $updatedTotals
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error in bulk update: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function calculateTotal($event_id, $team_id, $student_id = null)
+    {
+        $categories = SteamCategory::all();
+        $total = 0;
+
+        foreach ($categories as $category) {
+            $score = Score::where('event_id', $event_id)
+                ->where('steam_category_id', $category->id)
+                ->when($student_id, function($query) use ($student_id) {
+                    return $query->where('student_id', $student_id);
+                }, function($query) use ($team_id) {
+                    return $query->where('team_id', $team_id)->whereNull('student_id');
+                })
+                ->first();
+            
+            $total += $score ? $score->points : 0;
+        }
+
+        return $total;
+    }
 }
