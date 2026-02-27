@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('challenges', function (Blueprint $table) {
-            $table->string('sub_category')->nullable();
+        Schema::create('groups', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->id();
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->string('group_name');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('challenges', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('groups');
     }
 };

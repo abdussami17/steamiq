@@ -2,6 +2,7 @@
 
 use App\Exports\LeaderboardExport;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ChallengeActivityController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
@@ -11,6 +12,8 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\ScoreController;
+use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubGroupController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TournamentController;
 use Illuminate\Http\Request;
@@ -33,8 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
 
         // Players routes
-        Route::get('/players', [PlayerController::class, 'index'])->name('player.index');
-        Route::post('/add-player', [PlayerController::class, 'store'])->name('player.store');
+        Route::get('/student', [StudentController::class, 'index'])->name('student.index');
+        Route::post('/student/store', [StudentController::class, 'store'])->name('student.store');
         Route::post('/players/import', [PlayerController::class, 'import'])->name('players.import');
         Route::get('/players/{player}/edit', [PlayerController::class, 'edit'])->name('players.edit');
         Route::post('/players/{player}/update', [PlayerController::class, 'update'])->name('players.update');
@@ -44,7 +47,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/teams/store', [TeamController::class, 'store'])->name('teams.store');
         Route::get('/teams-data', [TeamController::class, 'teamsData'])->name('teams.data');
         Route::get('/view/{team}', [TeamController::class, 'view'])->name('teams.view');
-        Route::post('/update/{team}', [TeamController::class, 'update'])->name('teams.update');
+        Route::get('/teams/{team}', [TeamController::class, 'edit'])->name('teams.edit'); // JSON for edit modal
+        Route::post('/teams/update/{team}', [TeamController::class, 'update'])->name('teams.update'); // update handler
         Route::delete('/delete/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
         Route::get('/teams-export', [TeamController::class, 'export'])->name('teams.export');
         Route::post('/teams-import', [TeamController::class, 'import'])->name('teams.import');
@@ -67,22 +71,31 @@ Route::middleware('auth')->group(function () {
         Route::post('/tournament-match/{match}/winner', [TournamentController::class,'setWinner']);
         Route::post('/tournament-match/{match}/pin', [TournamentController::class,'generatePIN']);
         // Challenges routes
-        Route::post('/challenges/store', [ChallengeController::class, 'store'])->name('challenges.store');
-        Route::get('/challenges/fetch', [ChallengeController::class, 'fetch'])->name('challenges.fetch');
-        Route::get('/challenges/edit/{challenge}', [ChallengeController::class, 'edit'])->name('challenges.edit');
-        Route::post('/challenges/update/{challenge}', [ChallengeController::class, 'update'])->name('challenges.update');
-        Route::delete('/challenges/delete/{challenge}', [ChallengeController::class, 'destroy'])->name('challenges.destroy');
-       
-        // Scores routes
-        Route::post('/scores/store', [ScoreController::class, 'store'])->name('scores.store');
-        Route::get('/scores-data', [ScoreController::class, 'scoresData'])->name('scores.data');
-        Route::get('/scores/view/{score}', [ScoreController::class, 'edit']);
-        Route::post('/scores/update/{score}', [ScoreController::class, 'update']);
-        Route::delete('/scores/delete/{score}', [ScoreController::class, 'destroy']);
-        Route::post('/scores/import', [ScoreController::class, 'import'])->name('scores.import');
+        // Route::post('/challenges/store', [ChallengeController::class, 'store'])->name('challenges.store');
+        // Route::get('/challenges/fetch', [ChallengeController::class, 'fetch'])->name('challenges.fetch');
+        // Route::get('/challenges/edit/{challenge}', [ChallengeController::class, 'edit'])->name('challenges.edit');
+        // Route::post('/challenges/update/{challenge}', [ChallengeController::class, 'update'])->name('challenges.update');
+        // Route::delete('/challenges/delete/{challenge}', [ChallengeController::class, 'destroy'])->name('challenges.destroy');
 
-        // Matches Routes
-        
+        // Activity Routes
+        Route::post('/activities/store', [ChallengeActivityController::class, 'store'])->name('activities.store');
+        Route::get('/activities/{activity}', [ChallengeActivityController::class, 'show']);
+        Route::post('/activities/{activity}/update', [ChallengeActivityController::class, 'update']);
+        Route::delete('/activities/{activity}/delete', [ChallengeActivityController::class, 'destroy']);
+  // Score routes
+  Route::prefix('scores')->name('scores.')->group(function () {
+    Route::post('/', [ScoreController::class, 'store'])->name('store');
+});
+    Route::post('/scores/fetch', [ScoreController::class, 'fetchScores'])->name('scores.fetch');
+    
+
+// API routes for AJAX dropdowns
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/events/{event}/students', [ScoreController::class, 'getEventStudents'])->name('events.students');
+    Route::get('/events/{event}/teams', [ScoreController::class, 'getEventTeams'])->name('events.teams');
+    Route::get('/events/{event}/activities', [ScoreController::class, 'getEventActivities'])->name('events.activities');
+    Route::get('/steam-categories', [ScoreController::class, 'getSteamCategories'])->name('steam.categories');
+});   
 Route::post('/matches', [MatchController::class,'store'])->name('matches.store');
 Route::post('/matches/{id}/generate-pin', [MatchController::class,'generatePin'])->name('matches.generatePin');
 Route::post('/matches/{id}/round', [MatchController::class,'addRound'])->name('matches.addRound');
@@ -102,12 +115,19 @@ Route::get('/matches/export/all', [MatchController::class, 'exportAllSchedule'])
     [OrganizationController::class, 'destroy']
 )->name('organizations.destroy');
 Route::get('/organizations/list', [TeamController::class, 'list']);
-
-
+// Update organization
+Route::post('/organizations/update/{id}', [OrganizationController::class, 'update'])->name('organizations.update');
 // Groupes Routes
 Route::post('/groups', [GroupController::class, 'store'])->name('groups.store');
+Route::post('/groups/store', [GroupController::class, 'store'])->name('groups.store');
+Route::post('/groups/update/{id}', [GroupController::class, 'update'])->name('groups.update');
 Route::get('/teams/list', [TeamController::class, 'listTeam'])->name('teams.list');
 Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
+
+Route::post('/subgroups/store', [SubGroupController::class, 'store'])->name('subgroups.store');
+Route::delete('/subgroups/{subgroup}', [SubGroupController::class, 'destroy'])->name('subgroups.destroy');
+Route::get('subgroup/fetch/{id}', [SubGroupController::class, 'show'])->name('subgroup.fetch');
+Route::put('subgroup/update/{subgroup}', [SubGroupController::class, 'update'])->name('subgroup.update'); // Update
 
 
         // Leaderboard routes

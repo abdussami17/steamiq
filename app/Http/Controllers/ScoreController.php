@@ -3,155 +3,146 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\Player;
-use App\Models\Scores;
-use App\Models\Challenges;
+use App\Models\Score;
+use App\Models\Student;
+use App\Models\Team;
+use App\Models\ChallengeActivity;
+use App\Models\SteamCategory;
 use Illuminate\Http\Request;
-use App\Imports\ScoresImport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Validation\ValidationException;
 
 class ScoreController extends Controller
 {
     public function store(Request $request)
     {
-        try {
-            $validated = $request->validate([
-                'event_id'     => 'required|exists:events,id',
-                'player_id'    => 'required|exists:players,id',
-                'challenge_id' => 'required|exists:challenges,id',
-                'points'       => 'required|integer|min:0',
-            ]);
-
-            $event = Event::findOrFail($validated['event_id']);
-            $player = Player::findOrFail($validated['player_id']);
-            $challenge = Challenges::findOrFail($validated['challenge_id']);
-
-            if ($player->event_id != $event->id) {
-                throw ValidationException::withMessages([
-                    'player_id' => 'Selected player does not belong to this event.'
-                ]);
-            }
-
-            if ($challenge->event_id != $event->id) {
-                throw ValidationException::withMessages([
-                    'challenge_id' => 'Selected challenge does not belong to this event.'
-                ]);
-            }
-
-            if ($validated['points'] < 0 || $validated['points'] > $challenge->max_points) {
-                throw ValidationException::withMessages([
-                    'points' => 'Points must be between 0 and ' . $challenge->max_points
-                ]);
-            }
-
-            $exists = Scores::where('player_id', $player->id)
-                            ->where('challenge_id', $challenge->id)
-                            ->exists();
-
-            if ($exists) {
-                throw ValidationException::withMessages([
-                    'player_id' => 'Score already exists for this player and challenge.'
-                ]);
-            }
-
-            DB::transaction(function () use ($validated) {
-                Scores::create($validated);
-            });
-
-            return back()->with('success', 'Score added successfully')
-            ->header('Content-Type', 'text/html');
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (\Exception $e) {
-            // Log the full error message and stack trace
-            Log::error('ScoreController@store error: '.$e->getMessage(), [
-                'exception' => $e
-            ]);
-
-            // Optionally, also return the message for local debugging (remove in production)
-            return back()->with('error', 'Something went wrong: '.$e->getMessage())->withInput();
-        }
-    }
-
-    public function import(Request $request)
-    {
         $request->validate([
-            'file' => 'required|file|mimes:csv,xlsx'
+            'event_id' => 'required|exists:events,id',
+            'challenge_activity_id' => 'required|exists:challenge_activities,id',
+            'student_id' => 'required_without:team_id|nullable|exists:students,id',
+            'team_id' => 'required_without:student_id|nullable|exists:teams,id',
+            'points' => 'required|array',
         ]);
-    
-        $file = $request->file('file');
-    
+
+        if (!$request->student_id && !$request->team_id) {
+            return response()->json(['success'=>false,'message'=>'Please select student or team'],422);
+        }
+
+        DB::beginTransaction();
         try {
-            Excel::import(new ScoresImport(), $file);
-    
-            return back()->with('success', 'Scores imported successfully!');
+            foreach($request->points as $steamCategoryId => $pts){
+                $pts = (int)$pts;
+                if($pts <= 0) continue;
+
+                Score::create([
+                    'event_id' => $request->event_id,
+                    'challenge_activity_id' => $request->challenge_activity_id,
+                    'student_id' => $request->student_id,
+                    'team_id' => $request->team_id,
+                    'steam_category_id' => $steamCategoryId,
+                    'points' => $pts,
+                ]);
+            }
+
+            DB::commit();
+            return response()->json(['success'=>true,'message'=>'Points assigned successfully']);
         } catch (\Exception $e) {
-            return back()->with('error', 'Import failed: '.$e->getMessage());
+            DB::rollBack();
+            Log::error('Score store error: '.$e->getMessage());
+            return response()->json(['success'=>false,'message'=>'Failed to save points'],500);
         }
     }
-    
-    public function scoresData()
-    {
-        $scores = Scores::with(['player','challenge'])
-            ->latest()
-            ->get();
 
-        return response()->json(
-            $scores->map(function ($s) {
-                return [
-                    'id' => $s->id,
-                    'player' => $s->player->name ?? 'N/A',
-                    'pillar' => $s->challenge->pillar_type ?? 'N/A',
-                    'category' => $s->challenge->name ?? 'N/A',
-                    'points' => $s->points,
-                    'date' => $s->created_at->format('Y-m-d'),
+    // Fetch students for an event
+    public function getEventStudents(Event $event)
+    {
+        return response()->json($event->students()->select('id','name')->orderBy('name')->get());
+    }
+
+    // Fetch teams for an event
+    public function getEventTeams(Event $event)
+    {
+        return response()->json($event->teams()->select('id','team_name as name')->orderBy('team_name')->get());
+    }
+
+    // Fetch activities for an event
+    public function getEventActivities(Event $event)
+    {
+        return response()->json($event->challengeactivity()->select('id','name')->orderBy('name')->get());
+    }
+
+    // Fetch STEAM categories
+    public function getSteamCategories()
+    {
+        return response()->json(SteamCategory::select('id','name')->orderBy('id')->get());
+    }
+
+
+
+    
+    public function fetchScores(Request $request)
+    {
+        $event_id = $request->event_id;
+    
+        if (!$event_id) {
+            return response()->json(['error' => 'Event not selected'], 422);
+        }
+    
+        $teams = Team::with('students')->where('event_id', $event_id)->get();
+        $categories = SteamCategory::all();
+    
+        $table = [];
+    
+        foreach ($teams as $team) {
+    
+            // Team row (aggregate)
+            $teamScores = Score::where('event_id', $event_id)
+                ->where('team_id', $team->id)
+                ->whereNull('student_id')
+                ->get()
+                ->keyBy('steam_category_id');
+    
+            $row = [
+                'type' => 'team',
+                'id' => $team->id,
+                'name' => $team->team_name,
+                'team_name' => $team->null, // Changed from null to actual team name
+                'scores' => []
+            ];
+    
+            foreach ($categories as $cat) {
+                $row['scores'][$cat->id] = optional($teamScores->get($cat->id))->points ?? 0;
+            }
+    
+            $table[] = $row;
+    
+            // Student rows
+            foreach ($team->students as $student) {
+                $studentScores = Score::where('event_id', $event_id)
+                    ->where('student_id', $student->id)
+                    ->get()
+                    ->keyBy('steam_category_id');
+    
+                $srow = [
+                    'type' => 'student',
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'team_name' => $team->team_name,
+                    'scores' => []
                 ];
-            })
-        );
-    }
-
-
-        public function edit(Scores $score)
-{
-
-
-    return response()->json([
-        'id' => $score->id,
-        'points' => $score->points
-    ]);
-}
-
-
-
-public function update(Request $request, Scores $score)
-{
-    try {
-        $request->validate([
-            'points' => 'required|numeric|min:0'
+    
+                foreach ($categories as $cat) {
+                    $srow['scores'][$cat->id] = optional($studentScores->get($cat->id))->points ?? 0;
+                }
+    
+                $table[] = $srow;
+            }
+        }
+    
+        return response()->json([
+            'table' => $table,
+            'categories' => $categories
         ]);
-
-        $score->points = $request->points;
-        $score->save();
-
-        return response()->json(['success' => true]);
-    } catch (\Exception $e) {
-        \Log::error('Score update failed: '.$e->getMessage());
-        return response()->json(['success'=>false,'error'=>$e->getMessage()],500);
     }
-}
-
-
-
-
-
-public function destroy(Scores $score)
-{
-    $score->delete();
-    return response()->json(['success' => true]);
-}
-
+ 
 }

@@ -11,17 +11,29 @@ class GroupController extends Controller
     {
         $request->validate([
             'group_name' => 'required|string|max:255',
-            'team_id'    => 'required|exists:teams,id',
+            'event_id'    => 'required|exists:events,id',
         ]);
     
         Group::create([
             'group_name' => $request->group_name,
-            'team_id'    => $request->team_id,
+            'event_id'    => $request->event_id,
         ]);
     
         return back()->with('success', 'Group created successfully.')->header('Content-Type', 'text/html');
     }
-
+    public function update(Request $request, $id)
+    {
+        $group = Group::findOrFail($id);
+    
+        $data = $request->validate([
+            'group_name' => 'required|string|max:255',
+            'event_id'   => 'required|exists:events,id',
+        ]);
+    
+        $group->update($data);
+    
+        return back()->with('success', 'Group updated successfully');
+    }
 
     public function destroy(Group $group)
 {

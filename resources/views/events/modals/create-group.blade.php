@@ -14,23 +14,26 @@
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Group Name <span class="text-danger">*</span>
+                            Group Name
                         </label>
                         <input type="text"
                                name="group_name"
                                class="form-input"
-                               required>
+                               >
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Team <span class="text-danger">*</span>
+                            Event 
                         </label>
-                        <select name="team_id"
-                                id="teamSelect"
+                        <select name="event_id"
+                               
                                 class="form-select"
-                                required>
-                            <option>Loading teams...</option>
+                                >
+                            <option value="" hidden>--Select Event--</option>
+                            @foreach ($events as $ev )
+                                <option value="{{ $ev->id }}">{{ $ev->name }}</option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -47,38 +50,3 @@
     </div>
 </div>
 
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-    
-        const teamSelect = document.getElementById('teamSelect');
-        const modal = document.getElementById('createGroupModal');
-    
-        modal.addEventListener('shown.bs.modal', function () {
-    
-            teamSelect.innerHTML = '<option>Loading...</option>';
-    
-            fetch('/teams/list')
-                .then(res => res.json())
-                .then(teams => {
-    
-                    teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
-    
-                    if (!teams.length) {
-                        teamSelect.innerHTML =
-                            '<option disabled>No teams available</option>';
-                        return;
-                    }
-    
-                    teams.forEach(team => {
-                        const opt = document.createElement('option');
-                        opt.value = team.id;
-                        opt.textContent = team.team_name;
-                        teamSelect.appendChild(opt);
-                    });
-                });
-        });
-    
-    });
-    </script>
-    

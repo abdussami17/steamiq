@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tournament_matches', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->unsignedBigInteger('tournament_id');
             $table->unsignedBigInteger('team_a_id')->nullable();
@@ -28,6 +29,7 @@ return new class extends Migration
             $table->foreign('team_a_id')->references('id')->on('teams')->onDelete('set null');
             $table->foreign('team_b_id')->references('id')->on('teams')->onDelete('set null');
             $table->foreign('winner_team_id')->references('id')->on('teams')->onDelete('set null');
+            $table->string('pin', 10)->nullable();
         });
         
     }

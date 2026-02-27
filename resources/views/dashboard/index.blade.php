@@ -23,17 +23,21 @@
                 <div class="stat-value">{{ $activeEventsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
-                <div class="stat-label">Total Players</div>
-                <div class="stat-value">{{ $playersCount ?: 'N/A' }}</div>
+                <div class="stat-label">Total Students</div>
+                <div class="stat-value">{{ $studentsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
                 <div class="stat-label">Teams Registered</div>
                 <div class="stat-value">{{ $teamsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
+                <div class="stat-label">Total Organization</div>
+                <div class="stat-value">{{ $orgCount ?: 'N/A' }}</div>
+            </div>
+            {{-- <div class="stat">
                 <div class="stat-label">Matches Today</div>
                 <div class="stat-value">{{ $todayMatchesCount ?: 'N/A' }}</div>
-            </div>
+            </div> --}}
         </div>
     </section>
 
@@ -165,7 +169,7 @@
                     </div>
                     <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Players</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Register new participants</p>
-                    <a href="{{ route('player.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
+                    <a href="{{ route('student.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
 
                 </div>
             </div>

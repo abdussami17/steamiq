@@ -9,16 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('scores', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
-            $table->unsignedBigInteger('event_id');
-            $table->unsignedBigInteger('player_id')->nullable();
-            $table->unsignedBigInteger('challenge_id');
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->foreignId('student_id')->nullable()->constrained('students')->onDelete('cascade');
+            $table->foreignId('team_id')->nullable()->constrained('teams')->onDelete('cascade');
+            $table->foreignId('challenge_activity_id')->constrained()->onDelete('cascade');
+            $table->foreignId('steam_category_id')->constrained('steam_categories')->onDelete('cascade');
             $table->integer('points')->default(0);
             $table->timestamps();
-
-            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
-            $table->foreign('player_id')->references('id')->on('players')->onDelete('cascade');
-            $table->foreign('challenge_id')->references('id')->on('challenges')->onDelete('cascade');
         });
     }
 

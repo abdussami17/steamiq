@@ -1,146 +1,133 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        fetchScores();
-    
-        document.getElementById('editScoreForm')
-            .addEventListener('submit', submitUpdate);
+        const eventSelect = document.getElementById('eventSelect');
+        if (eventSelect) {
+            eventSelect.addEventListener('change', fetchScores);
+            
+            // Auto-load if there's a selected event (e.g., from URL parameter)
+            if (eventSelect.value) {
+                fetchScores();
+            }
+        }
     });
     
-    
-    
-    /* =============================
-       LOAD TABLE
-    ============================= */
     async function fetchScores() {
-        const tbody = document.getElementById('scoresTableBody');
-        tbody.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
+        const eventSelect = document.getElementById('eventSelect');
+        const eventId = eventSelect.value;
+        const tbody = document.getElementById('scoreBody');
+        const thead = document.getElementById('scoreHead');
+    
+        if (!eventId) {
+            tbody.innerHTML = `<tr><td colspan="9">Please select an event</td></tr>`;
+            return;
+        }
+    
+        tbody.innerHTML = `<tr><td colspan="9">Loading...</td></tr>`;
     
         try {
-            const res = await fetch('/scores-data', {
-                headers: { 'Accept':'application/json' }
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            
+            if (!token) {
+                throw new Error('CSRF token not found');
+            }
+    
+            const res = await fetch(`/scores/fetch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token
+                },
+                body: JSON.stringify({ event_id: eventId })
             });
     
-            const scores = await res.json();
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
     
-            if (!scores.length) {
-                tbody.innerHTML = `<tr><td colspan="6">N/A</td></tr>`;
+            const data = await res.json();
+            
+            // Validate response structure
+            if (!data.table || !data.categories) {
+                throw new Error('Invalid response structure');
+            }
+            
+            const tableData = data.table;
+            const categories = data.categories;
+    
+            // Build dynamic table head based on categories
+            let headHtml = '<tr>';
+            headHtml += '<th>Type</th>';
+            headHtml += '<th>Team</th>';
+            headHtml += '<th>Name</th>';
+            
+            // Add category columns
+            categories.forEach(cat => {
+                headHtml += `<th>${cat.name}</th>`;
+            });
+            
+            headHtml += '<th>Total</th>';
+            headHtml += '</tr>';
+            
+            thead.innerHTML = headHtml;
+    
+            if (!tableData || tableData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${categories.length + 4}">No scores available for this event</td></tr>`;
                 return;
             }
     
-            tbody.innerHTML = scores.map(s => `
-                <tr>
-                    <td>${s.player}</td>
-                    <td>${s.pillar}</td>
-                    <td>${s.category}</td>
-                    <td>${s.points}</td>
-                    <td>${s.date}</td>
-                    <td>
-                     <div class="d-flex gap-2">
-                        <button class="btn btn-icon btn-edit" onclick="openScoreModal('${s.id}')" title="Edit">
-                            <i data-lucide="edit-2"></i>
-                        </button>
-                        <button class="btn btn-icon btn-delete" onclick="deleteScore('${s.id}')" title="Delete">
-                            <i data-lucide="trash-2"></i>
-                        </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
-            try {
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-} catch (e) {
-    console.warn('Lucide icon replacement failed:', e);
-}
+            // Build table body
+            let bodyHtml = '';
+            
+            tableData.forEach(row => {
+                // Calculate total score
+                let total = 0;
+                let scoresHtml = '';
+                
+                categories.forEach(cat => {
+                    const points = row.scores && row.scores[cat.id] ? row.scores[cat.id] : 0;
+                    total += points;
+                    scoresHtml += `<td>${points}</td>`;
+                });
     
-        } catch (e) {
-            console.error(e);
-            tbody.innerHTML = `<tr><td colspan="6">Error</td></tr>`;
-        }
-    }
+                // Determine display values based on row type
+                const typeDisplay = row.type === 'team' ? 'Team' : 'Student';
+                const nameDisplay = row.type === 'team' ? row.name : row.name;
+                const teamDisplay = row.team_name || '-';
+                
+                // Add row with appropriate styling
+                const rowClass = row.type === 'team' ? 'team-row fw-bold' : 'student-row';
+                
+                bodyHtml += `
+                    <tr class="${rowClass}">
+                        <td>${typeDisplay}</td>
+                        <td>${teamDisplay}</td>
+                        <td>${nameDisplay}</td>
+                        ${scoresHtml}
+                        <td><strong>${total}</strong></td>
+                    </tr>
+                `;
+            });
     
-    
-    
-    /* =============================
-       OPEN MODAL
-    ============================= */
-    async function openScoreModal(id) {
-    
-        const modal = new bootstrap.Modal(
-            document.getElementById('editScoreModal')
-        );
-    
-        document.getElementById('scoreId').value = id;
-    
-        const res = await fetch(`/scores/view/${id}`, {
-            headers:{'Accept':'application/json'}
-        });
-    
-        const data = await res.json();
-    
-       
-        document.getElementById('scorePoints').value = data.points;
-    
-        modal.show();
-    }
-    
-    
-    
-    /* =============================
-       UPDATE
-    ============================= */
-    async function submitUpdate(e) {
-        e.preventDefault();
-    
-        const id = document.getElementById('scoreId').value;
-        const form = new FormData(e.target);
-    
-        const res = await fetch(`/scores/update/${id}`, {
-    method:'POST',
-    body:form,
-    headers:{
-        'Accept':'application/json',
-        'X-CSRF-TOKEN':'{{ csrf_token() }}'
-    }
-});
-
-if(!res.ok){
-    const err = await res.json().catch(()=>({error:'Server error'}));
-    alert('Update failed: '+ (err.error || 'Unknown error'));
-    return;
-}
-
-const data = await res.json();
-
-    
-        if(data.success){
-            bootstrap.Modal.getInstance(
-                document.getElementById('editScoreModal')
-            ).hide();
-    
-            fetchScores();
-        } else {
-            alert('Update failed');
-        }
-    }
-    
-    
-    
-    /* =============================
-       DELETE
-    ============================= */
-    async function deleteScore(id){
-    
-        if(!confirm('Delete this score?')) return;
-    
-        await fetch(`/scores/delete/${id}`,{
-            method:'DELETE',
-            headers:{
-                'Accept':'application/json',
-                'X-CSRF-TOKEN':'{{ csrf_token() }}'
+            tbody.innerHTML = bodyHtml;
+            
+            // Re-initialize Lucide icons if you're using them
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
             }
-        });
     
+        } catch (error) {
+            console.error('Error fetching scores:', error);
+            tbody.innerHTML = `<tr><td colspan="9">Error loading scores: ${error.message}</td></tr>`;
+        }
+    }
+    
+    // Optional: Add auto-refresh functionality
+    function refreshScores() {
         fetchScores();
     }
-    </script>
     
+    // Auto-refresh every 30 seconds (optional)
+    // setInterval(refreshScores, 30000);
+</script>
+

@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChallengeActivity;
 use App\Models\Challenges;
 use App\Models\Event;
 use App\Models\Organization;
 use App\Models\Player;
+use App\Models\SubGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class EventController extends Controller
 {
@@ -31,48 +34,47 @@ class EventController extends Controller
 
                        $challenges = Challenges::all();
                        $organizations = Organization::all(); // fetch all
-                       $groups = \App\Models\Group::with('team')->latest()->get();
-            
-    
-        return view('events.index', compact('players','groups','organizations','allevents','events','challenges','allplayers'));
+                       $groups = \App\Models\Group::with('event')->get();
+                       $subgroups = SubGroup::with('group','event')->get();
+                       $activities = ChallengeActivity::with('event')->get();
+        return view('events.index', compact('players','activities','subgroups','groups','organizations','allevents','events','challenges','allplayers'));
     }
     
 
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'event_type' => 'required|in:match,tournament,season_tracking',
+            'organization_id' => 'required|exists:organizations,id',
+            'event_type' => 'required|in:Brain Games,Playground Games,Esports',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'location' => 'nullable|string|max:255',
             'status' => 'required|in:draft,live,closed',
-            'notes' => 'nullable|string',
+        ], [
+            'name.required' => 'Event name is required.',
+            'organization_id.required' => 'Organization selection is required.',
+            'organization_id.exists' => 'Selected organization is invalid.',
+            'start_date.required' => 'Start date is required.',
+            'end_date.after_or_equal' => 'End date must be after start date.',
         ]);
     
-        if ($data['event_type'] === 'season_tracking' && empty($data['end_date'])) {
-            return redirect()->back()
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
                 ->withInput()
-                ->withErrors(['end_date' => 'End date is required for Season Tracking events.']);
+                ->with('error', $validator->errors()->first());
         }
     
+        $data = $validator->validated();
+    
         Event::create([
-            'name' => $data['name'],
-            'event_type' => $data['event_type'],
-            'start_date' => $data['start_date'],
-            'end_date' => $data['end_date'] ?? null,
-            'location' => $data['location'] ?? null,
-            'status' => $data['status'],
-            'notes' => $data['notes'] ?? null,
+            ...$data,
             'registration_count' => 0,
         ]);
     
-        return redirect()
-        ->back()
-        ->with('success', 'Event created successfully.')
-        ->header('Content-Type', 'text/html');
-    
+        return redirect()->back()->with('success', 'Event created successfully.');
     }
     public function show(Event $event)
     {

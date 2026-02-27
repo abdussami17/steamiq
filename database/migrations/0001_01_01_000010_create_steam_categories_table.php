@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('tournament_matches', function (Blueprint $table) {
-            $table->string('pin', 10)->nullable()->after('winner_team_id');
+        Schema::create('steam_categories', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->id();
+            $table->string('name')->unique();
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('tournament_matches', function (Blueprint $table) {
-            $table->dropColumn('pin');
-        });
+        Schema::dropIfExists('steam_categories');
     }
 };

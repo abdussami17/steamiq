@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Team;
-use App\Models\Player; 
 use App\Exports\TeamsExport;
 use App\Imports\TeamsImport;
+use App\Models\Player; 
+use App\Models\SubGroup;
+use App\Models\Team;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 
@@ -24,36 +27,45 @@ class TeamController extends Controller
         return response()->json($players);
     }
 
-
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'team_name'       => 'required|string|max:255',
-            'event_id'        => 'required|exists:events,id',
-            'organization_id' => 'required|exists:organizations,id',
-            'players'         => 'required|array|min:1',
-            'players.*'       => 'exists:players,id',
-    
-            // NEW
-            'profile'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'team_name'    => 'required|string|max:255',
+            'sub_group_id' => 'required|exists:sub_groups,id',
+            'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
     
-        $profilePath = null;
+        DB::beginTransaction();
     
-        if ($request->hasFile('profile')) {
-            $profilePath = $request->file('profile')->store('teams', 'public');
+        try {
+    
+            $subgroup = SubGroup::with('event')->findOrFail($validated['sub_group_id']);
+    
+            $profilePath = null;
+    
+            if ($request->hasFile('profile')) {
+                $profilePath = $request->file('profile')->store('teams', 'public');
+            }
+    
+            Team::create([
+                'team_name'    => $validated['team_name'],
+                'sub_group_id' => $subgroup->id,
+                'event_id'     => $subgroup->event->id,
+                'profile'      => $profilePath,
+            ]);
+    
+            DB::commit();
+    
+            return back()->with('success', 'Team created successfully.');
+    
+        } catch (\Throwable $e) {
+    
+            DB::rollBack();
+            Log::error($e->getMessage());
+    
+            return back()->withInput()->with('error', 'Failed to create team.');
         }
-    
-        $team = Team::create([
-            'team_name'       => $validated['team_name'],
-            'event_id'        => $validated['event_id'],
-            'organization_id' => $validated['organization_id'],
-            'profile'         => $profilePath,
-        ]);
-    
-        $team->players()->attach($validated['players']);
-    
-        return back()->with('success', 'Team created successfully.')->header('Content-Type', 'text/html');
     }
     
    
@@ -169,20 +181,54 @@ class TeamController extends Controller
     }
 
     // Update team
+    public function edit(Team $team)
+    {
+        $team->load('subgroup.event');
+    
+        return response()->json([
+            'team' => [
+                'id' => $team->id,
+                'team_name' => $team->team_name,
+                'sub_group_id' => $team->sub_group_id,
+                'event_id' => $team->event_id,
+                'profile' => $team->profile ? asset('storage/' . $team->profile) : null
+            ]
+        ]);
+    }
+    
     public function update(Request $request, Team $team)
     {
-        $request->validate([
-            'team_name' => 'required|string|max:255',
-            'players' => 'required|array|min:1',
-            'players.*' => 'exists:players,id'
+        $validated = $request->validate([
+            'team_name'    => 'required|string|max:255',
+            'sub_group_id' => 'required|exists:sub_groups,id',
+            'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
-        $team->update(['team_name' => $request->team_name]);
-        $team->players()->sync($request->players);
-
-        return response()->json(['success' => true, 'message' => 'Team updated successfully.']);
+    
+        DB::beginTransaction();
+        try {
+            $subgroup = SubGroup::with('event')->findOrFail($validated['sub_group_id']);
+    
+            $profilePath = $team->profile;
+            if ($request->hasFile('profile')) {
+                $profilePath = $request->file('profile')->store('teams', 'public');
+            }
+    
+            $team->update([
+                'team_name'    => $validated['team_name'],
+                'sub_group_id' => $subgroup->id,
+                'event_id'     => $subgroup->event->id,
+                'profile'      => $profilePath,
+            ]);
+    
+            DB::commit();
+    
+            return response()->json(['success' => true, 'message' => 'Team updated successfully.']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to update team.']);
+        }
     }
-
     // Delete team
     public function destroy(Team $team)
     {

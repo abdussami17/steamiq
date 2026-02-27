@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('organizations', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->string('name');
-            $table->string('address')->nullable();
+            $table->enum('organization_type', ['School','Parks and Recreation','Youth Organization','Other']);
+            // $table->string('address')->nullable();
             $table->string('email')->nullable();
             $table->text('profile')->nullable();
             $table->timestamps();

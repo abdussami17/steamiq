@@ -9,12 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('players', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->unsignedBigInteger('event_id');
             $table->string('name');
             $table->string('email')->nullable();
             $table->timestamps();
-
+            $table->string('profile')->nullable();
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
         });
     }

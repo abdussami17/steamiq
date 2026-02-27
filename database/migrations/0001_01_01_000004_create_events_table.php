@@ -12,11 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('events', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id(); // EventID
+            $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->enum('event_type', ['match', 'tournament', 'season_tracking']);
+            $table->enum('event_type', ['Brain Games','Playground Games','Esports']);
             $table->date('start_date');
-            $table->date('end_date')->nullable();
+            $table->date('end_date');
             $table->string('location')->nullable();
             $table->integer('registration_count')->default(0);
             $table->enum('status', ['draft', 'live', 'closed'])->default('draft');

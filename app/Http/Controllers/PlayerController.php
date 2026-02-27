@@ -32,8 +32,7 @@ class PlayerController extends Controller
             'player_email' => 'nullable|email|unique:players,email',
             'assign_team'  => 'nullable|exists:teams,id',
             'event_id'     => 'nullable|exists:events,id',
-    
-            // NEW
+
             'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
     

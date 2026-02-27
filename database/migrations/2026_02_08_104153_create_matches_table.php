@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('matches', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
         
             $table->foreignId('event_id')->constrained()->cascadeOnDelete();

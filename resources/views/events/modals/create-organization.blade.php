@@ -21,35 +21,36 @@
                         <!-- Name -->
                         <div class="col-md-6">
                             <label class="form-label">
-                                Organization Name <span class="text-danger">*</span>
+                                Organization Name
                             </label>
                             <input type="text"
                                    name="name"
                                    class="form-input"
                                    value="{{ old('name') }}"
-                                   required>
+                                   >
                         </div>
 
-                        <!-- Email -->
+                        <!-- Type -->
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email"
-                                   name="email"
-                                   class="form-input"
-                                   value="{{ old('email') }}">
-                        </div>
+                            <label class="form-label">Organization Type</label>
+                            <select class="form-select" name="organization_type">
+                                <option value="" hidden>--Select Type--</option>
+                                <option value="School">School</option>
+                                <option value="Parks and Recreation">Parks and Recreation</option>
+                                <option value="Youth Organization">Youth Organization</option>
+                                <option value="Other">Other</option>
 
-                        <!-- Address -->
-                        <div class="col-md-12">
-                            <label class="form-label">Address</label>
-                            <textarea name="address"
-                                      rows="2"
-                                      class="form-input">{{ old('address') }}</textarea>
+                            </select>
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email <small class="text-muted">(optional)</small></label>
+                           <input type="text" class="form-input" name="email" value="{{ old('address') }}">
+                        </div>
+                  
 
                         <!-- Photo -->
-                        <div class="col-md-12">
-                            <label class="form-label">Photo</label>
+                        <div class="col-md-6">
+                            <label class="form-label">Photo  <small class="text-muted">(optional)</small></label>
                             <input type="file"
                                    name="profile"
                                    class="form-input"

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Players - SteamIQ')
+@section('title', 'Students - SteamIQ')
 
 @section('content')
 <div class="container">
@@ -7,10 +7,10 @@
         <div class="section-header d-flex justify-content-between align-items-center">
             <h2 class="section-title">
                 <span class="icon"><i data-lucide="users"></i></span>
-                Players Management
+                Student Management
             </h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#playerModal">
-                <i data-lucide="plus"></i> Add New Player
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                <i data-lucide="plus"></i> Add New Student
             </button>
         </div>
 
@@ -18,9 +18,7 @@
         <div class="spreadsheet-container">
             <!-- Toolbar -->
             <div class="spreadsheet-toolbar mb-4">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#playerModal">
-                    <i data-lucide="plus"></i> Add Player
-                </button>
+                
                 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
                     Import Players
                 </button>
@@ -50,11 +48,11 @@
         
     </section>
 </div>
-
-@include('players.script')
-@include('players.modals.create-players')
-@include('players.modals.import-players')
-@include('players.modals.edit-players')
+{{-- 
+@include('students.script') --}}
+@include('students.modals.create-students')
+{{-- @include('students.modals.import-students')
+@include('students.modals.edit-players') --}}
 
 
 @endsection

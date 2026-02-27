@@ -11,31 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('match_rounds', function (Blueprint $table) {
+        Schema::create('students', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->id();
-    
-            $table->foreignId('match_id')
-                  ->constrained()
-                  ->cascadeOnDelete();
-    
-            $table->integer('round_no');
-    
-            $table->foreignId('winner_team_id')
-                  ->nullable()
-                  ->constrained('teams')
-                  ->nullOnDelete();
-    
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->foreignId('team_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->string('profile')->nullable();
+            $table->string('email')->nullable();
             $table->timestamps();
         });
     }
-    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('match_rounds');
+        Schema::dropIfExists('students');
     }
 };

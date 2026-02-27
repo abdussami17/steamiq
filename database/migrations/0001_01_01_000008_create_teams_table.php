@@ -9,12 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('teams', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
-            $table->unsignedBigInteger('event_id');
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->foreignId('sub_group_id')->constrained()->onDelete('cascade');
             $table->string('team_name');
             $table->timestamps();
-
-            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
+            $table->string('profile')->nullable();
+            $table->integer('seed_rank')->nullable();
+         
         });
     }
 

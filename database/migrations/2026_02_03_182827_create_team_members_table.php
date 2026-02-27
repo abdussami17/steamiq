@@ -9,6 +9,7 @@
         public function up(): void
         {
             Schema::create('team_members', function (Blueprint $table) {
+                $table->engine = 'InnoDB';
                 $table->id();
                 $table->unsignedBigInteger('team_id');
                 $table->unsignedBigInteger('player_id');

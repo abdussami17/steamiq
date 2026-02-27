@@ -15,22 +15,32 @@
 
 
                     <div class="mb-3 col-md-4">
-                        <label class="form-label">Event Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-input" placeholder="Spring Championship 2026" required>
+                        <label class="form-label">Event Name </label>
+                        <input type="text" name="name" class="form-input" placeholder="Spring Championship 2026" >
                     </div>
 
+  <div class="mb-3 col-md-4">
+                        <label class="form-label">Organization</label>
+                        <select name="organization_id" class="form-select" >
+                            <option value="" hidden>--Select Organization--</option>
+                           @foreach ($organizations as $org )
+                               <option value="{{ $org->id }}">{{ $org->name }}</option>
+                           @endforeach
+                        </select>
+                    </div>
                     <div class="mb-3 col-md-4">
-                        <label class="form-label">Event Type <span class="text-danger">*</span></label>
-                        <select name="event_type" class="form-select" required>
-                            <option value="match">Match Event</option>
-                            <option value="tournament">Tournament Event</option>
-                            <option value="season_tracking">Season Tracking Event</option>
+                        <label class="form-label">Event Type</label>
+                        <select name="event_type" class="form-select" >
+                           <option value=""  hidden>--Select Type--</option>
+                            <option value="Brain Games">Brain Games</option>
+                            <option value="Playground Games">Playground Games</option>
+                            <option value="Esports">Esports</option>
                         </select>
                     </div>
 
                     <div class="mb-3 col-md-4">
-                        <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                        <input type="date" name="start_date" class="form-input" required>
+                        <label class="form-label">Start Date </label>
+                        <input type="date" name="start_date" class="form-input" >
                     </div>
 
                     <div class="mb-3 col-md-4">
@@ -44,18 +54,14 @@
                     </div>
 
                     <div class="mb-3 col-md-4">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select name="status" class="form-select" required>
+                        <label class="form-label">Status </label>
+                        <select name="status" class="form-select" >
                             <option value="draft">Draft</option>
                             <option value="live">Live</option>
                             <option value="closed">Closed</option>
                         </select>
                     </div>
 
-                    <div class="mb-3 col-md-6">
-                        <label class="form-label">Notes / Description</label>
-                        <textarea name="notes" class="form-input" rows="3" placeholder="Optional admin notes"></textarea>
-                    </div>
                 </div>
                 </div>
 
@@ -70,14 +76,3 @@
 </div>
 
 
-<script>
-    document.querySelector('select[name="event_type"]').addEventListener('change', function() {
-    const endDateInput = document.querySelector('input[name="end_date"]');
-    if (this.value === 'season_tracking') {
-        endDateInput.required = true;
-    } else {
-        endDateInput.required = false;
-    }
-});
-
-</script>

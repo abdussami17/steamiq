@@ -9,11 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('challenges', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
             $table->id();
             $table->unsignedBigInteger('event_id');
             $table->enum('pillar_type', ['brain', 'playground', 'egame']);
             $table->string('name');
             $table->integer('max_points');
+            $table->string('sub_category')->nullable();
             $table->timestamps();
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
         });

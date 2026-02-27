@@ -87,55 +87,7 @@
         }
     }
     
-    // Open Edit Team Modal
-    function openEditTeamModal(teamId){
-        const modal = new bootstrap.Modal(document.getElementById('editTeamModal'));
-        const editTeamId = document.getElementById('editTeamId');
-        const editTeamName = document.getElementById('editTeamName');
-        const editTeamEvent = document.getElementById('editTeamEvent');
-        const editTeamPlayers = document.getElementById('editTeamPlayers');
-    
-        document.getElementById('editTeamForm').reset();
-        editTeamId.value = teamId;
-    
-        fetch(`/view/${teamId}`)
-            .then(res => res.json())
-            .then(data => {
-                editTeamName.value = data.team.team_name;
-                editTeamEvent.value = data.team.event_id;
-    
-                Array.from(editTeamPlayers.options).forEach(opt => {
-                    opt.selected = data.members.some(m => m.id == opt.value);
-                });
-    
-                modal.show();
-            })
-            .catch(err => console.error(err));
-    }
-    
-    // Submit Edit Team Form
-    document.getElementById('editTeamForm').addEventListener('submit', function(e){
-        e.preventDefault();
-        const formData = new FormData(this);
-        const id = formData.get('team_id');
-    
-        fetch(`/update/${id}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }).then(res => res.json())
-          .then(data => {
-              if(data.success){
-                  fetchTeams();
-                  bootstrap.Modal.getInstance(document.getElementById('editTeamModal')).hide();
-              } else {
-                  alert('Failed to update team');
-              }
-          }).catch(err => console.error(err));
-    });
+
     
     // Delete Team
     function confirmDelete(type,id,name){

@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Team;
+use App\Models\Event;
+use App\Models\SubGroup;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -10,12 +11,7 @@ class Group extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'team_id',
-        'group_name'
-    ];
-
-    public function team(){
-        return $this->belongsTo(Team::class);
-    }
+    protected $fillable = ['event_id','group_name'];
+    public function event() { return $this->belongsTo(Event::class); }
+    public function subgroups() { return $this->hasMany(SubGroup::class); }
 }

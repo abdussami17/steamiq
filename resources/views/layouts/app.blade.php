@@ -1,34 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="csrf-token" content="{{ csrf_token() }}">
-<title>@yield('title')</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
-<link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('assets/styles/style.css') }}">
 
-<style>
-    /* Improve font and icon visibility */
-    .toast {
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-    }
-    .toast-success {
-        background-color: #51A351 !important;
-    }
-    .toast-error {
-        background-color: #BD362F !important;
-    }
-    body { visibility:hidden; }
-</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title')</title>
+    <style>
+        /* ===== CRITICAL LOADER CSS (must be first) ===== */
+        
+        #page-loader{
+          position:fixed;
+          top:0;
+          left:0;
+          width:100vw;
+          height:100vh;
+        
+          background:#000;
+        
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        
+          z-index:999999;
+        
+          opacity:1;
+          transition:opacity .4s ease;
+        }
+        
+        /* simple clean spinner */
+        .loader-spinner{
+          width:48px;
+          height:48px;
+        
+          border:4px solid #333;
+          border-top-color:#fff;
+        
+          border-radius:50%;
+        
+          animation:spin .8s linear infinite;
+        }
+        
+        @keyframes spin{
+          to{ transform:rotate(360deg); }
+        }
+        
+        /* fade out only */
+        #page-loader.hide{
+          opacity:0;
+          pointer-events:none;
+        }
+        </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('assets/styles/style.css') }}">
+
+    <style>
+        /* Improve font and icon visibility */
+        .toast {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        .toast-success {
+            background-color: #51A351 !important;
+        }
+
+        .toast-error {
+            background-color: #BD362F !important;
+        }
+    </style>
+    @stack('styles')
 
 </head>
+
 <body>
+    <div id="page-loader">
+        <div class="loader-spinner"></div>
+    </div>
     <div class="bg-pattern"></div>
     <header>
         <div class="container">
@@ -40,71 +95,74 @@
                         <p>EVENT MANAGEMENT</p>
                     </div>
                 </div>
-            
+
                 <nav class="d-flex align-items-center gap-4">
 
                     {{-- Common nav links --}}
                     <nav class="d-flex align-items-center gap-4">
 
                         <a href="{{ route('dashboard.index') }}"
-                           class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                            class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
                             Dashboard
                         </a>
-                    
+
                         <a href="{{ route('events.index') }}"
-                           class="nav-link-custom {{ request()->routeIs('events.*') ? 'active' : '' }}">
+                            class="nav-link-custom {{ request()->routeIs('events.*') ? 'active' : '' }}">
                             Events
                         </a>
-                    
-                        <a href="{{ route('player.index') }}"
-                           class="nav-link-custom {{ request()->routeIs('player.*') ? 'active' : '' }}">
-                            Players
+
+                        <a href="{{ route('student.index') }}"
+                            class="nav-link-custom {{ request()->routeIs('student.*') ? 'active' : '' }}">
+                            Students
                         </a>
-                    
+
                         <a href="{{ route('tournaments.index') }}"
-                           class="nav-link-custom {{ request()->routeIs('tournaments.*') ? 'active' : '' }}">
+                            class="nav-link-custom {{ request()->routeIs('tournaments.*') ? 'active' : '' }}">
                             Tournaments
                         </a>
-                    
-                
-                    @auth
-                        {{-- username --}}
-                        <span class="nav-link-custom disabled-link">
-                            {{ Auth::user()->username }}
-                        </span>
-                
-                        {{-- Logout link --}}
-                        <a href="{{ route('logout') }}" class="nav-link-custom" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            Logout
-                        </a>
-                
-                        {{-- Hidden logout form --}}
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
-                    @else
-                        <a href="{{ route('register-login') }}" class="nav-link-custom">Login</a>
-                    @endauth
-                
-                </nav>
-                
-                
+
+
+                        @auth
+                            {{-- username --}}
+                            <span class="nav-link-custom disabled-link">
+                                {{ Auth::user()->username }}
+                            </span>
+
+                            {{-- Logout link --}}
+                            <a href="{{ route('logout') }}" class="nav-link-custom"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                Logout
+                            </a>
+
+                            {{-- Hidden logout form --}}
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
+                        @else
+                            <a href="{{ route('register-login') }}" class="nav-link-custom">Login</a>
+                        @endauth
+
+                    </nav>
+
+
             </div>
-            
+
         </div>
     </header>
 
     <main>
         @yield('content')
+
+        @stack('modals')
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Toastr default options
         toastr.options = {
-            "closeButton": true,        
-            "progressBar": true,       
+            "closeButton": true,
+            "progressBar": true,
             "positionClass": "toast-top-right",
             "timeOut": "5000",
             "extendedTimeOut": "1000",
@@ -115,40 +173,40 @@
             "hideMethod": "fadeOut"
         };
 
-        @if(session('success'))
+        @if (session('success'))
             toastr.success(@json(session('success')));
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             toastr.error(@json(session('error')));
         @endif
 
-        @if($errors->any())
-            @foreach($errors->all() as $error)
+        @if ($errors->any())
+            @foreach ($errors->all() as $error)
                 toastr.error(@json($error));
             @endforeach
         @endif
     </script>
-    
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
     </script>
 
-    
+
     <!-- Main JavaScript -->
-    <script src="{{asset('assets/scripts/main.js')}}"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ asset('assets/scripts/main.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Initialize all date inputs
             flatpickr('input[type="date"]', {
                 dateFormat: "Y-m-d",
                 allowInput: true
             });
-        
+
             // Initialize all time inputs
             flatpickr('input[type="time"]', {
                 enableTime: true,
@@ -157,7 +215,7 @@
                 time_24hr: true,
                 allowInput: true
             });
-        
+
             // Initialize all datetime-local inputs
             flatpickr('input[type="datetime-local"]', {
                 enableTime: true,
@@ -166,12 +224,20 @@
                 allowInput: true
             });
         });
-        </script>
-        <script>
-            window.addEventListener('load', () => {
-              document.body.style.visibility = 'visible';
-            });
-            </script>
-        
+    </script>
+
+<script>
+    window.addEventListener("load", function () {
+        const loader = document.getElementById("page-loader");
+    
+        loader.classList.add("hide");
+    
+        setTimeout(() => {
+            loader.remove();
+        }, 400);
+    });
+    </script>
+    @stack('scripts')
 </body>
+
 </html>
