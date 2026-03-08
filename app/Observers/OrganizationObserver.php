@@ -14,7 +14,7 @@ class OrganizationObserver
     {
         Activity::create([
             'user_id' => auth()->id(),
-            'description' => "New Organization '{$organization->name}' added",
+            'description' => "Organization '{$organization->name}' added",
             'type'    => 'organization_created',
             'data' => json_encode(['organization_id' => $organization->id])
         ]);

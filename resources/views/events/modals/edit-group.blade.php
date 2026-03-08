@@ -24,26 +24,26 @@
                                class="form-input">
                     </div>
 
-                    <!-- Event -->
                     <div class="mb-3">
-                        <label class="form-label">Event</label>
-                        <select id="edit_event_id"
-                                name="event_id"
-                                class="form-select">
-
-                            @foreach ($events as $ev)
-                                <option value="{{ $ev->id }}">
-                                    {{ $ev->name }}
-                                </option>
+                        <label class="form-label">
+                            Organization 
+                        </label>
+                        <select name="organization_id"
+                               id="org_id"
+                                class="form-select"
+                                >
+                            <option value="" hidden>--Select Organization--</option>
+                            @foreach ($organizations as $org )
+                                <option value="{{ $org->id }}">{{ $org->name }}</option>
                             @endforeach
-
                         </select>
                     </div>
+
 
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update Group</button>
                 </div>
 
@@ -54,13 +54,19 @@
 </div>
 
 <script>
-    function openGroupEditModal(id, name, eventId)
+    function openGroupEditModal(id, name,org)
     {
         // fill fields
         document.getElementById('edit_group_id').value = id;
         document.getElementById('edit_group_name').value = name;
-        document.getElementById('edit_event_id').value = eventId;
+
     
+
+        const orgSelect = document.getElementById('org_id');
+    for (let i = 0; i < orgSelect.options.length; i++) {
+        orgSelect.options[i].selected = orgSelect.options[i].value == org;
+    }
+
         // set dynamic action
         document.getElementById('editGroupForm').action = `/groups/update/${id}`;
     

@@ -18,7 +18,7 @@ class StudentController extends Controller
         $events = Event::where('status', 'live')
             ->select('id', 'name')
             ->get();
-        $teams = Team::select('id','team_name')->get();   
+        $teams = Team::select('id','name')->get();   
         return view('students.index', compact('events','teams'));
     }
     public function store(Request $request)
@@ -34,7 +34,7 @@ class StudentController extends Controller
         DB::beginTransaction();
         try {
             $team = Team::findOrFail($request->team_id);
-            $eventId = $team->event_id;
+          
 
             foreach($request->students as $studentData){
                 $profilePath = null;
@@ -47,7 +47,7 @@ class StudentController extends Controller
                     'email' => $studentData['email'] ?? null,
                     'profile' => $profilePath,
                     'team_id' => $team->id,
-                    'event_id' => $eventId
+                 
                 ]);
             }
 
@@ -69,7 +69,9 @@ class StudentController extends Controller
             'team.subgroup',
             'scores.challengeActivity'
         ])
-        ->where('event_id', $eventId)
+        ->whereHas('team.subgroup.group.organization', function ($q) use ($eventId) {
+            $q->where('event_id', $eventId);
+        })
         ->get();
     
         $rows = [];
@@ -81,7 +83,7 @@ class StudentController extends Controller
             $row = [
                 'id' => $student->id,
                 'student' => $student->name,
-                'team' => $student->team->team_name ?? 'N/A',
+                'team' => $student->team->name ?? 'N/A',
                 'activity' => optional($student->scores->first()?->challengeActivity)->name ?? 'N/A',
                 'total' => 0
             ];

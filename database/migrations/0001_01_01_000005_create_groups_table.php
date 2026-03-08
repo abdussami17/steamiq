@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->id();
-            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('group_name');
             $table->timestamps();
         });

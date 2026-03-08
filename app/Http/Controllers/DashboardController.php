@@ -15,7 +15,7 @@ class DashboardController extends Controller
         $activeEventsCount = \App\Models\Event::where('status', 'live')->count();
         $recentActivities = \App\Models\Activity::latest()->take(5)->get();
     $orgCount = \App\Models\Organization::count();
-        $todayMatchesCount = Matches::whereDate('date', Carbon::today())->count();
+        // $todayMatchesCount = Matches::whereDate('date', Carbon::today())->count();
     
         return view('dashboard.index', compact(
             'studentsCount',
@@ -23,7 +23,7 @@ class DashboardController extends Controller
             'activeEventsCount',
             'recentActivities',
             'orgCount',
-            'todayMatchesCount'
+            
         ));
     }
     

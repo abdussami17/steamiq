@@ -42,6 +42,17 @@
 
                             </select>
                         </div>
+                                <!-- Event -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Event</label>
+                                    <select class="form-select" name="event_id">
+                                        <option value="" hidden>--Select Event--</option>
+                                    @foreach ($events as $evt )
+                                        <option value="{{ $evt->id }}">{{ $evt->name }}</option>
+                                    @endforeach
+        
+                                    </select>
+                                </div>
                         <div class="col-md-6">
                             <label class="form-label">Email <small class="text-muted">(optional)</small></label>
                            <input type="text" class="form-input" name="email" value="{{ old('address') }}">

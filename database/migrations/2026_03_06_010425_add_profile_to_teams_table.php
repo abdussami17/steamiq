@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sub_groups', function (Blueprint $table) {
-            $table->engine = 'InnoDB';
-            $table->id();
-            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->timestamps();
+        Schema::table('teams', function (Blueprint $table) {
+            $table->string('profile')->nullable()->after('name');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sub_groups');
+        Schema::table('teams', function (Blueprint $table) {
+            $table->dropColumn('profile');
+        });
     }
 };

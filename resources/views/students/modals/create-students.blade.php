@@ -16,8 +16,8 @@
                         <select class="form-select" id="teamSelect" name="team_id" required>
                             <option hidden>-- Select Team --</option>
                             @foreach($teams as $team)
-                                <option value="{{ $team->id }}" data-event="{{ $team->event_id }}">
-                                    {{ $team->team_name }}
+                                <option value="{{ $team->id }}">
+                                    {{ $team->name }}
                                 </option>
                             @endforeach
                         </select>

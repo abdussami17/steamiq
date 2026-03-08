@@ -10,72 +10,79 @@ class LeaderboardService
 {
     public function build($eventId)
     {
+        // Load event with full hierarchy and students' scores
         $event = Event::with([
-            'organization',
-            'groups.subgroups.teams.students'
+            'organizations.groups.subgroups.teams.students.scores'
         ])->findOrFail($eventId);
 
-        $categories = SteamCategory::all();
+        $categories = SteamCategory::all(); // id and name
 
         $rows = [];
 
-        foreach ($event->groups as $group) {
-            foreach ($group->subgroups as $subgroup) {
-                foreach ($subgroup->teams as $team) {
+        foreach ($event->organizations as $org) {
+            foreach ($org->groups as $group) {
+                foreach ($group->subgroups as $subgroup) {
+                    foreach ($subgroup->teams as $team) {
 
-                    $teamScores = Score::where('event_id', $eventId)
-                        ->where('team_id', $team->id)
-                        ->whereNull('student_id')
-                        ->get()
-                        ->keyBy('steam_category_id');
-
-                    $rows[] = $this->makeRow(
-                        'team',
-                        $event,
-                        $group,
-                        $subgroup,
-                        $team->team_name,
-                        null,
-                        $team->id,
-                        $teamScores,
-                        $categories
-                    );
-
-                    foreach ($team->students as $student) {
-                        $studentScores = Score::where('event_id', $eventId)
-                            ->where('student_id', $student->id)
-                            ->get()
-                            ->keyBy('steam_category_id');
+                        // TEAM ROW (aggregate)
+                        $teamScores = $team->scores->whereNull('student_id')->keyBy('steam_category_id');
 
                         $rows[] = $this->makeRow(
-                            'student',
+                            'team',
                             $event,
+                            $org,
                             $group,
                             $subgroup,
-                            $team->team_name,
-                            $student->name,
-                            $student->id,
-                            $studentScores,
+                            $team->name,
+                            null,
+                            $team->id,
+                            $teamScores,
                             $categories
                         );
+
+                        // STUDENT ROWS
+                        foreach ($team->students as $student) {
+                            $studentScores = $student->scores->keyBy('steam_category_id');
+
+                            $rows[] = $this->makeRow(
+                                'student',
+                                $event,
+                                $org,
+                                $group,
+                                $subgroup,
+                                $team->name,
+                                $student->name,
+                                $student->id,
+                                $studentScores,
+                                $categories
+                            );
+                        }
                     }
                 }
             }
         }
 
-        // sort
+        // Sort by total descending
         $rows = collect($rows)->sortByDesc('total')->values();
 
-       // rank (FIXED)
-$rows = $rows->values()->map(function ($row, $index) {
-    $row['rank'] = $index + 1;
-    return $row;
-});
+        // Assign ranks with tie handling
+        $rank = 1;
+        $previousPoints = null;
+        foreach ($rows as $index => $row) {
+            if ($previousPoints !== null && $row['total'] === $previousPoints) {
+                $row['rank'] = $rows[$index - 1]['rank']; // tie
+            } else {
+                $row['rank'] = $rank;
+            }
+            $previousPoints = $row['total'];
+            $rank++;
+            $rows[$index] = $row;
+        }
 
         return [$rows, $categories];
     }
 
-    private function makeRow($type,$event,$group,$sub,$teamName,$studentName,$id,$scores,$categories)
+    private function makeRow($type, $event, $org, $group, $sub, $teamName, $studentName, $id, $scores, $categories)
     {
         $total = 0;
         $points = [];
@@ -90,7 +97,7 @@ $rows = $rows->values()->map(function ($row, $index) {
             'type' => $type,
             'rank' => 0,
             'event' => $event->name ?? 'N/A',
-            'organization' => $event->organization->name ?? 'N/A',
+            'organization' => $org->name ?? 'N/A',
             'group' => $group->group_name ?? 'N/A',
             'subgroup' => $sub->name ?? 'N/A',
             'team_name' => $teamName ?? 'N/A',

@@ -23,7 +23,7 @@
               <select class="form-select" name="sub_group_id" id="editTeamSubgroup" required>
                 <option hidden>-- Select Subgroup --</option>
                 @foreach($subgroups as $subgroup)
-                  <option value="{{ $subgroup->id }}">{{ $subgroup->name }} (Event: {{ $subgroup->event->name }})</option>
+                  <option value="{{ $subgroup->id }}">{{ $subgroup->name }}</option>
                 @endforeach
               </select>
             </div>
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch(`/teams/${teamId}`)
       .then(res => res.json())
       .then(data => {
-        nameInput.value = data.team.team_name;
+        nameInput.value = data.team.name;
         subgroupSelect.value = data.team.sub_group_id;
         modal.show();
       }).catch(err => console.error(err));

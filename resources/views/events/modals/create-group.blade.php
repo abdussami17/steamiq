@@ -24,15 +24,15 @@
 
                     <div class="mb-3">
                         <label class="form-label">
-                            Event 
+                            Organization 
                         </label>
-                        <select name="event_id"
+                        <select name="organization_id"
                                
                                 class="form-select"
                                 >
-                            <option value="" hidden>--Select Event--</option>
-                            @foreach ($events as $ev )
-                                <option value="{{ $ev->id }}">{{ $ev->name }}</option>
+                            <option value="" hidden>--Select Organization--</option>
+                            @foreach ($organizations as $org )
+                                <option value="{{ $org->id }}">{{ $org->name }}</option>
                             @endforeach
                         </select>
                     </div>

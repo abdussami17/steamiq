@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('challenge_activities', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->id();
-            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->foreignId('event_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->text('description')->nullable();
+            $table->integer('max_score')->default(0) ;
             $table->timestamps();
         });
     }

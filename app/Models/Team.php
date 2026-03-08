@@ -17,18 +17,11 @@ class Team extends Model
     use HasFactory;
 
     protected $fillable = [
-        'team_name',
-        'event_id',
+        'name',
         'sub_group_id',
         'profile',
     ];
 
-    // Team has multiple players (many-to-many)
-    public function players()
-    {
-        return $this->belongsToMany(Player::class, 'team_members', 'team_id', 'player_id')
-                    ->withTimestamps();
-    }
 
     // Team belongs to an event
     public function event()
@@ -50,11 +43,9 @@ public function organization(){
     return $this->belongsTo(Organization::class);
 }
 
-public function groups(){
-    return $this->hasMany(Group::class);
-}
 
 public function subgroup() { return $this->belongsTo(SubGroup::class,'sub_group_id'); }
 public function students() { return $this->hasMany(Student::class,'team_id'); }
 public function scores() { return $this->hasMany(Score::class); }
+public function challengeActivity(){return $this->hasMany(ChallengeActivity::class);}
 }

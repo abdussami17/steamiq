@@ -22,13 +22,12 @@
                         <select name="group_id" id="edit_group" class="form-select" required>
                             <option value="" hidden>--Select Group--</option>
                             @foreach ($groups as $grp)
-                                @if($grp->event)
+                           
                                     <option value="{{ $grp->id }}"
-                                        data-event-id="{{ $grp->event->id }}"
-                                        data-event-name="{{ $grp->event->name }}">
+                                        >
                                         {{ $grp->group_name }}
                                     </option>
-                                @endif
+                           
                             @endforeach
                         </select>
                     </div>

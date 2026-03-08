@@ -31,6 +31,17 @@
                             </select>
                         </div>
 
+                        <!-- Event -->
+                        <div class="col-md-6">
+                            <label class="form-label">Event</label>
+                            <select name="event_id" id="edit_event" class="form-select">
+                                <option value="" hidden>--Select Event--</option>
+                                @foreach($events as $evt)
+                                    <option value="{{ $evt->id }}">{{ $evt->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         <!-- Email -->
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
@@ -57,17 +68,19 @@
 </div>
 
 <script>
-    function openEditOrgModal(id, name, email, type) {
-    // fill values
+function openEditOrgModal(id, name, email, type, event_id) {
     document.getElementById('edit_id').value = id;
     document.getElementById('edit_name').value = name;
     document.getElementById('edit_email').value = email;
     document.getElementById('edit_type').value = type;
 
-    // set form action
+    const eventSelect = document.getElementById('edit_event');
+    for (let i = 0; i < eventSelect.options.length; i++) {
+        eventSelect.options[i].selected = eventSelect.options[i].value == event_id;
+    }
+
     document.getElementById('editOrgForm').action = `/organizations/update/${id}`;
 
-    // open modal
     const modal = new bootstrap.Modal(document.getElementById('editOrganizationModal'));
     modal.show();
 }

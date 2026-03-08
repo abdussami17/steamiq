@@ -25,7 +25,12 @@ class EventObserver
      */
     public function updated(Event $event): void
     {
-        //
+        Activity::create([
+            'user_id' => auth()->id(),
+            'description' => "Event '{$event->name}' updated",
+            'type'    => 'event_updated',
+            'data' => json_encode(['event_id' => $event->id])
+        ]);
     }
 
     /**

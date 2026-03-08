@@ -11,18 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('matches', function (Blueprint $t) {
+        Schema::create('events', function (Blueprint $t) {
             $t->engine = 'InnoDB';
             $t->id();
-            $t->foreignId('event_id')->constrained()->cascadeOnDelete();
-        
-            $t->foreignId('team_one_id')->nullable()->constrained('teams');
-            $t->foreignId('team_two_id')->nullable()->constrained('teams');
-        
-            $t->integer('round');
+            $t->string('name');
+            $t->enum('type',['esports','xr']);
+            $t->string('location');
+            $t->date('start_date');
+            $t->date('end_date');
+            $t->enum('status',['draft','live','closed'])->default('draft');
             $t->timestamps();
         });
-        
     }
 
     /**
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('matches');
+        Schema::dropIfExists('events');
     }
 };

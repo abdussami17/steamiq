@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('organizations', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->id();
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->enum('organization_type', ['School','Parks and Recreation','Youth Organization','Other']);
             // $table->string('address')->nullable();

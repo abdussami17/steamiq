@@ -39,7 +39,7 @@
             let rows = '';
             teams.forEach(team => {
                 const id = safe(team.id);
-                const name = safe(team.team_name);
+                const name = safe(team.name);
                 const members = safe(team.members_count ?? 0);
                 const points = safe(team.total_points ?? 0);
                 const rank = safe(team.rank ?? 0);
@@ -167,7 +167,7 @@ try {
 
 let html = `
 <h5 class="mb-4" style="color:var(--text);font-weight:700">
-    ${data.team.team_name} (Event: ${data.team.event.name})
+    ${data.team.name}
 </h5>
 
 <table class="table table-bordered table-dark">
@@ -176,7 +176,7 @@ let html = `
             <th>Student</th>
             <th>Email</th>
             <th>Total Points</th>
-            <th>Scores Detail</th>
+           
         </tr>
     </thead>
     <tbody>
@@ -194,7 +194,7 @@ html += `
         <td>${member.name || 'N/A'}</td>
         <td>${member.email || 'N/A'}</td>
         <td style="font-weight:700;color:#00e676">${total}</td>
-        <td>${scores || 'N/A'}</td>
+       
     </tr>
 `;
 });

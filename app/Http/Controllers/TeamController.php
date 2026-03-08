@@ -42,7 +42,7 @@ class TeamController extends Controller
     
         try {
     
-            $subgroup = SubGroup::with('event')->findOrFail($validated['sub_group_id']);
+            $subgroup = SubGroup::findOrFail($validated['sub_group_id']);
     
             $profilePath = null;
     
@@ -51,9 +51,8 @@ class TeamController extends Controller
             }
     
             Team::create([
-                'team_name'    => $validated['team_name'],
+                'name'    => $validated['team_name'],
                 'sub_group_id' => $subgroup->id,
-                'event_id'     => $subgroup->event->id,
                 'profile'      => $profilePath,
             ]);
     
@@ -103,7 +102,7 @@ class TeamController extends Controller
 
                 return [
                     'id' => $team->id,
-                    'team_name' => $team->team_name ?? 'N/A',
+                    'name' => $team->name ?? 'N/A',
                     'subgroup_name' => $team->subgroup->name ?? 'N/A',
                     'members_count' => $membersMap[$team->id] ?? 0,
                     'total_points' => $pointsMap[$team->id] ?? 0,
@@ -203,24 +202,24 @@ class TeamController extends Controller
 
     public function view(Team $team)
     {
+        // Eager load students, their scores, and the associated activity
         $team->load([
-            'event',
             'students.scores.challengeActivity'
         ]);
     
+        // Map members with scores and total
         $members = $team->students->map(function ($student) {
     
-            // 🔥 calculate total properly
             $totalPoints = (int) $student->scores->sum('points');
     
             return [
                 'id' => $student->id,
                 'name' => $student->name ?? 'N/A',
                 'email' => $student->email ?? 'N/A',
-                'total_points' => $totalPoints, // ALWAYS exists
+                'total_points' => $totalPoints,
                 'scores' => $student->scores->map(function ($score) {
                     return [
-                        'challenge' => $score->challengeActivity->name ?? 'N/A',
+                        'activity' => $score->challengeActivity->name ?? 'N/A',
                         'points' => (int) ($score->points ?? 0)
                     ];
                 })->values()
@@ -240,9 +239,9 @@ class TeamController extends Controller
         return response()->json([
             'team' => [
                 'id' => $team->id,
-                'team_name' => $team->team_name,
+                'name' => $team->name,
                 'sub_group_id' => $team->sub_group_id,
-                'event_id' => $team->event_id,
+              
                 'profile' => $team->profile ? asset('storage/' . $team->profile) : null
             ]
         ]);
@@ -258,7 +257,7 @@ class TeamController extends Controller
     
         DB::beginTransaction();
         try {
-            $subgroup = SubGroup::with('event')->findOrFail($validated['sub_group_id']);
+            $subgroup = SubGroup::findOrFail($validated['sub_group_id']);
     
             $profilePath = $team->profile;
             if ($request->hasFile('profile')) {
@@ -266,9 +265,9 @@ class TeamController extends Controller
             }
     
             $team->update([
-                'team_name'    => $validated['team_name'],
+                'name'    => $validated['team_name'],
                 'sub_group_id' => $subgroup->id,
-                'event_id'     => $subgroup->event->id,
+            
                 'profile'      => $profilePath,
             ]);
     
@@ -302,7 +301,7 @@ class TeamController extends Controller
 public function listTeam()
 {
     return response()->json(
-        \App\Models\Team::select('id','team_name')->get()
+        \App\Models\Team::select('id','name')->get()
     );
 }
 

@@ -3,13 +3,16 @@
 namespace App\Models;
 
 
+use App\Models\Activity;
 use App\Models\ChallengeActivity;
 use App\Models\Group;
-use App\Models\Organization;
+use App\Models\Matches;
+
 use App\Models\Score;
 use App\Models\Student;
 use App\Models\SubGroup;
 use App\Models\Team;
+use App\Models\TournamentSetting;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,29 +22,26 @@ class Event extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'name',
-        'organization_id',
-        'event_type',
-        'location',
-        'registration_count',
-        'status',
-        'start_date',
-        'end_date'
-    ];
+    protected $fillable = ['name','type','location','start_date','end_date','status'];
     protected $dates = [
         'start_date',
         'end_date'
     ];
 
-    public function organization() { return $this->belongsTo(Organization::class); }
-    public function groups() { return $this->hasMany(Group::class); }
-    public function subgroups() { return $this->hasMany(SubGroup::class); }
-    public function teams() { return $this->hasMany(Team::class); }
-    public function students() { return $this->hasMany(Student::class); }
-    public function challengeactivity()
+    public function tournament(){ return $this->hasOne(TournamentSetting::class); }
+    public function tournamentSetting()
     {
-        return $this->hasMany(\App\Models\ChallengeActivity::class);
+        return $this->hasOne(TournamentSetting::class);
     }
-    public function scores() { return $this->hasMany(Score::class); }
+    
+    public function activities()
+    {
+        return $this->hasMany(ChallengeActivity::class);
+    }
+    public function organizations()
+    {
+        return $this->hasMany(Organization::class);
+    }
+    public function teams(){ return $this->hasMany(Team::class); }
+    public function matches(){ return $this->hasMany(Matches::class); }
 }

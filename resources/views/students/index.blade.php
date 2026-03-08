@@ -22,10 +22,10 @@
                 {{-- <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importModal">
                     Import Players
                 </button> --}}
-                <button class="btn btn-secondary" onclick="exportGridToExcel()">
+                {{-- <button class="btn btn-secondary" onclick="exportGridToExcel()">
                     <i data-lucide="upload"></i> Export Excel
-                </button>
-                <button class="btn btn-secondary" onclick="refreshLeaderboard()">
+                </button> --}}
+                <button class="btn btn-secondary" onclick="loadLeaderboard()">
                     <i data-lucide="refresh-cw"></i> Refresh
                 </button>
             </div>

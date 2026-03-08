@@ -689,6 +689,7 @@ color: #000;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 0.75rem;
+    white-space: nowrap;
 }
 
 .data-table th:first-child {
@@ -705,6 +706,7 @@ color: #000;
     background: #1a1a1a;
     font-family: "Space Mono" !important;
     color: #e0e0e0;
+    white-space: nowrap;
 }
 
 .data-table tr:hover td {

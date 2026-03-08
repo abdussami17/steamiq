@@ -12,7 +12,7 @@ class SubGroupController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'group_id' => 'required|exists:groups,id',
-            'event_id' => 'required|exists:events,id',
+
         ]);
     
         SubGroup::create($data);
@@ -27,7 +27,7 @@ class SubGroupController extends Controller
     }
     public function show($id)
     {
-        $subgroup = SubGroup::with('group.event')->find($id);
+        $subgroup = SubGroup::find($id);
     
         if (!$subgroup) {
             return response()->json(['error' => 'SubGroup not found'], 404);
@@ -39,8 +39,7 @@ class SubGroupController extends Controller
             'name' => $subgroup->name,           // This should match 'name' in your DB
             'subgroup_name' => $subgroup->name,  // Alternative field name for compatibility
             'group_id' => $subgroup->group_id,
-            'event_id' => optional($subgroup->group->event)->id,  // Fixed: event comes from group
-            'event_name' => optional($subgroup->group->event)->name,
+
         ]);
     }
 
@@ -49,13 +48,13 @@ class SubGroupController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'group_id' => 'required|exists:groups,id',
-            'event_id' => 'nullable|exists:events,id',
+  
         ]);
 
         $subgroup->update([
             'name' => $request->name,
             'group_id' => $request->group_id,
-            'event_id' => $request->event_id,
+  
         ]);
 
         return redirect()->back()->with('success', 'Sub Group updated successfully.');

@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ChallengeActivity extends Model
 {
-    protected $fillable = ['event_id','name','description'];
+    protected $fillable = [
+        'event_id','name','max_score'
+    ];
+    
     public function event() { return $this->belongsTo(Event::class); }
     public function scores() { return $this->hasMany(Score::class); }
 }

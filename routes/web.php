@@ -60,6 +60,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])
     ->name('events.destroy');
+    Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit'); 
+Route::post('/events/{event}/update', [EventController::class, 'update'])->name('events.update');
         Route::get('/events/{event}/players', [TeamController::class, 'playersByEvent'])->name('teams.get_players');
         Route::get('/events/{event}/teams', function (\App\Models\Event $event) {
             $teams = \App\Models\Team::where('event_id', $event->id)->get(['id', 'team_name']);

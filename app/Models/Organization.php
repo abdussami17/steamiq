@@ -11,8 +11,16 @@ class Organization extends Model
     use HasFactory;
 
 
-    protected $fillable = ['name','type','email','profile'];
-    public function events() { return $this->hasMany(Event::class); }
+    protected $fillable = ['name','organization_type','email','profile','event_id'];
+    public function event()
+    {
+        return $this->belongsTo(Event::class);
+    }
+
+    public function groups()
+    {
+        return $this->hasMany(Group::class);
+    }
     
 
     

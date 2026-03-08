@@ -24,9 +24,7 @@ class TeamsExport implements FromCollection, WithHeadings
         // =============================
         $query = Team::with(['subgroup']);
 
-        if ($this->eventId) {
-            $query->where('event_id', $this->eventId);
-        }
+        
 
         $teams = $query->get();
 
@@ -50,7 +48,7 @@ class TeamsExport implements FromCollection, WithHeadings
         $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
             return [
                 'id' => $team->id,
-                'team_name' => $team->team_name ?? 'N/A',
+                'team_name' => $team->name ?? 'N/A',
                 'subgroup' => $team->subgroup->name ?? 'N/A',
                 'members' => $membersMap[$team->id] ?? 0,
                 'points' => $pointsMap[$team->id] ?? 0,

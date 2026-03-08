@@ -53,22 +53,49 @@ class ScoreController extends Controller
         }
     }
 
-    // Fetch students for an event
     public function getEventStudents(Event $event)
     {
-        return response()->json($event->students()->select('id','name')->orderBy('name')->get());
+        $students = $event->organizations()
+            ->with('groups.subgroups.teams.students')
+            ->get()
+            ->flatMap->groups
+            ->flatMap->subgroups
+            ->flatMap->teams
+            ->flatMap->students
+            ->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name
+                ];
+            })
+            ->sortBy('name')
+            ->values();
+    
+        return response()->json($students);
     }
 
-    // Fetch teams for an event
     public function getEventTeams(Event $event)
     {
-        return response()->json($event->teams()->select('id','team_name as name')->orderBy('team_name')->get());
+        $teams = $event->organizations()
+            ->with('groups.subgroups.teams')
+            ->get()
+            ->flatMap->groups
+            ->flatMap->subgroups
+            ->flatMap->teams
+            ->map(function ($team) {
+                return [
+                    'id' => $team->id,
+                    'name' => $team->name
+                ];
+            })
+            ->values();
+    
+        return response()->json($teams);
     }
-
     // Fetch activities for an event
     public function getEventActivities(Event $event)
     {
-        return response()->json($event->challengeactivity()->select('id','name')->orderBy('name')->get());
+        return response()->json($event->activities()->select('id','name')->orderBy('name')->get());
     }
 
     // Fetch STEAM categories
@@ -87,55 +114,67 @@ class ScoreController extends Controller
             return response()->json(['error' => 'Event not selected'], 422);
         }
     
-        $teams = Team::with('students')->where('event_id', $event_id)->get();
-        $categories = SteamCategory::all();
+        $event = Event::with('organizations.groups.subgroups.teams.students')->find($event_id);
     
+        if (!$event) {
+            return response()->json(['error' => 'Event not found'], 404);
+        }
+    
+        $categories = SteamCategory::all();
         $table = [];
     
-        foreach ($teams as $team) {
+        // Traverse all teams in hierarchy
+        foreach ($event->organizations as $org) {
+            foreach ($org->groups as $group) {
+                foreach ($group->subgroups as $subgroup) {
+                    foreach ($subgroup->teams as $team) {
     
-            // Team row (aggregate)
-            $teamScores = Score::where('event_id', $event_id)
-                ->where('team_id', $team->id)
-                ->whereNull('student_id')
-                ->get()
-                ->keyBy('steam_category_id');
+                        // Team row
+                        $teamScores = Score::where('event_id', $event_id)
+                            ->where('team_id', $team->id)
+                            ->whereNull('student_id')
+                            ->get()
+                            ->keyBy('steam_category_id');
     
-            $row = [
-                'type' => 'team',
-                'id' => $team->id,
-                'name' => $team->team_name,
-                'team_name' => $team->team_name,
-                'scores' => []
-            ];
+                        $row = [
+                            'type' => 'team',
+                            'id' => $team->id,
+                            'name' => $team->name,
+                            'team_name' => $team->name,
+                            'scores' => []
+                        ];
     
-            foreach ($categories as $cat) {
-                $row['scores'][$cat->id] = optional($teamScores->get($cat->id))->points ?? 0;
-            }
+                        foreach ($categories as $cat) {
+                            $row['scores'][$cat->id] = optional($teamScores->get($cat->id))->points ?? 0;
+                        }
     
-            $table[] = $row;
+                        $table[] = $row;
     
-            // Student rows
-            foreach ($team->students as $student) {
-                $studentScores = Score::where('event_id', $event_id)
-                    ->where('student_id', $student->id)
-                    ->get()
-                    ->keyBy('steam_category_id');
+                        // Student rows
+                        foreach ($team->students as $student) {
+                            $studentScores = Score::where('event_id', $event_id)
+                                ->where('student_id', $student->id)
+                                ->get()
+                                ->keyBy('steam_category_id');
     
-                $srow = [
-                    'type' => 'student',
-                    'id' => $student->id,
-                    'name' => $student->name,
-                    'team_name' => $team->team_name,
-                    'team_id' => $team->id,
-                    'scores' => []
-                ];
+                            $srow = [
+                                'type' => 'student',
+                                'id' => $student->id,
+                                'name' => $student->name,
+                                'team_name' => $team->name,
+                                'team_id' => $team->id,
+                                'scores' => []
+                            ];
     
-                foreach ($categories as $cat) {
-                    $srow['scores'][$cat->id] = optional($studentScores->get($cat->id))->points ?? 0;
+                            foreach ($categories as $cat) {
+                                $srow['scores'][$cat->id] = optional($studentScores->get($cat->id))->points ?? 0;
+                            }
+    
+                            $table[] = $srow;
+                        }
+    
+                    }
                 }
-    
-                $table[] = $srow;
             }
         }
     
@@ -144,7 +183,6 @@ class ScoreController extends Controller
             'categories' => $categories
         ]);
     }
-
     public function updateScore(Request $request)
     {
         try {

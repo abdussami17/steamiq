@@ -13,9 +13,11 @@ class OrganizationController extends Controller
         $validator = Validator::make($request->all(), [
             'name'    => 'required|string|max:255',
             'email'   => 'nullable|email|max:255',
+            'event_id'   => 'required|integer|exists:events,id',
             'organization_type'    => 'required|in:School,Parks and Recreation,Youth Organization,Other',
             'profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ], [
+            'event_id.required' => 'Selection Of Event is required',
             'name.required' => 'Organization name is required.',
             'organization_type.required' => 'Organization type is required.',
             'type.in'       => 'Invalid organization type selected.',
@@ -64,6 +66,7 @@ public function update(Request $request, $id)
         'organization_type' => 'required|in:School,Parks and Recreation,Youth Organization,Other',
         'email' => 'nullable|email|max:255',
         'profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        'event_id'   => 'required|integer|exists:events,id',
     ]);
 
     if ($request->hasFile('profile')) {
