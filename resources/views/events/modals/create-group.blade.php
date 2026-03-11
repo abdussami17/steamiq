@@ -37,6 +37,21 @@
                         </select>
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">
+                            POD 
+                        </label>
+                        <select name="pod"
+                               
+                                class="form-select"
+                                >
+                                <option value="">-- Select POD --</option>
+                           <option value="Red">Red</option>
+                           <option value="Blue">Blue</option>
+
+                        </select>
+                    </div>
+
                 </div>
 
                 <div class="modal-footer">

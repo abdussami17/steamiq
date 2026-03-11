@@ -15,9 +15,8 @@ class StudentController extends Controller
 {
     public function index()
     {
-        $events = Event::where('status', 'live')
-            ->select('id', 'name')
-            ->get();
+        $events = Event::select('id', 'name')
+        ->get();
         $teams = Team::select('id','name')->get();   
         return view('students.index', compact('events','teams'));
     }
@@ -52,12 +51,12 @@ class StudentController extends Controller
             }
 
             DB::commit();
-            return back()->with('success', 'Students added successfully.');
+            return back()->with('success', 'Player added successfully.');
 
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e->getMessage());
-            return back()->with('error', 'Failed to add students.');
+            return back()->with('error', 'Failed to add Players.');
         }
     }
 

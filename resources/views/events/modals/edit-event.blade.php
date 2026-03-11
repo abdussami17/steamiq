@@ -20,8 +20,8 @@
                             <label class="form-label">Event Type</label>
                             <select id="editType" name="type" class="form-select" required>
                                 <option value="">--Select Type--</option>
-                                <option value="esports">Steam eSports</option>
-                                <option value="xr">Steam XR Sports</option>
+                                <option value="esports">STEAM ESports</option>
+                                <option value="xr">STEAM XR Sports</option>
                             </select>
                         </div>
                         <div class="col-md-6">

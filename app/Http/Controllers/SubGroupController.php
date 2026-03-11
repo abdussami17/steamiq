@@ -17,7 +17,7 @@ class SubGroupController extends Controller
     
         SubGroup::create($data);
     
-        return back()->with('success', 'Sub group created successfully');
+        return redirect()->back()->with('active_tab', 'teams-tab')->with('success', 'SubGroup created successfully!');
     }
     public function destroy(SubGroup $subgroup)
     {

@@ -50,56 +50,35 @@
                             <div class="stat">
                                 <div class="stat-label">Teams</div>
                                 <div class="stat-value" style="font-size:1.3rem;">
-                                    {{
-                                        $allevent->organizations
-                                        ->flatMap->groups
-                                        ->flatMap->subgroups
-                                        ->flatMap->teams
-                                        ->count() ?: 'N/A'
-                                    }}
+                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->flatMap->teams->count() ?: 'N/A' }}
                                 </div>
                             </div>
-                        
+
                             {{-- STUDENTS --}}
                             <div class="stat">
-                                <div class="stat-label">Students</div>
+                                <div class="stat-label">Players</div>
                                 <div class="stat-value" style="font-size:1.3rem;">
-                                    {{
-                                        $allevent->organizations
-                                        ->flatMap->groups
-                                        ->flatMap->subgroups
-                                        ->flatMap->teams
-                                        ->flatMap->students
-                                        ->count() ?: 'N/A'
-                                    }}
+                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->flatMap->teams->flatMap->students->count() ?:
+                                        'N/A' }}
                                 </div>
                             </div>
-                        
+
                             {{-- GROUPS --}}
                             <div class="stat">
                                 <div class="stat-label">Groups</div>
                                 <div class="stat-value" style="font-size:1.3rem;">
-                                    {{
-                                        $allevent->organizations
-                                        ->flatMap->groups
-                                        ->count() ?: 'N/A'
-                                    }}
+                                    {{ $allevent->organizations->flatMap->groups->count() ?: 'N/A' }}
                                 </div>
                             </div>
-                        
+
                             {{-- SUBGROUPS --}}
                             <div class="stat">
                                 <div class="stat-label">Sub Groups</div>
                                 <div class="stat-value" style="font-size:1.3rem;">
-                                    {{
-                                        $allevent->organizations
-                                        ->flatMap->groups
-                                        ->flatMap->subgroups
-                                        ->count() ?: 'N/A'
-                                    }}
+                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A' }}
                                 </div>
                             </div>
-                        
+
                         </div>
                         <div class="card-actions">
                             <button class="btn btn-primary" style="flex:1;" onclick="openEventModal({{ $allevent->id }})">
@@ -126,370 +105,386 @@
                 </h2>
             </div>
 
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('events')">Events</button>
+            @php
+            $activeTab = session('active_tab') ?? 'events-tab';
+            @endphp
+            
+            <div class="tabs" id="eventTabs">
+                <button class="tab {{ $activeTab == 'events-tab' ? 'active' : '' }}" onclick="switchTab('events')">Events</button>
+                <button class="tab {{ $activeTab == 'organizations-tab' ? 'active' : '' }}" onclick="switchTab('organizations')">Organizations</button>
+                <button class="tab {{ $activeTab == 'groups-tab' ? 'active' : '' }}" onclick="switchTab('groups')">Groups</button>
+                <button class="tab {{ $activeTab == 'subgroup-tab' ? 'active' : '' }}" onclick="switchTab('subgroup')">Sub Group</button>
+                <button class="tab {{ $activeTab == 'teams-tab' ? 'active' : '' }}" onclick="switchTab('teams')">Teams</button>
+                <button class="tab {{ $activeTab == 'scores-tab' ? 'active' : '' }}" onclick="switchTab('scores')">Scores</button>
+            </div>
+            @if(session('active_tab'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.getElementById('eventTabs');
+        if(tabs){
+            // scroll to the tabs area smoothly
+            tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+</script>
+@endif
 
-                <button class="tab " onclick="switchTab('organizations')">Organizations</button>
-                <button class="tab " onclick="switchTab('groups')">Groups</button>
-                <button class="tab " onclick="switchTab('subgroup')">Sub Group</button>
-                <button class="tab " onclick="switchTab('teams')">Teams</button>
-                <button class="tab" onclick="switchTab('activites')">Activities</button>
-                <button class="tab" onclick="switchTab('scores')">Scores</button>
-                {{-- <button class="tab" onclick="switchTab('schedule')">Schedule</button> --}}
 
+            <!-- Events Tab -->
+            <div id="events-tab" class="tab-content {{ $activeTab == 'events-tab' ? 'active show' : '' }}">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEventModal">
+                            <i data-lucide="plus"></i> Add Event
+                        </button>
+
+                    </div>
+
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+
+                                <th>Event Name</th>
+                                <th>Event Type</th>
+                                <th>Location</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+
+                                <th>Brain Game</th>
+                                <th>Game Settings</th>
+                                <th>Tournament</th>
+                                <th>Activities</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @forelse($allevents as $allevent)
+                                <tr>
+
+                                    <td>
+                                        {{ $allevent->id ?: 'N/A' }}
+                                    </td>
+                                    {{-- <td>{{ $allevent->organization->name ?: 'N/A' }}</td> --}}
+                                    <td>{{ $allevent->name ?: 'N/A' }}</td>
+                                    {{-- Name --}}
+                                    <td>
+                                        @if ($allevent->type === 'esports')
+                                            STEAM ESports
+                                        @elseif($allevent->type === 'xr')
+                                            STEAM XR Sports
+                                        @else
+                                            STEAM {{ $allevent->type ?: 'N/A' }}
+                                        @endif
+                                    </td>
+                                    <td>{{ $allevent->location ?: 'N/A' }}</td>
+                                    <td>{{ $allevent->start_date ?: 'N/A' }}</td>
+                                    <td>{{ $allevent->end_date ?: 'N/A' }}</td>
+                                    <td>
+                                        @php
+                                            $status = $allevent->status;
+                                            $map = [
+                                                'live' => ['label' => 'LIVE', 'class' => 'badge-live'],
+                                                'close' => ['label' => 'CLOSED', 'class' => 'badge-close'],
+                                                'draft' => ['label' => 'DRAFT', 'class' => 'badge-draft'],
+                                            ];
+                                        @endphp
+
+                                        @if ($status && isset($map[$status]))
+                                            <span class="badge {{ $map[$status]['class'] }}">
+                                                {{ $map[$status]['label'] }}
+                                            </span>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+                                    {{-- Brain Game --}}
+                                    <td>
+                                        @if ($allevent->tournamentSetting && $allevent->tournamentSetting->brain_enabled)
+                                            Type: {{ $allevent->tournamentSetting->brain_type }}<br>
+                                            Score: {{ $allevent->tournamentSetting->brain_score }}<br>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+
+                                    {{-- Game Settings --}}
+                                    <td>
+                                        @if ($allevent->tournamentSetting)
+                                            Game: {{ $allevent->tournamentSetting->game ?? '-' }}<br>
+                                            Players/Team: {{ $allevent->tournamentSetting->players_per_team ?? '-' }}<br>
+                                            Match Rule: {{ $allevent->tournamentSetting->match_rule ?? '-' }}<br>
+                                            Points Win: {{ $allevent->tournamentSetting->points_win ?? '-' }}<br>
+                                            Points Draw: {{ $allevent->tournamentSetting->points_draw ?? '-' }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+
+                                    {{-- Tournament Settings --}}
+                                    <td>
+                                        @if ($allevent->tournamentSetting)
+                                            Type: {{ $allevent->tournamentSetting->tournament_type ?? '-' }}<br>
+                                            Teams: {{ $allevent->tournamentSetting->number_of_teams ?? '-' }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+
+                                    {{-- Activities --}}
+                                    <td>
+                                        @if ($allevent->activities->count())
+                                            <ul class="mb-0">
+                                                @foreach ($allevent->activities as $activity)
+                                                    <li>{{ $activity->name }} - Score: {{ $activity->max_score }}</li>
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div style="display:flex;gap:0.25rem;">
+
+                                            <button class="btn btn-icon btn-edit"
+                                                onclick="openEditEventModal({{ $allevent->id }})">
+                                                <i data-lucide="edit-2"></i>
+                                            </button>
+
+                                            <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
+                                                onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit" class="btn btn-icon btn-delete">
+                                                    <i data-lucide="trash-2"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+
+                                </tr>
+
+                            @empty
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-4">
+                                        No Events available
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                    <!-- Modal -->
+
+
+                </div>
             </div>
 
+            <!-- Organizations Tab -->
+            <div id="organizations-tab" class="tab-content {{ $activeTab == 'organizations-tab' ? 'active show' : '' }}">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary"  data-next-tab="groups-tab" data-bs-toggle="modal" data-bs-target="#createOrganizationModal">
+                            <i data-lucide="plus"></i> Add Organization
+                        </button>
 
-   <!-- Events Tab -->
-   <div id="events-tab" class="tab-content active show">
-    <div class="spreadsheet-container">
-        <div class="spreadsheet-toolbar">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEventModal">
-                <i data-lucide="plus"></i> Add Event
-            </button>
-
-        </div>
-
-
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-
-                    <th>Event Name</th>
-                    <th>Event Type</th>
-                    <th>Location</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Status</th>
-
-                    <th>Brain Game</th>
-                    <th>Game Settings</th>
-                    <th>Tournament</th>
-                    <th>Activities</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @forelse($allevents as $allevent)
-                    <tr>
-
-                        <td>
-                            {{ $allevent->id ?: 'N/A' }}
-                        </td>
-                        {{-- <td>{{ $allevent->organization->name ?: 'N/A' }}</td> --}}
-                        <td>{{ $allevent->name ?: 'N/A' }}</td>
-                        {{-- Name --}}
-                        <td>
-                            @if ($allevent->type === 'esports')
-                                Steam eSports
-                            @elseif($allevent->type === 'xr')
-                                Steam XR Sports
-                            @else
-                                Steam {{ $allevent->type ?: 'N/A' }}
-                            @endif
-                        </td>
-                        <td>{{ $allevent->location ?: 'N/A' }}</td>
-                        <td>{{ $allevent->start_date ?: 'N/A' }}</td>
-                        <td>{{ $allevent->end_date ?: 'N/A' }}</td>
-                        <td>
-                            @php
-                                $status = $allevent->status;
-                                $map = [
-                                    'live' => ['label' => 'LIVE', 'class' => 'badge-live'],
-                                    'close' => ['label' => 'CLOSED', 'class' => 'badge-close'],
-                                    'draft' => ['label' => 'DRAFT', 'class' => 'badge-draft'],
-                                ];
-                            @endphp
-
-                            @if ($status && isset($map[$status]))
-                                <span class="badge {{ $map[$status]['class'] }}">
-                                    {{ $map[$status]['label'] }}
-                                </span>
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        {{-- Brain Game --}}
-                        <td>
-                            @if ($allevent->tournamentSetting && $allevent->tournamentSetting->brain_enabled)
-                                Type: {{ $allevent->tournamentSetting->brain_type }}<br>
-                                Score: {{ $allevent->tournamentSetting->brain_score }}<br>
-                            
-                            @else
-                                N/A
-                            @endif
-                        </td>
-
-                        {{-- Game Settings --}}
-                        <td>
-                            @if ($allevent->tournamentSetting)
-                                Game: {{ $allevent->tournamentSetting->game ?? '-' }}<br>
-                                Players/Team: {{ $allevent->tournamentSetting->players_per_team ?? '-' }}<br>
-                                Match Rule: {{ $allevent->tournamentSetting->match_rule ?? '-' }}<br>
-                                Points Win: {{ $allevent->tournamentSetting->points_win ?? '-' }}<br>
-                                Points Draw: {{ $allevent->tournamentSetting->points_draw ?? '-' }}
-                            @else
-                                N/A
-                            @endif
-                        </td>
-
-                        {{-- Tournament Settings --}}
-                        <td>
-                            @if ($allevent->tournamentSetting)
-                                Type: {{ $allevent->tournamentSetting->tournament_type ?? '-' }}<br>
-                                Teams: {{ $allevent->tournamentSetting->number_of_teams ?? '-' }}
-                            @else
-                                N/A
-                            @endif
-                        </td>
-
-                        {{-- Activities --}}
-                        <td>
-                            @if ($allevent->activities->count())
-                                <ul class="mb-0">
-                                    @foreach ($allevent->activities as $activity)
-                                        <li>{{ $activity->name }} - Score: {{ $activity->max_score }}</li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                N/A
-                            @endif
-                        </td>
-                        <td>
-                            <div style="display:flex;gap:0.25rem;">
-
-                                <button class="btn btn-icon btn-edit" onclick="openEditEventModal({{ $allevent->id }})">
-                                    <i data-lucide="edit-2"></i>
-                                </button>
-
-                                <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
-                                   
-                                    onsubmit="return confirm('Are you sure you want to delete this event?');">
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button type="submit" class="btn btn-icon btn-delete">
-                                        <i data-lucide="trash-2"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-
-                    </tr>
-
-                @empty
-                    <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
-                            No Events available
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-        <!-- Modal -->
+                    </div>
 
 
-    </div>
-</div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Profile</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Email</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
 
-     <!-- Organizations Tab -->
-     <div id="organizations-tab" class="tab-content ">
-        <div class="spreadsheet-container">
-            <div class="spreadsheet-toolbar">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrganizationModal">
-                    <i data-lucide="plus"></i> Add Organization
-                </button>
+                        <tbody>
+                            @forelse($organizations as $org)
+                                <tr>
 
+
+                                    <td>
+                                        <img src="{{ $org->profile ? asset('storage/' . $org->profile) : asset('assets/avatar-default.png') }}"
+                                            height="40" width="40" class="rounded-circle" style="object-fit: cover"
+                                            onerror="this.src='{{ asset('assets/avatar-default.png') }}'">
+                                    </td>
+                                    <td>{{ $org->name ?: 'N/A' }}</td>
+
+                                    <td>{{ $org->organization_type ?: 'N/A' }}</td>
+
+
+
+
+                                    <td>{{ $org->email ?: 'N/A' }}</td>
+
+                                    <td>
+                                        <div style="display:flex;gap:0.25rem;">
+
+                                            <button class="btn btn-icon btn-edit"
+                                                onclick="openEditOrgModal({{ $org->id }}, '{{ addslashes($org->name) }}', '{{ addslashes($org->email) }}', '{{ $org->organization_type }}' , '{{ $org->event_id }}')">
+                                                <i data-lucide="edit-2"></i>
+                                            </button>
+
+                                            <form action="{{ route('organizations.destroy', $org->id) }}" method="POST"
+                                                onsubmit="return confirm('Are you sure you want to delete this organization?')">
+                                                @csrf
+                                                @method('DELETE')
+
+                                                <button type="submit" class="btn btn-icon btn-delete">
+                                                    <i data-lucide="trash-2"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+
+
+                                    </td>
+
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        No organizations available
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+
+
+                </div>
             </div>
 
+            <div id="groups-tab" class="tab-content {{ $activeTab == 'groups-tab' ? 'active show' : '' }}">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                            <i data-lucide="plus"></i> Add Group
+                        </button>
+                    </div>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Profile</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Email</th>
-                        <th width="120">Actions</th>
-                    </tr>
-                </thead>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Organization</th>
+                                <th>Group Name</th>
+                                <th>POD</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
 
-                <tbody>
-                    @forelse($organizations as $org)
-                        <tr>
-
-
-                            <td>
-                                <img src="{{ $org->profile ? asset('storage/' . $org->profile) : asset('assets/avatar-default.png') }}"
-                                    height="40" width="40" class="rounded-circle"
-                                    style="object-fit: cover"
-                                    onerror="this.src='{{ asset('assets/avatar-default.png') }}'">
-                            </td>
-                            <td>{{ $org->name ?: 'N/A' }}</td>
-
-                            <td>{{ $org->organization_type ?: 'N/A' }}</td>
-
-
-
-
-                            <td>{{ $org->email ?: 'N/A' }}</td>
-
-                            <td>
-                                <div style="display:flex;gap:0.25rem;">
-
-                                    <button class="btn btn-icon btn-edit"
-                                        onclick="openEditOrgModal({{ $org->id }}, '{{ addslashes($org->name) }}', '{{ addslashes($org->email) }}', '{{ $org->organization_type }}' , '{{ $org->event_id }}')">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
-
-                                    <form action="{{ route('organizations.destroy', $org->id) }}" method="POST"
-                                        onsubmit="return confirm('Are you sure you want to delete this organization?')">
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="submit" class="btn btn-icon btn-delete">
-                                            <i data-lucide="trash-2"></i>
-                                        </button>
-                                    </form>
-                                </div>
+                        <tbody>
+                            @forelse($groups as $group)
+                                <tr>
+                                    <td>{{ $group->id ?? 'N/A' }}</td>
+                                    <td>
+                                        {{ optional($organizations->firstWhere('id', $group->organization_id))->name ?? 'N/A' }}
+                                    </td>
+                                    <td>{{ $group->group_name ?? 'N/A' }}</td>
+                                    <td class="text-uppercase">{{ $group->pod ?? 'N/A' }}</td>
 
 
-                            </td>
-
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                                No organizations available
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-
-        </div>
-    </div>
-    
-    <div id="groups-tab" class="tab-content">
-        <div class="spreadsheet-container">
-            <div class="spreadsheet-toolbar">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
-                    <i data-lucide="plus"></i> Add Group
-                </button>
-            </div>
-
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Organization</th>
-                        <th>Group Name</th>
-                        <th width="120">Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @forelse($groups as $group)
-                        <tr>
-                            <td>{{ $group->id ?? 'N/A' }}</td>
-                            <td>
-                                {{ optional($organizations->firstWhere('id', $group->organization_id))->name ?? 'N/A' }}
-                            </td>
-                            <td>{{ $group->group_name ?? 'N/A' }}</td>
-
-                            <td>
-                                <div style="display:flex;gap:0.25rem;">
-                                    <button class="btn btn-icon btn-edit"
-                                        onclick="openGroupEditModal(
+                                    <td>
+                                        <div style="display:flex;gap:0.25rem;">
+                                            <button class="btn btn-icon btn-edit"
+                                                onclick="openGroupEditModal(
                                             {{ $group->id ?? 'null' }},
                                             '{{ addslashes($group->group_name ?? 'N/A') }}',
+                                            '{{ $group->pod ?? 'N/A' }}',
                                         
                                             {{ $group->organization_id }}
                                         )">
-                                        <i data-lucide="pencil"></i>
-                                    </button>
+                                                <i data-lucide="pencil"></i>
+                                            </button>
 
-                                    <form action="{{ route('groups.destroy', $group->id ?? 0) }}" method="POST"
-                                        onsubmit="return confirm('Delete this group?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-icon btn-delete">
-                                            <i data-lucide="trash-2"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="text-center text-white py-4">
-                                No groups available
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div id="subgroup-tab" class="tab-content">
-        <div class="spreadsheet-container">
-            <div class="spreadsheet-toolbar">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSubGroupModal">
-                    <i data-lucide="plus"></i> Add Sub Group
-                </button>
+                                            <form action="{{ route('groups.destroy', $group->id ?? 0) }}" method="POST"
+                                                onsubmit="return confirm('Delete this group?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-icon btn-delete">
+                                                    <i data-lucide="trash-2"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center text-white py-4">
+                                        No groups available
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
+            <div id="subgroup-tab" class="tab-content {{ $activeTab == 'subgroup-tab' ? 'active show' : '' }}">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSubGroupModal">
+                            <i data-lucide="plus"></i> Add Sub Group
+                        </button>
+                    </div>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Group Name</th>
-                        <th>Sub Group Name</th>
-                        <th width="120">Actions</th>
-                    </tr>
-                </thead>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Group Name</th>
+                                <th>Sub Group Name</th>
+                                <th>POD</th>
+                                <th width="120">Actions</th>
+                            </tr>
+                        </thead>
 
-                <tbody>
-                    @forelse($subgroups as $subgrp)
-                        <tr>
-                            <td>{{ $subgrp->id ?? 'N/A' }}</td>
-                            <td>{{ $subgrp->group->group_name ?? 'N/A' }}</td>
-                            <td>{{ $subgrp->name ?? 'N/A' }}</td>
+                        <tbody>
+                            @forelse($subgroups as $subgrp)
+                                <tr>
+                                    <td>{{ $subgrp->id ?? 'N/A' }}</td>
+                                    <td>{{ $subgrp->group->group_name ?? 'N/A' }}</td>
+                                    <td>{{ $subgrp->name ?? 'N/A' }}</td>
+                                    <td class="text-uppercase">{{ $subgrp->group->pod ?? 'N/A' }}</td>
 
-                            <td>
-                                <div style="display:flex;gap:0.25rem;">
-                                    <button class="btn btn-icon btn-edit"
-                                        onclick="openSubGroupEditModal({{ $subgrp->id }})">
-                                        <i data-lucide="pencil"></i>
-                                    </button>
 
-                                    <form action="{{ route('subgroups.destroy', $subgrp->id ?? 0) }}"
-                                        method="POST" onsubmit="return confirm('Delete this sub group?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-icon btn-delete">
-                                            <i data-lucide="trash-2"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="text-center text-white py-4">
-                                No subgroups available
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                                    <td>
+                                        <div style="display:flex;gap:0.25rem;">
+                                            <button class="btn btn-icon btn-edit"
+                                                onclick="openSubGroupEditModal({{ $subgrp->id }})">
+                                                <i data-lucide="pencil"></i>
+                                            </button>
+
+                                            <form action="{{ route('subgroups.destroy', $subgrp->id ?? 0) }}"
+                                                method="POST" onsubmit="return confirm('Delete this sub group?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="btn btn-icon btn-delete">
+                                                    <i data-lucide="trash-2"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-white py-4">
+                                        No subgroups available
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             <!-- Teams Tab -->
-            <div id="teams-tab" class="tab-content">
+            <div id="teams-tab" class="tab-content {{ $activeTab == 'teams-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
@@ -517,7 +512,9 @@
                                 <th>Avatar</th>
                                 <th>Team ID</th>
                                 <th>Team Name</th>
+                                <th>Division</th>
                                 <th>Sub Group</th>
+                                <th>POD</th>
                                 <th>Members</th>
                                 <th>Total Points</th>
                                 <th>Rank</th>
@@ -532,7 +529,7 @@
             </div>
 
             <!-- activites Tab -->
-            <div id="activites-tab" class="tab-content">
+            {{-- <div id="activites-tab" class="tab-content">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createActivityModal">
@@ -578,7 +575,7 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </div> --}}
 
             <!-- Scores Tab -->
             <div id="scores-tab" class="tab-content">
@@ -651,9 +648,9 @@
                     </div>
                 </div>
             </div> --}}
-       
 
-         
+
+
 
         </section>
 
@@ -666,7 +663,7 @@
 @push('modals')
     @include('events.modals.create-team')
     @include('events.modals.create-event')
-    @include('events.modals.create-activity')
+    {{-- @include('events.modals.create-activity') --}}
     @include('events.modals.create-scores')
     @include('events.modals.view-event')
     @include('events.modals.import-team')
@@ -681,7 +678,7 @@
     @include('events.modals.edit-score')
     @include('events.modals.edit-event')
     {{-- @include('events.modals.import-scores') --}}
-    @include('events.modals.edit-activity')
+    {{-- @include('events.modals.edit-activity') --}}
     @include('events.modals.add-match')
     @include('events.modals.match-pin')
     @include('events.modals.add-round')

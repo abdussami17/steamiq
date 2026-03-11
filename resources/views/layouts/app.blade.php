@@ -113,7 +113,7 @@
 
                         <a href="{{ route('student.index') }}"
                             class="nav-link-custom {{ request()->routeIs('student.*') ? 'active' : '' }}">
-                            Students
+                            Players
                         </a>
 
                         {{-- <a href="{{ route('tournaments.index') }}"

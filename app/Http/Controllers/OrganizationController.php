@@ -42,7 +42,7 @@ class OrganizationController extends Controller
     
         Organization::create($validated);
     
-        return back()->with('success', 'Organization created successfully!');
+        return redirect()->back()->with('active_tab', 'groups-tab')->with('success', 'Organization created successfully!');
     }
     public function destroy(Organization $organization)
     {

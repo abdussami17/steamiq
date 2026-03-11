@@ -49,6 +49,7 @@ class TeamsExport implements FromCollection, WithHeadings
             return [
                 'id' => $team->id,
                 'team_name' => $team->name ?? 'N/A',
+                'division' => $team->division ?? 'N/A',
                 'subgroup' => $team->subgroup->name ?? 'N/A',
                 'members' => $membersMap[$team->id] ?? 0,
                 'points' => $pointsMap[$team->id] ?? 0,
@@ -77,6 +78,7 @@ class TeamsExport implements FromCollection, WithHeadings
                 $row['profile'] ?? 'N/A',
                 $row['id'],
                 $row['team_name'],
+                $row['division'],
                 $row['subgroup'],
                 $row['members'],
                 $row['points'],
@@ -94,8 +96,9 @@ class TeamsExport implements FromCollection, WithHeadings
             'Avatar',
             'Team ID',
             'Team Name',
+            'Division',
             'Sub Group',
-            'Members',
+            'Members',  
             'Total Points',
             'Rank',
         ];

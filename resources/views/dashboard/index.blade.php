@@ -23,7 +23,7 @@
                 <div class="stat-value">{{ $activeEventsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
-                <div class="stat-label">Total Students</div>
+                <div class="stat-label">Total Players</div>
                 <div class="stat-value">{{ $studentsCount ?: 'N/A' }}</div>
             </div>
             <div class="stat">
@@ -170,9 +170,9 @@
                     <div style="font-size: 3rem; margin-bottom: 1rem; display: flex; justify-content: center;">
                         <i data-lucide="users" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
-                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Students</h3>
+                    <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Players</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Register new participants</p>
-                    <a href="{{ route('student.index') }}" class="btn btn-primary" style="width: 100%;">Add Students</a>
+                    <a href="{{ route('student.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
 
                 </div>
             </div>
@@ -183,7 +183,7 @@
                         <i data-lucide="trophy" style="width: 60px; height: 60px; color: var(--primary);"></i>
                     </div>
                     <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Assign Scores</h3>
-                    <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Assign Student/Team Score</p>
+                    <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Assign Player/Team Score</p>
                     <a href="{{ route('events.index') }}" class="btn btn-primary" style="width: 100%;">Assign Scores</a>
                 </div>
             </div>

@@ -20,6 +20,7 @@ class Team extends Model
         'name',
         'sub_group_id',
         'profile',
+        'division'
     ];
 
 

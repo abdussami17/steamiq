@@ -18,7 +18,7 @@
         const tbody = document.getElementById('teamsTableBody');
         if (!tbody) return;
 
-        tbody.innerHTML = `<tr><td colspan="6">Loading...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">Loading...</td></tr>`;
 
         try {
             const res = await fetch('/teams-data', {
@@ -40,6 +40,8 @@
             teams.forEach(team => {
                 const id = safe(team.id);
                 const name = safe(team.name);
+                const division = safe(team.division);
+                const pod = safe(team.pod);
                 const members = safe(team.members_count ?? 0);
                 const points = safe(team.total_points ?? 0);
                 const rank = safe(team.rank ?? 0);
@@ -67,7 +69,9 @@ rows += `
 
     <td><input type="text" value="${id}" readonly></td>
     <td><input type="text" value="${name}"></td>
+    <td>${division}</td>
     <td>${subgroup}</td>
+    <td class="text-uppercase">${pod}</td>
     <td>${members}</td>
     <td style="color: var(--primary); font-weight:700;">${points}</td>
     <td style="color:${rankColor}; font-weight:700;font-size:22px">${rank}</td>
@@ -92,7 +96,7 @@ rows += `
             if (window.lucide) lucide.createIcons();
         } catch (err) {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="6">N/A</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8">N/A</td></tr>`;
         }
     }
 
@@ -173,7 +177,7 @@ let html = `
 <table class="table table-bordered table-dark">
     <thead>
         <tr>
-            <th>Student</th>
+            <th>Player</th>
             <th>Email</th>
             <th>Total Points</th>
            

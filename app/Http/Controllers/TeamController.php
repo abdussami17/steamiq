@@ -34,6 +34,7 @@ class TeamController extends Controller
     {
         $validated = $request->validate([
             'team_name'    => 'required|string|max:255',
+            'division' => 'required|in:Junior,Primary',
             'sub_group_id' => 'required|exists:sub_groups,id',
             'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -54,6 +55,7 @@ class TeamController extends Controller
                 'name'    => $validated['team_name'],
                 'sub_group_id' => $subgroup->id,
                 'profile'      => $profilePath,
+                'division' => $validated['division']
             ]);
     
             DB::commit();
@@ -78,8 +80,9 @@ class TeamController extends Controller
             // =============================
             // 1) Load teams + subgroup
             // =============================
-            $teams = Team::with(['subgroup'])
-                ->get();
+       $teams = Team::with([
+    'subgroup.group' 
+])->get();
 
             // =============================
             // 2) Get total points per team (SCORES TABLE ONLY)
@@ -103,6 +106,8 @@ class TeamController extends Controller
                 return [
                     'id' => $team->id,
                     'name' => $team->name ?? 'N/A',
+                    'pod' => $team->subgroup->group->pod ?? 'N/A',
+                    'division' => $team->division ?? 'N/A',
                     'subgroup_name' => $team->subgroup->name ?? 'N/A',
                     'members_count' => $membersMap[$team->id] ?? 0,
                     'total_points' => $pointsMap[$team->id] ?? 0,
@@ -231,19 +236,25 @@ class TeamController extends Controller
             'members' => $members
         ]);
     }
-    // Update team
     public function edit(Team $team)
     {
-        $team->load('subgroup.event');
+        $team->load('subgroup.group');
+    
+        $organizationId = $team->subgroup->group->organization_id;
+    
+        $subgroups = \App\Models\SubGroup::whereHas('group', function ($q) use ($organizationId) {
+            $q->where('organization_id', $organizationId);
+        })->select('id','name','group_id')->get();
     
         return response()->json([
             'team' => [
                 'id' => $team->id,
                 'name' => $team->name,
+                'division' => $team->division,
                 'sub_group_id' => $team->sub_group_id,
-              
                 'profile' => $team->profile ? asset('storage/' . $team->profile) : null
-            ]
+            ],
+            'subgroups' => $subgroups
         ]);
     }
     
@@ -251,6 +262,7 @@ class TeamController extends Controller
     {
         $validated = $request->validate([
             'team_name'    => 'required|string|max:255',
+            'division' => 'required|in:Junior,Primary',
             'sub_group_id' => 'required|exists:sub_groups,id',
             'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -267,7 +279,7 @@ class TeamController extends Controller
             $team->update([
                 'name'    => $validated['team_name'],
                 'sub_group_id' => $subgroup->id,
-            
+                'division' => $validated['division'],
                 'profile'      => $profilePath,
             ]);
     

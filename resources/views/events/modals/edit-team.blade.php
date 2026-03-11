@@ -21,13 +21,18 @@
             <div class="mb-3 col-md-6">
               <label class="form-label">Subgroup </label>
               <select class="form-select" name="sub_group_id" id="editTeamSubgroup" required>
-                <option hidden>-- Select Subgroup --</option>
-                @foreach($subgroups as $subgroup)
-                  <option value="{{ $subgroup->id }}">{{ $subgroup->name }}</option>
-                @endforeach
+               
               </select>
             </div>
-
+            <div class="mb-3 col-md-6">
+              <label class="form-label">Division </label>
+              <select class="form-select" name="division" id="editDivision" required>
+                <option value="">-- Select Division --</option>
+                <option value="Junior">Junior</option>   
+                <option value="Primary">Primary</option>   
+              
+              </select>
+            </div>
             <div class="mb-3 col-md-6">
               <label class="form-label">Team Avatar</label>
               <input type="file" class="form-input" name="profile" accept="image/*">
@@ -46,48 +51,66 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const editForm = document.getElementById('editTeamForm');
-
-  window.openEditTeamModal = function(teamId){
-    const modal = new bootstrap.Modal(document.getElementById('editTeamModal'));
-    const idInput = document.getElementById('editTeamId');
-    const nameInput = document.getElementById('editTeamName');
-    const subgroupSelect = document.getElementById('editTeamSubgroup');
-
-    idInput.value = teamId;
-
-    fetch(`/teams/${teamId}`)
+  document.addEventListener('DOMContentLoaded', function() {
+    const editForm = document.getElementById('editTeamForm');
+  
+    window.openEditTeamModal = function(teamId){
+      const modalEl = document.getElementById('editTeamModal');
+      const modal = new bootstrap.Modal(modalEl);
+      const idInput = document.getElementById('editTeamId');
+      const nameInput = document.getElementById('editTeamName');
+      const divisionInput = document.getElementById('editDivision');
+      const subgroupSelect = document.getElementById('editTeamSubgroup');
+  
+      idInput.value = teamId;
+  
+      fetch(`/teams/${teamId}`)
+        .then(res => res.json())
+        .then(data => {
+          nameInput.value = data.team.name;
+          divisionInput.value = data.team.division;
+  
+          // Clear current options
+          subgroupSelect.innerHTML = '<option hidden>-- Select Subgroup --</option>';
+  
+          // Populate dropdown dynamically
+          data.subgroups.forEach(sub => {
+            const option = document.createElement('option');
+            option.value = sub.id;
+            option.textContent = sub.name;
+            if(sub.id == data.team.sub_group_id){
+              option.selected = true;
+            }
+            subgroupSelect.appendChild(option);
+          });
+  
+          modal.show();
+        })
+        .catch(err => console.error(err));
+    }
+  
+    editForm.addEventListener('submit', function(e){
+      e.preventDefault();
+      const formData = new FormData(this);
+      const teamId = formData.get('team_id');
+  
+      fetch(`/teams/update/${teamId}`, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        },
+        body: formData
+      })
       .then(res => res.json())
       .then(data => {
-        nameInput.value = data.team.name;
-        subgroupSelect.value = data.team.sub_group_id;
-        modal.show();
-      }).catch(err => console.error(err));
-  }
-
-  editForm.addEventListener('submit', function(e){
-    e.preventDefault();
-    const formData = new FormData(this);
-    const teamId = formData.get('team_id');
-
-    fetch(`/teams/update/${teamId}`, {
-      method: 'POST',
-      headers: {
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-      },
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      if(data.success){
-        bootstrap.Modal.getInstance(document.getElementById('editTeamModal')).hide();
-        fetchTeams(); // refresh table
-      } else {
-        alert(data.message || 'Failed to update team');
-      }
-    })
-    .catch(err => console.error(err));
+        if(data.success){
+          bootstrap.Modal.getInstance(document.getElementById('editTeamModal')).hide();
+          fetchTeams(); // refresh table
+        } else {
+          alert(data.message || 'Failed to update team');
+        }
+      })
+      .catch(err => console.error(err));
+    });
   });
-});
-</script> 
+  </script>

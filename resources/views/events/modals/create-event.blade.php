@@ -17,7 +17,7 @@
 
                     <!-- ================= BASIC INFO ================= -->
 
-                    <div class="row g-3">
+                    <div class="row g-4">
 
                         <div class="col-md-6">
                             <label class="form-label">Event Name</label>
@@ -28,22 +28,22 @@
                             <label class="form-label">Event Type</label>
                             <select id="eventType" name="type" class="form-select" required>
                                 <option value="">--Select Type--</option>
-                                <option value="esports">Steam eSports</option>
-                                <option value="xr">Steam XR Sports</option>
+                                <option value="esports">STEAM ESports</option>
+                                <option value="xr">STEAM XR Sports</option>
                             </select>
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label">Location</label>
                             <input type="text" name="location" class="form-input" required>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Start Date</label>
                             <input type="date" name="start_date" class="form-input">
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">End Date</label>
                             <input type="date" name="end_date" class="form-input">
                         </div>
@@ -80,9 +80,9 @@
                                 <label class="form-label ">Brain Type</label>
                                 <select name="brain_type" class="form-select">
                                     <option value="">--Select Brain Type--</option>
-@foreach ($steamCategories as $stcat )
-    <option value="{{ $stcat->name }}">{{ $stcat->name }}</option>
-@endforeach
+                                    @foreach ($steamCategories as $stcat)
+                                        <option value="{{ $stcat->name }}">{{ $stcat->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
 
@@ -91,7 +91,7 @@
                                 <input name="brain_score" type="number" class="form-input" placeholder="Score">
                             </div>
 
-                            
+
                         </div>
 
                         <hr>
@@ -101,7 +101,7 @@
 
                             <div class="col-md-4">
                                 <label class="form-label">Game</label>
-                               <input type="text" placeholder="Aqua Ball League" name="game" class="form-input">
+                                <input type="text" placeholder="Aqua Ball League" name="game" class="form-input">
                             </div>
 
                             <div class="col-md-4">
@@ -139,7 +139,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Tournament Type</label>
-                                <select name="tournament_type" class="form-select" id="">
+                                <select name="esports_tournament_type" class="form-select" id="">
                                     <option value="">--Select Type--</option>
                                     <option value="single_elimination">Single Elimination</option>
                                     <option value="double_elimination">Double Elimination</option>
@@ -150,7 +150,7 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Number of Teams</label>
-                                <input name="number_of_teams" type="number" class="form-input">
+                                <input name="esports_number_of_teams" type="number" class="form-input">
                             </div>
 
                         </div>
@@ -163,6 +163,28 @@
                         <button type="button" class="btn btn-primary mb-3" onclick="addActivity()">Add
                             Activity</button>
                         <div id="activitiesContainer"></div>
+
+                        <hr>
+                        <h5 class="mb-3 text-white fw-bold">Tournament Setup</h5>
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label">Tournament Type</label>
+                                <select name="xr_tournament_type" class="form-select" id="">
+                                    <option value="">--Select Type--</option>
+                                    <option value="single_elimination">Single Elimination</option>
+                                    <option value="double_elimination">Double Elimination</option>
+                                    <option value="round_robin">Round Robin</option>
+
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Number of Teams</label>
+                                <input name="xr_number_of_teams" type="number" class="form-input">
+                            </div>
+
+                        </div>
                     </div>
 
                 </div> <!-- end modal-body -->
@@ -185,6 +207,31 @@
     const xrSection = document.getElementById("xrSection");
     const brainToggle = document.getElementById("brainToggle");
 
+
+    function toggleSections(type) {
+
+        // hide both first
+        esportsSection.style.display = "none";
+        xrSection.style.display = "none";
+
+        // disable all inputs first
+        esportsSection.querySelectorAll("input,select").forEach(el => el.disabled = true);
+        xrSection.querySelectorAll("input,select").forEach(el => el.disabled = true);
+
+        if (type === "esports") {
+            esportsSection.style.display = "block";
+            esportsSection.querySelectorAll("input,select").forEach(el => el.disabled = false);
+        }
+
+        if (type === "xr") {
+            xrSection.style.display = "block";
+            xrSection.querySelectorAll("input,select").forEach(el => el.disabled = false);
+        }
+    }
+
+    eventType.addEventListener("change", function() {
+        toggleSections(this.value);
+    });
     eventType.addEventListener("change", function() {
         esportsSection.style.display = "none";
         xrSection.style.display = "none";
@@ -200,11 +247,11 @@
 
     /* ================= XR Activities ================= */
     function addActivity() {
-    const container = document.getElementById("activitiesContainer");
-    const index = container.children.length; // ensures proper numeric indexing
-    const div = document.createElement("div");
-    div.className = "row g-3 mt-2 rounded p-0";
-    div.innerHTML = `
+        const container = document.getElementById("activitiesContainer");
+        const index = container.children.length; // ensures proper numeric indexing
+        const div = document.createElement("div");
+        div.className = "row g-3 mt-2 rounded p-0";
+        div.innerHTML = `
       <div class="col-md-4">
    <input type="text" placeholder="Thug Of War" name="activities[${index}][type]" class="form-input" required>
       </div>
@@ -217,15 +264,16 @@
         <button type="button" class="btn btn-primary" onclick="this.closest('.row').remove(); reindexActivities();">Remove</button>
       </div>
     `;
-    container.appendChild(div);
-}
-function reindexActivities() {
-    const container = document.getElementById("activitiesContainer");
-    Array.from(container.children).forEach((row, i) => {
-        const type = row.querySelector('input[name^="activities"][type="text"]');
-        const score = row.querySelector('input[name^="activities"][type="number"]');
-        if (type) type.name = `activities[${i}][type]`;
-        if (score) score.name = `activities[${i}][score]`;
-    });
-}
+        container.appendChild(div);
+    }
+
+    function reindexActivities() {
+        const container = document.getElementById("activitiesContainer");
+        Array.from(container.children).forEach((row, i) => {
+            const type = row.querySelector('input[name^="activities"][type="text"]');
+            const score = row.querySelector('input[name^="activities"][type="number"]');
+            if (type) type.name = `activities[${i}][type]`;
+            if (score) score.name = `activities[${i}][score]`;
+        });
+    }
 </script>

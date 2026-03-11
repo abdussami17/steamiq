@@ -1,5 +1,5 @@
 <div class="modal fade" id="add_team" tabindex="-1" aria-labelledby="teamModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -30,7 +30,17 @@
                             </select>
                         </div>
 
-                        <div class="col-md-12">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Division</label>
+                            <select name="division" class="form-select" >
+                                <option value="">-- Select Division --</option>
+                                <option value="Junior">Junior</option>   
+                                <option value="Primary">Primary</option>                        
+
+                            </select>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label">Team Avatar <small class="text-muted">(optional)</small></label>
                             <input type="file" name="profile" class="form-input" accept="image/*">
                             <small class="text-muted">jpg, jpeg, png (max 2MB)</small>

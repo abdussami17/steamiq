@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Students - SteamIQ')
+@section('title', 'Players - SteamIQ')
 
 @section('content')
 <div class="container">
@@ -7,10 +7,10 @@
         <div class="section-header d-flex justify-content-between align-items-center">
             <h2 class="section-title">
                 <span class="icon"><i data-lucide="users"></i></span>
-                Student Management
+                Players Management
             </h2>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                <i data-lucide="plus"></i> Add New Student
+                <i data-lucide="plus"></i> Add New Player
             </button>
         </div>
 

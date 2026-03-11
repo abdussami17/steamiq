@@ -12,14 +12,16 @@ class GroupController extends Controller
         $request->validate([
             'group_name' => 'required|string|max:255',
             'organization_id'    => 'required|exists:organizations,id',
+            'pod' => 'required|in:Red,Blue'
         ]);
     
         Group::create([
             'group_name' => $request->group_name,
             'organization_id'    => $request->organization_id,
+            'pod' => $request->pod,
         ]);
     
-        return back()->with('success', 'Group created successfully.')->header('Content-Type', 'text/html');
+        return redirect()->back()->with('active_tab', 'subgroup-tab')->with('success', 'Group created successfully!');
     }
     public function update(Request $request, $id)
     {
@@ -28,6 +30,7 @@ class GroupController extends Controller
         $data = $request->validate([
             'group_name' => 'required|string|max:255',
             'organization_id'    => 'required|exists:organizations,id',
+            'pod' => 'required|in:Red,Blue'
         ]);
     
         $group->update($data);

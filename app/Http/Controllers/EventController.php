@@ -68,18 +68,29 @@ class EventController extends Controller
 
             TournamentSetting::create([
                 'event_id' => $event->id,
-                'brain_enabled' => $r->brain_enabled ?? 0,
-                'brain_type' => $r->brain_enabled ? $r->brain_type : null,
-                'brain_score' => $r->brain_enabled ? $r->brain_score : null,
-                'game' => $r->game ?? null,
-                'players_per_team' => $r->players_per_team ?? null,
-                'match_rule' => $r->match_rule ?? null,
-                'points_win' => $r->points_win ?? 0,
-                'points_draw' => $r->points_draw ?? 0,
-                'tournament_type' => $r->tournament_type ?? null,
-                'number_of_teams' => $r->number_of_teams ?? null
+            
+                // Brain settings only for esports
+                'brain_enabled' => $r->type === 'esports' ? ($r->brain_enabled ?? 0) : 0,
+                'brain_type' => $r->type === 'esports' && $r->brain_enabled ? $r->brain_type : null,
+                'brain_score' => $r->type === 'esports' && $r->brain_enabled ? $r->brain_score : null,
+            
+                // Game settings only for esports
+                'game' => $r->type === 'esports' ? $r->game : null,
+                'players_per_team' => $r->type === 'esports' ? $r->players_per_team : null,
+                'match_rule' => $r->type === 'esports' ? $r->match_rule : null,
+            
+                // IMPORTANT FIX
+                'points_win' => $r->type === 'esports' ? ($r->points_win ?? 0) : 0,
+                'points_draw' => $r->type === 'esports' ? ($r->points_draw ?? 0) : 0,
+            
+                'tournament_type' => $r->type === 'esports'
+                ? $r->esports_tournament_type
+                : $r->xr_tournament_type,
+        
+        'number_of_teams' => $r->type === 'esports'
+                ? $r->esports_number_of_teams
+                : $r->xr_number_of_teams,
             ]);
-
             if ($r->filled('activities')) {
                 foreach ($r->activities as $a) {
                     ChallengeActivity::create([

@@ -38,6 +38,20 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            POD 
+                        </label>
+                        <select id="editPod" name="pod"
+                               
+                                class="form-select"
+                                >
+                                <option value="">-- Select POD --</option>
+                           <option value="Red">Red</option>
+                           <option value="Blue">Blue</option>
+
+                        </select>
+                    </div>
 
 
                 </div>
@@ -54,11 +68,12 @@
 </div>
 
 <script>
-    function openGroupEditModal(id, name,org)
+    function openGroupEditModal(id, name,pod,org)
     {
         // fill fields
         document.getElementById('edit_group_id').value = id;
         document.getElementById('edit_group_name').value = name;
+        document.getElementById('editPod').value= pod;
 
     
 
@@ -66,6 +81,7 @@
     for (let i = 0; i < orgSelect.options.length; i++) {
         orgSelect.options[i].selected = orgSelect.options[i].value == org;
     }
+    
 
         // set dynamic action
         document.getElementById('editGroupForm').action = `/groups/update/${id}`;

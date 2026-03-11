@@ -12,7 +12,7 @@ class Group extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['organization_id','group_name'];
+    protected $fillable = ['organization_id','group_name','pod'];
     public function event() { return $this->belongsTo(Event::class); }
     public function organization()
     {

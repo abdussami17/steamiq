@@ -18,86 +18,85 @@
 
 
 <script>
+    function openEventModal(eventId) {
 
-function openEventModal(eventId)
-{
+        const modalLabel = document.getElementById('eventDetailsModalLabel');
+        const contentDiv = document.getElementById('eventDetailsContent');
 
-const modalLabel = document.getElementById('eventDetailsModalLabel');
-const contentDiv = document.getElementById('eventDetailsContent');
-
-contentDiv.innerHTML = "Loading...";
+        contentDiv.innerHTML = "Loading...";
 
 
-fetch(`/events/${eventId}`,{
-headers:{
-'Accept':'application/json',
-'X-Requested-With':'XMLHttpRequest'
-}
-})
-.then(res => res.json())
-.then(event => {
+        fetch(`/events/${eventId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(event => {
 
 
-/* ---------------- EVENT NAME ---------------- */
+                /* ---------------- EVENT NAME ---------------- */
 
-modalLabel.textContent = event.name ?? "N/A";
-
-
-/* ---------------- EVENT TYPE ---------------- */
-
-let eventType = "Steam " + (event.type ?? "");
-
-if(event.type === "esports") eventType = "Steam eSports";
-if(event.type === "xr") eventType = "Steam XR Sports";
+                modalLabel.textContent = event.name ?? "N/A";
 
 
-/* ---------------- COUNTING ---------------- */
+                /* ---------------- EVENT TYPE ---------------- */
 
-let totalTeams = 0;
-let totalStudents = 0;
+                let eventType = "STEAM " + (event.type ?? "");
 
-let teamsList = [];
-
-
-(event.organizations || []).forEach(org => {
-
-(org.groups || []).forEach(group => {
-
-(group.subgroups || []).forEach(sub => {
-
-(sub.teams || []).forEach(team => {
-
-totalTeams++;
-
-let students = (team.students || []).map(s => s.name).join(", ");
-
-if(team.students){
-totalStudents += team.students.length;
-}
-
-teamsList.push({
-team: team.name,
-students: students || "No Students"
-});
-
-});
-
-});
-
-});
-
-});
+                if (event.type === "esports") eventType = "STEAM ESports";
+                if (event.type === "xr") eventType = "STEAM XR Sports";
 
 
-/* ---------------- TEAMS HTML ---------------- */
+                /* ---------------- COUNTING ---------------- */
 
-let teamsHtml = "";
+                let totalTeams = 0;
+                let totalStudents = 0;
 
-if(teamsList.length){
+                let teamsList = [];
 
-teamsList.forEach(t => {
 
-teamsHtml += `
+                (event.organizations || []).forEach(org => {
+
+                    (org.groups || []).forEach(group => {
+
+                        (group.subgroups || []).forEach(sub => {
+
+                            (sub.teams || []).forEach(team => {
+
+                                totalTeams++;
+
+                                let students = (team.students || []).map(s => s
+                                    .name).join(", ");
+
+                                if (team.students) {
+                                    totalStudents += team.students.length;
+                                }
+
+                                teamsList.push({
+                                    team: team.name,
+                                    students: students || "No Players"
+                                });
+
+                            });
+
+                        });
+
+                    });
+
+                });
+
+
+                /* ---------------- TEAMS HTML ---------------- */
+
+                let teamsHtml = "";
+
+                if (teamsList.length) {
+
+                    teamsList.forEach(t => {
+
+                        teamsHtml += `
 
 <div style="
 padding:12px;
@@ -122,33 +121,33 @@ ${t.students}
 
 `;
 
-});
+                    });
 
-}else{
+                } else {
 
-teamsHtml = `<div>No Teams Found</div>`;
+                    teamsHtml = `<div>No Teams Found</div>`;
 
-}
+                }
 
 
-/* ---------------- ACTIVITIES ---------------- */
+                /* ---------------- ACTIVITIES ---------------- */
 
-let activitiesHtml = "<div>No Activities</div>";
+                let activitiesHtml = "<div>No Activities</div>";
 
-if(event.activities && event.activities.length){
+                if (event.activities && event.activities.length) {
 
-activitiesHtml = event.activities.map(a => `
+                    activitiesHtml = event.activities.map(a => `
 <div style="padding:8px 0;border-bottom:1px solid #2c2c2c">
 ${a.name}
 </div>
 `).join("");
 
-}
+                }
 
 
-/* ---------------- FINAL HTML ---------------- */
+                /* ---------------- FINAL HTML ---------------- */
 
-contentDiv.innerHTML = `
+                contentDiv.innerHTML = `
 
 <div style="margin-bottom:15px">
 
@@ -177,7 +176,7 @@ ${eventType}
 </div>
 
 <div class="stat">
-<div class="stat-label">Total Students</div>
+<div class="stat-label">Total Players</div>
 <div class="stat-value" style="font-size:20px">${totalStudents}</div>
 </div>
 
@@ -219,22 +218,21 @@ ${activitiesHtml}
 `;
 
 
-/* ---------------- OPEN MODAL ---------------- */
+                /* ---------------- OPEN MODAL ---------------- */
 
-new bootstrap.Modal(
-document.getElementById("eventDetailsModal")
-).show();
+                new bootstrap.Modal(
+                    document.getElementById("eventDetailsModal")
+                ).show();
 
 
-})
-.catch(err => {
+            })
+            .catch(err => {
 
-console.error(err);
+                console.error(err);
 
-contentDiv.innerHTML = "<p>Failed to load event data</p>";
+                contentDiv.innerHTML = "<p>Failed to load event data</p>";
 
-});
+            });
 
-}
-
+    }
 </script>
