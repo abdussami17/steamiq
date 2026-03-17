@@ -10,6 +10,7 @@ use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -29,33 +30,52 @@ class StudentController extends Controller
             'students.*.email' => 'nullable|email|max:255',
             'students.*.profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-
+    
         DB::beginTransaction();
+    
         try {
+    
             $team = Team::findOrFail($request->team_id);
-          
-
-            foreach($request->students as $studentData){
+    
+            foreach ($request->students as $studentData) {
+    
                 $profilePath = null;
-                if(isset($studentData['profile'])){
-                    $profilePath = $studentData['profile']->store('students', 'public');
+    
+                if (isset($studentData['profile'])) {
+    
+                    $file = $studentData['profile'];
+    
+                    $extension = $file->getClientOriginalExtension() ?: $file->extension();
+                    $filename = time().'_'.Str::random(8).'.'.$extension;
+    
+                    $destinationDir = public_path('storage/players');
+    
+                    if (!is_dir($destinationDir)) {
+                        mkdir($destinationDir, 0755, true);
+                    }
+    
+                    $file->move($destinationDir, $filename);
+    
+                    $profilePath = 'players/'.$filename;
                 }
-
+    
                 Student::create([
                     'name' => $studentData['name'],
                     'email' => $studentData['email'] ?? null,
                     'profile' => $profilePath,
                     'team_id' => $team->id,
-                 
                 ]);
             }
-
+    
             DB::commit();
+    
             return back()->with('success', 'Player added successfully.');
-
+    
         } catch (\Throwable $e) {
+    
             DB::rollBack();
             Log::error($e->getMessage());
+    
             return back()->with('error', 'Failed to add Players.');
         }
     }
@@ -64,11 +84,12 @@ class StudentController extends Controller
     {
         $categories = SteamCategory::orderBy('id')->get(); // dynamic
     
+        // Fetch students belonging to the event via team -> group -> event
         $students = Student::with([
-            'team.subgroup',
+            'team.subgroup.group.organization',
             'scores.challengeActivity'
         ])
-        ->whereHas('team.subgroup.group.organization', function ($q) use ($eventId) {
+        ->whereHas('team.group.organization', function ($q) use ($eventId) {
             $q->where('event_id', $eventId);
         })
         ->get();
@@ -79,17 +100,20 @@ class StudentController extends Controller
     
             $scoreMap = $student->scores->keyBy('steam_category_id');
     
+            $team = $student->team;
+            $subgroup = $team->subgroup ?? null;
+    
             $row = [
                 'id' => $student->id,
                 'student' => $student->name,
-                'team' => $student->team->name ?? 'N/A',
+                'team' => $team->name ?? 'N/A',
+                'subgroup' => $subgroup->name ?? 'N/A', // optional subgroup
                 'activity' => optional($student->scores->first()?->challengeActivity)->name ?? 'N/A',
                 'total' => 0
             ];
     
             foreach ($categories as $cat) {
                 $points = (int) optional($scoreMap->get($cat->id))->points ?? 0;
-    
                 $row[$cat->name] = $points;
                 $row['total'] += $points;
             }
@@ -97,7 +121,7 @@ class StudentController extends Controller
             $rows[] = $row;
         }
     
-        // sort + rank
+        // sort by total points DESC + assign rank
         $rows = collect($rows)->sortByDesc('total')->values();
     
         $rank = 1;

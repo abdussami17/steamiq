@@ -30,12 +30,13 @@
                                 </p>
                             </div>
                             <div class="d-flex ">
-                                <span
-                                    class="badge me-2 badge-{{ $allevent->status }}">{{ ucfirst($allevent->status) }}</span>
-
+                                <span class="badge me-2 badge-{{ $allevent->status }}">
+                                    {{ ucfirst($allevent->status) }}
+                                </span>
+            
                                 <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
-                                    style="display:inline; height:0"
-                                    onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                      style="display:inline; height:0"
+                                      onsubmit="return confirm('Are you sure you want to delete this event?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link p-0 m-0 align-baseline">
@@ -44,25 +45,35 @@
                                 </form>
                             </div>
                         </div>
+            
                         <div class="stats-grid">
-
+            
+                            @php
+                                // Merge all teams under groups + subgroups and remove duplicates
+                                $allTeams = $allevent->organizations
+                                    ->flatMap->groups
+                                    ->flatMap(function ($group) {
+                                        return $group->teams->concat($group->subgroups->flatMap->teams);
+                                    })
+                                    ->unique('id');
+                            @endphp
+            
                             {{-- TEAMS --}}
                             <div class="stat">
                                 <div class="stat-label">Teams</div>
                                 <div class="stat-value" style="font-size:1.3rem;">
-                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->flatMap->teams->count() ?: 'N/A' }}
+                                    {{ $allTeams->count() ?: 'N/A' }}
                                 </div>
                             </div>
-
-                            {{-- STUDENTS --}}
+            
+                            {{-- PLAYERS --}}
                             <div class="stat">
                                 <div class="stat-label">Players</div>
                                 <div class="stat-value" style="font-size:1.3rem;">
-                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->flatMap->teams->flatMap->students->count() ?:
-                                        'N/A' }}
+                                    {{ $allTeams->flatMap->students->count() ?: 'N/A' }}
                                 </div>
                             </div>
-
+            
                             {{-- GROUPS --}}
                             <div class="stat">
                                 <div class="stat-label">Groups</div>
@@ -70,7 +81,7 @@
                                     {{ $allevent->organizations->flatMap->groups->count() ?: 'N/A' }}
                                 </div>
                             </div>
-
+            
                             {{-- SUBGROUPS --}}
                             <div class="stat">
                                 <div class="stat-label">Sub Groups</div>
@@ -78,8 +89,9 @@
                                     {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A' }}
                                 </div>
                             </div>
-
+            
                         </div>
+            
                         <div class="card-actions">
                             <button class="btn btn-primary" style="flex:1;" onclick="openEventModal({{ $allevent->id }})">
                                 View Event
@@ -106,28 +118,37 @@
             </div>
 
             @php
-            $activeTab = session('active_tab') ?? 'events-tab';
+                $activeTab = session('active_tab') ?? 'events-tab';
             @endphp
-            
+
             <div class="tabs" id="eventTabs">
-                <button class="tab {{ $activeTab == 'events-tab' ? 'active' : '' }}" onclick="switchTab('events')">Events</button>
-                <button class="tab {{ $activeTab == 'organizations-tab' ? 'active' : '' }}" onclick="switchTab('organizations')">Organizations</button>
-                <button class="tab {{ $activeTab == 'groups-tab' ? 'active' : '' }}" onclick="switchTab('groups')">Groups</button>
-                <button class="tab {{ $activeTab == 'subgroup-tab' ? 'active' : '' }}" onclick="switchTab('subgroup')">Sub Group</button>
-                <button class="tab {{ $activeTab == 'teams-tab' ? 'active' : '' }}" onclick="switchTab('teams')">Teams</button>
-                <button class="tab {{ $activeTab == 'scores-tab' ? 'active' : '' }}" onclick="switchTab('scores')">Scores</button>
+                <button class="tab {{ $activeTab == 'events-tab' ? 'active' : '' }}"
+                    onclick="switchTab('events')">Events</button>
+                <button class="tab {{ $activeTab == 'organizations-tab' ? 'active' : '' }}"
+                    onclick="switchTab('organizations')">Organizations</button>
+                <button class="tab {{ $activeTab == 'groups-tab' ? 'active' : '' }}"
+                    onclick="switchTab('groups')">Groups</button>
+                <button class="tab {{ $activeTab == 'subgroup-tab' ? 'active' : '' }}" onclick="switchTab('subgroup')">Sub
+                    Group</button>
+                <button class="tab {{ $activeTab == 'teams-tab' ? 'active' : '' }}"
+                    onclick="switchTab('teams')">Teams</button>
+                <button class="tab {{ $activeTab == 'scores-tab' ? 'active' : '' }}"
+                    onclick="switchTab('scores')">Scores</button>
             </div>
-            @if(session('active_tab'))
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tabs = document.getElementById('eventTabs');
-        if(tabs){
-            // scroll to the tabs area smoothly
-            tabs.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-</script>
-@endif
+            @if (session('active_tab'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const tabs = document.getElementById('eventTabs');
+                        if (tabs) {
+                            // scroll to the tabs area smoothly
+                            tabs.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                </script>
+            @endif
 
 
             <!-- Events Tab -->
@@ -234,12 +255,12 @@
                                         @endif
                                     </td>
 
-                                    {{-- Activities --}}
                                     <td>
                                         @if ($allevent->activities->count())
                                             <ul class="mb-0">
                                                 @foreach ($allevent->activities as $activity)
-                                                    <li>{{ $activity->name }} - Score: {{ $activity->max_score }}</li>
+                                                    <li>{{ $activity->display_name }} - Score: {{ $activity->max_score }}
+                                                    </li>
                                                 @endforeach
                                             </ul>
                                         @else
@@ -263,6 +284,10 @@
                                                     <i data-lucide="trash-2"></i>
                                                 </button>
                                             </form>
+                                            <button class="btn btn-icon btn-view"
+                                                onclick="openBracketModal({{ $allevent->id }})">
+                                                <i data-lucide="trophy"></i>
+                                            </button>
                                         </div>
                                     </td>
 
@@ -287,7 +312,8 @@
             <div id="organizations-tab" class="tab-content {{ $activeTab == 'organizations-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
-                        <button class="btn btn-primary"  data-next-tab="groups-tab" data-bs-toggle="modal" data-bs-target="#createOrganizationModal">
+                        <button class="btn btn-primary" data-next-tab="groups-tab" data-bs-toggle="modal"
+                            data-bs-target="#createOrganizationModal">
                             <i data-lucide="plus"></i> Add Organization
                         </button>
 
@@ -312,7 +338,8 @@
 
                                     <td>
                                         <img src="{{ $org->profile ? asset('storage/' . $org->profile) : asset('assets/avatar-default.png') }}"
-                                            height="40" width="40" class="rounded-circle" style="object-fit: cover"
+                                            height="40" width="40" class="rounded-circle"
+                                            style="object-fit: cover"
                                             onerror="this.src='{{ asset('assets/avatar-default.png') }}'">
                                     </td>
                                     <td>{{ $org->name ?: 'N/A' }}</td>
@@ -513,6 +540,7 @@
                                 <th>Team ID</th>
                                 <th>Team Name</th>
                                 <th>Division</th>
+                                <th>Group</th>
                                 <th>Sub Group</th>
                                 <th>POD</th>
                                 <th>Members</th>
@@ -669,7 +697,7 @@
     @include('events.modals.import-team')
     @include('events.modals.edit-team')
     @include('events.modals.view-team')
-    @include('events.modals.show-event')
+    {{-- @include('events.modals.show-event') --}}
     @include('events.modals.bracket')
 
 
@@ -691,6 +719,7 @@
 @endpush
 
 @push('scripts')
+    @include('events.bracket-script')
     @include('events.team-script')
     @include('events.score-script')
     {{-- @include('events.matches-script') --}}

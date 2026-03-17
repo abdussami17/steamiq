@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 
@@ -33,40 +34,56 @@ class TeamController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'team_name'    => 'required|string|max:255',
+            'team_name' => 'required|string|max:255',
             'division' => 'required|in:Junior,Primary',
-            'sub_group_id' => 'required|exists:sub_groups,id',
-            'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'group_id' => 'required|exists:groups,id',
+            'sub_group_id' => 'nullable|exists:sub_groups,id',
+            'profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
-    
+        
         DB::beginTransaction();
-    
+        
         try {
-    
-            $subgroup = SubGroup::findOrFail($validated['sub_group_id']);
-    
+        
+            $subgroupId = $validated['sub_group_id'] ?? null;
+        
             $profilePath = null;
-    
+        
             if ($request->hasFile('profile')) {
-                $profilePath = $request->file('profile')->store('teams', 'public');
+        
+                $file = $request->file('profile');
+        
+                $extension = $file->getClientOriginalExtension() ?: $file->extension();
+                $filename = time().'_'.Str::random(8).'.'.$extension;
+        
+                $destinationDir = public_path('storage/teams');
+        
+                if (!is_dir($destinationDir)) {
+                    mkdir($destinationDir, 0755, true);
+                }
+        
+                $file->move($destinationDir, $filename);
+        
+                $profilePath = 'teams/'.$filename;
             }
-    
+        
             Team::create([
-                'name'    => $validated['team_name'],
-                'sub_group_id' => $subgroup->id,
-                'profile'      => $profilePath,
-                'division' => $validated['division']
+                'name' => $validated['team_name'],
+                'group_id' => $validated['group_id'],
+                'sub_group_id' => $subgroupId,
+                'division' => $validated['division'],
+                'profile' => $profilePath
             ]);
-    
+        
             DB::commit();
-    
+        
             return back()->with('success', 'Team created successfully.');
-    
+        
         } catch (\Throwable $e) {
-    
+        
             DB::rollBack();
             Log::error($e->getMessage());
-    
+        
             return back()->withInput()->with('error', 'Failed to create team.');
         }
     }
@@ -80,9 +97,10 @@ class TeamController extends Controller
             // =============================
             // 1) Load teams + subgroup
             // =============================
-       $teams = Team::with([
-    'subgroup.group' 
-])->get();
+            $teams = Team::with([
+                'subgroup.group',
+                'group'
+            ])->get();
 
             // =============================
             // 2) Get total points per team (SCORES TABLE ONLY)
@@ -105,10 +123,16 @@ class TeamController extends Controller
 
                 return [
                     'id' => $team->id,
-                    'name' => $team->name ?? 'N/A',
-                    'pod' => $team->subgroup->group->pod ?? 'N/A',
+                    'name' => $team->display_name ?? 'N/A',
+                    'pod' => $team->subgroup
+                    ? $team->subgroup->group->pod
+                    : $team->group->pod ?? 'N/A',
+            
+            'subgroup_name' => $team->subgroup->name ?? 'N/A',
                     'division' => $team->division ?? 'N/A',
-                    'subgroup_name' => $team->subgroup->name ?? 'N/A',
+                    'group_name' => $team->subgroup
+                    ? $team->subgroup->group->group_name
+                    : ($team->group->group_name ?? 'N/A'),
                     'members_count' => $membersMap[$team->id] ?? 0,
                     'total_points' => $pointsMap[$team->id] ?? 0,
                     'profile' => $team->profile ?? null,
@@ -240,20 +264,24 @@ class TeamController extends Controller
     {
         $team->load('subgroup.group');
     
-        $organizationId = $team->subgroup->group->organization_id;
+        // Load all groups for dropdown
+        $groups = \App\Models\Group::select('id','group_name')->get();
     
-        $subgroups = \App\Models\SubGroup::whereHas('group', function ($q) use ($organizationId) {
-            $q->where('organization_id', $organizationId);
-        })->select('id','name','group_id')->get();
+        // Load subgroups for the team’s current group
+        $subgroups = \App\Models\SubGroup::where('group_id', $team->group_id)
+            ->select('id','name','group_id')
+            ->get();
     
         return response()->json([
             'team' => [
                 'id' => $team->id,
                 'name' => $team->name,
                 'division' => $team->division,
+                'group_id' => $team->group_id,
                 'sub_group_id' => $team->sub_group_id,
                 'profile' => $team->profile ? asset('storage/' . $team->profile) : null
             ],
+            'groups' => $groups,
             'subgroups' => $subgroups
         ]);
     }
@@ -262,29 +290,51 @@ class TeamController extends Controller
     {
         $validated = $request->validate([
             'team_name'    => 'required|string|max:255',
-            'division' => 'required|in:Junior,Primary',
-            'sub_group_id' => 'required|exists:sub_groups,id',
+            'division'     => 'required|in:Junior,Primary',
+            'group_id'     => 'required|exists:groups,id',
+            'sub_group_id' => 'nullable|exists:sub_groups,id', // optional now
             'profile'      => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
     
         DB::beginTransaction();
         try {
-            $subgroup = SubGroup::findOrFail($validated['sub_group_id']);
+            $subgroupId = null;
+            if(!empty($validated['sub_group_id'])){
+                $subgroup = SubGroup::where('id', $validated['sub_group_id'])
+                    ->where('group_id', $validated['group_id'])
+                    ->firstOrFail(); // ensure subgroup belongs to group
+                $subgroupId = $subgroup->id;
+            }
     
-            $profilePath = $team->profile;
+            $profilePath = null;
+        
             if ($request->hasFile('profile')) {
-                $profilePath = $request->file('profile')->store('teams', 'public');
+        
+                $file = $request->file('profile');
+        
+                $extension = $file->getClientOriginalExtension() ?: $file->extension();
+                $filename = time().'_'.Str::random(8).'.'.$extension;
+        
+                $destinationDir = public_path('storage/teams');
+        
+                if (!is_dir($destinationDir)) {
+                    mkdir($destinationDir, 0755, true);
+                }
+        
+                $file->move($destinationDir, $filename);
+        
+                $profilePath = 'teams/'.$filename;
             }
     
             $team->update([
-                'name'    => $validated['team_name'],
-                'sub_group_id' => $subgroup->id,
-                'division' => $validated['division'],
+                'name'         => $validated['team_name'],
+                'group_id'     => $validated['group_id'],
+                'sub_group_id' => $subgroupId,
+                'division'     => $validated['division'],
                 'profile'      => $profilePath,
             ]);
     
             DB::commit();
-    
             return response()->json(['success' => true, 'message' => 'Team updated successfully.']);
         } catch (\Throwable $e) {
             DB::rollBack();

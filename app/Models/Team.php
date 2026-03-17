@@ -20,6 +20,7 @@ class Team extends Model
         'name',
         'sub_group_id',
         'profile',
+        'group_id',
         'division'
     ];
 
@@ -44,6 +45,21 @@ public function organization(){
     return $this->belongsTo(Organization::class);
 }
 
+public function group()
+{
+    return $this->belongsTo(Group::class);
+}
+public function getDisplayNameAttribute()
+{
+    $suffixMap = [
+        'Primary' => '_P',
+        'Junior'  => '_J'
+    ];
+
+    $suffix = $suffixMap[$this->division] ?? '';
+
+    return $this->name . $suffix;
+}
 
 public function subgroup() { return $this->belongsTo(SubGroup::class,'sub_group_id'); }
 public function students() { return $this->hasMany(Student::class,'team_id'); }

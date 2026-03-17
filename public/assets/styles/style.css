@@ -450,6 +450,7 @@ color: #000;
 
 .btn-icon:hover {
     transform: scale(1.1) rotate(5deg);
+    color: #fff !important;
 }
 
 .btn-edit {
@@ -468,6 +469,10 @@ color: #000;
     background: rgba(0, 255, 136, 0.2);
     color: var(--primary);
     /* border: 1px solid var(--primary); */
+}
+.btn-copy{
+    background: #fff;
+    color: #000;
 }
 
 .card-title {

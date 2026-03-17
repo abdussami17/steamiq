@@ -19,17 +19,21 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Subgroup </label>
-                            <select name="sub_group_id" class="form-select" required>
-                                <option hidden>-- Select Subgroup --</option>
-                                @foreach($subgroups as $subgroup)
-                                    <option value="{{ $subgroup->id }}">
-                                        {{ $subgroup->name }}
-                                    </option>
+                            <label class="form-label">Group</label>
+                            <select name="group_id"  id="groupSelect" class="form-select" required>
+                                <option value="">-- Select Group --</option>
+                                @foreach($groups as $group)
+                                    <option value="{{ $group->id }}">{{ $group->group_name }}</option>
                                 @endforeach
                             </select>
                         </div>
-
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Subgroup <small class="text-muted">(optional)</small></label>
+                            <select name="sub_group_id" id="subgroupSelect" class="form-select">
+                                <option value="">-- Select Subgroup --</option>
+                            </select>
+                        </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Division</label>
@@ -58,3 +62,33 @@
         </div>
     </div>
 </div>
+
+<script>
+const groupSelect = document.getElementById('groupSelect');
+const subgroupSelect = document.getElementById('subgroupSelect');
+
+groupSelect.addEventListener('change', function(){
+
+    const groupId = this.value;
+
+    subgroupSelect.innerHTML = '<option value="">-- Select Subgroup --</option>';
+
+    if(!groupId) return;
+
+    fetch(`/groups/${groupId}/subgroups`)
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.length === 0){
+            subgroupSelect.innerHTML = '<option value="">-- Select Subgroup --</option>';
+            return;
+        }
+
+        data.forEach(sub => {
+            subgroupSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+        });
+
+    });
+
+}); 
+</script>

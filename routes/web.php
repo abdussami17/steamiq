@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function () {
         ->name('teams.bulkDelete');
         // Events routes
         Route::get('/events', [EventController::class, 'index'])->name('events.index');
+
+Route::get('/events/{event}/bracket', [EventController::class, 'bracket'])->name('events.bracket');
         Route::post('/events/store', [EventController::class, 'store'])->name('events.store');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])
@@ -129,7 +131,7 @@ Route::post('/groups/store', [GroupController::class, 'store'])->name('groups.st
 Route::post('/groups/update/{id}', [GroupController::class, 'update'])->name('groups.update');
 Route::get('/teams/list', [TeamController::class, 'listTeam'])->name('teams.list');
 Route::delete('/groups/{group}', [GroupController::class, 'destroy'])->name('groups.destroy');
-
+Route::get('/groups/{group}/subgroups', [GroupController::class,'subgroups']);
 Route::post('/subgroups/store', [SubGroupController::class, 'store'])->name('subgroups.store');
 Route::delete('/subgroups/{subgroup}', [SubGroupController::class, 'destroy'])->name('subgroups.destroy');
 Route::get('subgroup/fetch/{id}', [SubGroupController::class, 'show'])->name('subgroup.fetch');

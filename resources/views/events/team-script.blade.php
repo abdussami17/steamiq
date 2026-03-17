@@ -18,7 +18,7 @@
         const tbody = document.getElementById('teamsTableBody');
         if (!tbody) return;
 
-        tbody.innerHTML = `<tr><td colspan="8">Loading...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11">Loading...</td></tr>`;
 
         try {
             const res = await fetch('/teams-data', {
@@ -32,7 +32,7 @@
             const teams = await res.json();
 
             if (!Array.isArray(teams) || teams.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9">N/A</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="11">N/A</td></tr>`;
                 return;
             }
 
@@ -52,6 +52,8 @@
 
 
                     const subgroup = safe(team.subgroup_name ?? 'N/A');
+                    const group = safe(team.group_name ?? 'N/A');
+
 
 rows += `
 <tr>
@@ -70,6 +72,7 @@ rows += `
     <td><input type="text" value="${id}" readonly></td>
     <td><input type="text" value="${name}"></td>
     <td>${division}</td>
+    <td>${group}</td>
     <td>${subgroup}</td>
     <td class="text-uppercase">${pod}</td>
     <td>${members}</td>
@@ -96,7 +99,7 @@ rows += `
             if (window.lucide) lucide.createIcons();
         } catch (err) {
             console.error(err);
-            tbody.innerHTML = `<tr><td colspan="8">N/A</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="11">N/A</td></tr>`;
         }
     }
 

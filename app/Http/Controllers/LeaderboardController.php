@@ -25,7 +25,8 @@ class LeaderboardController extends Controller
         try {
             // Load event with full hierarchy
             $event = Event::with([
-                'organizations.groups.subgroups.teams.students.scores.challengeActivity'
+                'organizations.groups.teams.students.scores.challengeActivity', // teams directly under group
+                'organizations.groups.subgroups.teams.students.scores.challengeActivity' // teams under subgroup
             ])->findOrFail($eventId);
     
             // Map categories once
@@ -35,56 +36,18 @@ class LeaderboardController extends Controller
     
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
+    
+                    // ------------------- 1) Teams directly under group -------------------
+                    foreach ($group->teams as $team) {
+                        if ($team->sub_group_id) continue; // skip if attached to subgroup
+    
+                        $rows = array_merge($rows, $this->generateTeamRows($event, $org, $group, null, $team, $categories));
+                    }
+    
+                    // ------------------- 2) Teams under subgroups -------------------
                     foreach ($group->subgroups as $subgroup) {
                         foreach ($subgroup->teams as $team) {
-    
-                            // TEAM ROW (aggregate)
-                            $teamRow = [
-                                'type' => 'team',
-                                'id' => $team->id,
-                                'event' => $event->name,
-                                'organization' => $org->name ?? 'N/A',
-                                'group' => $group->group_name ?? '-',
-                                'subgroup' => $subgroup->name ?? '-',
-                                'team_name' => $team->name,
-                                'student_name' => null,
-                                'scores' => [],
-                                'total_points' => 0
-                            ];
-    
-                            // Calculate team scores (sum of students or team-only)
-                            foreach ($categories as $catId => $catName) {
-                                $points = optional($team->scores->whereNull('student_id')->where('steam_category_id', $catId)->first())->points ?? 0;
-                                $teamRow['scores'][$catName] = $points;
-                                $teamRow['total_points'] += $points;
-                            }
-    
-                            $rows[] = $teamRow;
-    
-                            // STUDENT ROWS
-                            foreach ($team->students as $student) {
-    
-                                $studentRow = [
-                                    'type' => 'student',
-                                    'id' => $student->id,
-                                    'event' => $event->name,
-                                    'organization' => $org->name ?? 'N/A',
-                                    'group' => $group->group_name ?? '-',
-                                    'subgroup' => $subgroup->name ?? '-',
-                                    'team_name' => $team->name,
-                                    'student_name' => $student->name,
-                                    'scores' => [],
-                                    'total_points' => 0
-                                ];
-    
-                                foreach ($categories as $catId => $catName) {
-                                    $points = optional($student->scores->where('steam_category_id', $catId)->first())->points ?? 0;
-                                    $studentRow['scores'][$catName] = $points;
-                                    $studentRow['total_points'] += $points;
-                                }
-    
-                                $rows[] = $studentRow;
-                            }
+                            $rows = array_merge($rows, $this->generateTeamRows($event, $org, $group, $subgroup, $team, $categories));
                         }
                     }
                 }
@@ -108,7 +71,7 @@ class LeaderboardController extends Controller
             }
     
             return response()->json([
-                'categories' => array_values($categories), // return names
+                'categories' => array_values($categories),
                 'rows' => $rows
             ]);
     
@@ -120,5 +83,61 @@ class LeaderboardController extends Controller
             ]);
             return response()->json([]);
         }
+    }
+    
+    /**
+     * Helper function to generate team + student rows
+     */
+    private function generateTeamRows($event, $org, $group, $subgroup, $team, $categories)
+    {
+        $rows = [];
+    
+        // TEAM ROW
+        $teamRow = [
+            'type' => 'team',
+            'id' => $team->id,
+            'event' => $event->name,
+            'organization' => $org->name ?? 'N/A',
+            'group' => $group->group_name ?? '-',
+            'subgroup' => $subgroup->name ?? '-', // null if no subgroup
+            'team_name' => $team->name,
+            'student_name' => null,
+            'scores' => [],
+            'total_points' => 0
+        ];
+    
+        foreach ($categories as $catId => $catName) {
+            $points = optional($team->scores->whereNull('student_id')->where('steam_category_id', $catId)->first())->points ?? 0;
+            $teamRow['scores'][$catName] = $points;
+            $teamRow['total_points'] += $points;
+        }
+    
+        $rows[] = $teamRow;
+    
+        // STUDENT ROWS
+        foreach ($team->students as $student) {
+            $studentRow = [
+                'type' => 'student',
+                'id' => $student->id,
+                'event' => $event->name,
+                'organization' => $org->name ?? 'N/A',
+                'group' => $group->group_name ?? '-',
+                'subgroup' => $subgroup->name ?? '-',
+                'team_name' => $team->name,
+                'student_name' => $student->name,
+                'scores' => [],
+                'total_points' => 0
+            ];
+    
+            foreach ($categories as $catId => $catName) {
+                $points = optional($student->scores->where('steam_category_id', $catId)->first())->points ?? 0;
+                $studentRow['scores'][$catName] = $points;
+                $studentRow['total_points'] += $points;
+            }
+    
+            $rows[] = $studentRow;
+        }
+    
+        return $rows;
     }
 }

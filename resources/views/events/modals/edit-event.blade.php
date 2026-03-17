@@ -11,6 +11,8 @@
                 </div>
 
                 <div class="modal-body">
+
+                    <!-- BASIC INFO -->
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Event Name</label>
@@ -48,14 +50,13 @@
                     </div>
 
                     <hr>
+
+                    <!-- ESPORTS SECTION -->
                     <div id="editEsportsSection" style="display:none">
                         <h5 class="mb-3 fw-bold text-white">Brain Game Settings</h5>
-                    
                         <div class="form-check form-switch mb-3">
-
                             <input type="hidden" name="brain_enabled" value="0">
-                            <input type="checkbox" class="form-check-input" id="editBrainToggle" name="brain_enabled"
-                                value="1">
+                            <input type="checkbox" class="form-check-input" id="editBrainToggle" name="brain_enabled" value="1">
                             <label class="form-check-label text-white">Enable Brain Game</label>
                         </div>
                         <div id="editBrainFields" class="row g-3" style="display:none">
@@ -107,7 +108,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tournament Type</label>
-                                <select name="tournament_type" id="editTournamentType" class="form-select">
+                                <select name="esports_tournament_type" id="editTournamentType" class="form-select">
                                     <option value="">--Select Type--</option>
                                     <option value="single_elimination">Single Elimination</option>
                                     <option value="double_elimination">Double Elimination</option>
@@ -116,16 +117,39 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Number of Teams</label>
-                                <input type="number" name="number_of_teams" id="editNumberOfTeams" class="form-input">
+                                <input type="number" name="esports_number_of_teams" id="editNumberOfTeams" class="form-input">
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <!-- XR SECTION -->
+                    <div id="editXrSection" style="display:none">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-white fw-bold mb-0">C.A.M.P ACTIVITIES &amp; MISSION</h5>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="addEditCampActivity()">+ Add Activity</button>
+                        </div>
+                        <div id="editCampActivitiesContainer"></div>
+
+                        <hr>
+                        <h5 class="mb-3 fw-bold text-white">Tournament Setup</h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tournament Type</label>
+                                <select name="xr_tournament_type" id="editXrTournamentType" class="form-select">
+                                    <option value="">--Select Type--</option>
+                                    <option value="single_elimination">Single Elimination</option>
+                                    <option value="double_elimination">Double Elimination</option>
+                                    <option value="round_robin">Round Robin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Number of Teams</label>
+                                <input type="number" name="xr_number_of_teams" id="editXrNumberOfTeams" class="form-input">
                             </div>
                         </div>
                     </div>
 
-                    <div id="editXrSection" style="display:none">
-                        <h5 class="mb-3 text-white fw-bold">Activities</h5>
-                        <button type="button" class="btn btn-primary mb-3" onclick="addEditActivity()">Add Activity</button>
-                        <div id="editActivitiesContainer"></div>
-                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -136,4 +160,3 @@
         </div>
     </div>
 </div>
-

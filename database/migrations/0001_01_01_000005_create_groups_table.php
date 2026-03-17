@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('group_name');
+            $table->enum('pod',['Blue','Red'])->nullable();
             $table->timestamps();
         });
     }

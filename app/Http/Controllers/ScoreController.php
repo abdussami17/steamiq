@@ -56,38 +56,49 @@ class ScoreController extends Controller
     public function getEventStudents(Event $event)
     {
         $students = $event->organizations()
-            ->with('groups.subgroups.teams.students')
+            ->with([
+                'groups.teams.students',      // Teams directly under group
+                'groups.subgroups.teams.students' // Teams under subgroups
+            ])
             ->get()
-            ->flatMap->groups
-            ->flatMap->subgroups
-            ->flatMap->teams
-            ->flatMap->students
-            ->map(function ($student) {
-                return [
-                    'id' => $student->id,
-                    'name' => $student->name
-                ];
+            ->flatMap(function ($org) {
+                return $org->groups->flatMap(function ($group) {
+                    $directTeams    = $group->teams->flatMap->students;       // direct teams
+                    $subgroupTeams  = $group->subgroups->flatMap->teams->flatMap->students; // subgroup teams
+                    return $directTeams->concat($subgroupTeams);
+                });
             })
+            ->unique('id') // remove duplicates if any
+            ->map(fn($student) => [
+                'id' => $student->id,
+                'name' => $student->name
+            ])
             ->sortBy('name')
             ->values();
     
         return response()->json($students);
     }
-
+    
     public function getEventTeams(Event $event)
     {
         $teams = $event->organizations()
-            ->with('groups.subgroups.teams')
+            ->with([
+                'groups.teams',      // Teams directly under group
+                'groups.subgroups.teams' // Teams under subgroups
+            ])
             ->get()
-            ->flatMap->groups
-            ->flatMap->subgroups
-            ->flatMap->teams
-            ->map(function ($team) {
-                return [
-                    'id' => $team->id,
-                    'name' => $team->name
-                ];
+            ->flatMap(function ($org) {
+                return $org->groups->flatMap(function ($group) {
+                    $directTeams    = $group->teams;                         // direct teams
+                    $subgroupTeams  = $group->subgroups->flatMap->teams;     // subgroup teams
+                    return $directTeams->concat($subgroupTeams);
+                });
             })
+            ->unique('id') // remove duplicates
+            ->map(fn($team) => [
+                'id' => $team->id,
+                'name' => $team->name
+            ])
             ->values();
     
         return response()->json($teams);
@@ -95,7 +106,13 @@ class ScoreController extends Controller
     // Fetch activities for an event
     public function getEventActivities(Event $event)
     {
-        return response()->json($event->activities()->select('id','name')->orderBy('name')->get());
+        // fetch all relevant fields
+        $activities = $event->activities()
+            ->select('id', 'name', 'brain_type', 'esports_type', 'egaming_type', 'badge_name')
+            ->orderBy('id')
+            ->get();
+    
+        return response()->json($activities);
     }
 
     // Fetch STEAM categories

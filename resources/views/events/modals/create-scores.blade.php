@@ -140,22 +140,44 @@
             }
         });
     
-        [studentSelect, teamSelect].forEach(select=>{
-            select.addEventListener('change', function(){
-                if(this.value){
-                    activityDiv.classList.remove('d-none');
-                    fetch(`/api/events/${currentEvent}/activities`)
-                        .then(r=>r.json())
-                        .then(data=>{
-                            activitySelect.innerHTML = '<option value="">-- Select Activity --</option>';
-                            data.forEach(a=>activitySelect.innerHTML += `<option value="${a.id}">${a.name}</option>`);
-                        });
-                } else {
-                    activityDiv.classList.add('d-none');
-                    pointsDiv.classList.add('d-none');
-                }
-            });
-        });
+        [studentSelect, teamSelect].forEach(select => {
+    select.addEventListener('change', function () {
+
+        if (this.value) {
+
+            activityDiv.classList.remove('d-none');
+
+            fetch(`/api/events/${currentEvent}/activities`)
+                .then(r => r.json())
+                .then(data => {
+
+                    activitySelect.innerHTML = '<option value="">-- Select Activity --</option>';
+
+                    data.forEach(a => {
+
+                        let displayName =
+                            a.badge_name ||
+                            a.brain_type ||
+                            a.esports_type ||
+                            a.egaming_type ||
+                            a.name ||
+                            'Playground';
+
+                        activitySelect.innerHTML += `<option value="${a.id}">${displayName}</option>`;
+
+                    });
+
+                });
+
+        } else {
+
+            activityDiv.classList.add('d-none');
+            pointsDiv.classList.add('d-none');
+
+        }
+
+    });
+});
     
         activitySelect.addEventListener('change', function(){
             if(this.value){

@@ -45,4 +45,13 @@ class GroupController extends Controller
     return back()->with('success', 'Group deleted successfully.');
 }
 
+public function subgroups($groupId)
+{
+    $subgroups = \App\Models\SubGroup::where('group_id',$groupId)
+        ->select('id','name')
+        ->get();
+
+    return response()->json($subgroups);
+}
+
 }

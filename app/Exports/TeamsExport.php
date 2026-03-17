@@ -48,7 +48,7 @@ class TeamsExport implements FromCollection, WithHeadings
         $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
             return [
                 'id' => $team->id,
-                'team_name' => $team->name ?? 'N/A',
+                'team_name' => $team->display_name ?? 'N/A',
                 'division' => $team->division ?? 'N/A',
                 'subgroup' => $team->subgroup->name ?? 'N/A',
                 'members' => $membersMap[$team->id] ?? 0,

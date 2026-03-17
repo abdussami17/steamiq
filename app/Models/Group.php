@@ -19,5 +19,10 @@ class Group extends Model
         return $this->belongsTo(Organization::class);
     }
 
+    public function teams()
+    {
+        return $this->hasMany(Team::class, 'group_id'); // direct teams under group
+    }
+    
     public function subgroups() { return $this->hasMany(SubGroup::class); }
 }

@@ -9,29 +9,31 @@ use App\Models\Matches;
 use App\Models\Organization;
 use App\Models\Player;
 use App\Models\SteamCategory;
+use App\Models\Student;
 use App\Models\SubGroup;
 use App\Models\TournamentSetting;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\JsonResponse;
 
 class EventController extends Controller
 {
     public function index()
     {
-        $players = Player::whereDoesntHave('teams')->orderBy('name')->get();
-        $allplayers = Player::all();
+      
+        $allplayers = Student::all();
 
         $events = Event::where('status', '!=', 'closed')->orderBy('start_date', 'asc')->get();
         $allevents = Event::with([
             'tournamentSetting',
             'activities',
-            'organizations.groups.subgroups.teams.students'
+            'organizations.groups.teams.students', // teams directly under group
+            'organizations.groups.subgroups.teams.students' // teams under subgroup
         ])->get();
 
-        $challenges = Challenges::all();
+   
         $organizations = Organization::all(); // fetch all
         $groups = \App\Models\Group::with('organization')->get();
         $subgroups = SubGroup::with('group', 'event')->get();
@@ -40,108 +42,98 @@ class EventController extends Controller
 
 
         $activities = ChallengeActivity::with('event')->get();
-        return view('events.index', compact('players','steamCategories' ,'activities', 'subgroups', 'groups', 'organizations', 'allevents', 'events', 'challenges', 'allplayers'));
+        return view('events.index', compact('steamCategories' ,'activities', 'subgroups', 'groups', 'organizations', 'allevents', 'events', 'allplayers'));
     }
     public function store(Request $r)
     {
         $r->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:esports,xr',
-            'location' => 'required|string|max:255',
-            'brain_type' => 'required_if:brain_enabled,1|string|max:255|nullable',
-            'brain_score' => 'required_if:brain_enabled,1|numeric|nullable',
-        
-            'activities' => 'nullable|array',
-            'activities.*.type' => 'required|string|max:255',
-            'activities.*.score' => 'required|numeric|min:0',
+            'name'         => 'required|string|max:255',
+            'type'         => 'required|in:esports,xr',
+            'location'     => 'required|string|max:255',
+            'brain_type'   => 'nullable|required_if:brain_enabled,1|string|max:255',
+            'brain_score'  => 'nullable|required_if:brain_enabled,1|numeric',
+    
+            'activities'                       => 'nullable|array',
+            'activities.*.activity_or_mission' => 'required|in:activity,mission',
+            'activities.*.activity_type'       => 'required_if:activities.*.activity_or_mission,activity|nullable|in:brain,esports,egaming,playground',
+            'activities.*.badge_name'          => 'required_if:activities.*.activity_or_mission,mission|nullable|string|max:255',
+            'activities.*.max_score'           => 'nullable|numeric|min:0',
+            'activities.*.point_structure'     => 'nullable|in:per_team,per_player',
+    
+            'activities.*.brain_type'          => 'nullable|string|max:255',
+            'activities.*.brain_description'   => 'nullable|string|max:500',
+    
+            'activities.*.esports_type'        => 'nullable|string|max:255',
+            'activities.*.esports_players'     => 'nullable|string|max:50',
+            'activities.*.esports_structure'   => 'nullable|string|max:50',
+            'activities.*.esports_description' => 'nullable|string|max:500',
+    
+            'activities.*.egaming_type'        => 'nullable|string|max:255',
+            'activities.*.egaming_mode'        => 'nullable|string|max:255',
+            'activities.*.egaming_structure'   => 'nullable|string|max:255',
+            'activities.*.egaming_description' => 'nullable|string|max:500',
+    
+            'activities.*.playground_description' => 'nullable|string|max:500',
         ]);
+    
         DB::transaction(function () use ($r) {
-
+    
             $event = Event::create([
-                'name' => $r->name,
-                'type' => $r->type,
-                'location' => $r->location,
+                'name'       => $r->name,
+                'type'       => $r->type,
+                'location'   => $r->location,
                 'start_date' => $r->start_date,
-                'end_date' => $r->end_date,
-                'status' => $r->status ?? 'draft'
+                'end_date'   => $r->end_date,
+                'status'     => $r->status ?? 'draft',
             ]);
-
+    
+            $isEsports = $r->type === 'esports';
+    
             TournamentSetting::create([
-                'event_id' => $event->id,
-            
-                // Brain settings only for esports
-                'brain_enabled' => $r->type === 'esports' ? ($r->brain_enabled ?? 0) : 0,
-                'brain_type' => $r->type === 'esports' && $r->brain_enabled ? $r->brain_type : null,
-                'brain_score' => $r->type === 'esports' && $r->brain_enabled ? $r->brain_score : null,
-            
-                // Game settings only for esports
-                'game' => $r->type === 'esports' ? $r->game : null,
-                'players_per_team' => $r->type === 'esports' ? $r->players_per_team : null,
-                'match_rule' => $r->type === 'esports' ? $r->match_rule : null,
-            
-                // IMPORTANT FIX
-                'points_win' => $r->type === 'esports' ? ($r->points_win ?? 0) : 0,
-                'points_draw' => $r->type === 'esports' ? ($r->points_draw ?? 0) : 0,
-            
-                'tournament_type' => $r->type === 'esports'
-                ? $r->esports_tournament_type
-                : $r->xr_tournament_type,
-        
-        'number_of_teams' => $r->type === 'esports'
-                ? $r->esports_number_of_teams
-                : $r->xr_number_of_teams,
+                'event_id'        => $event->id,
+                'brain_enabled'   => $isEsports ? ($r->brain_enabled ?? 0) : 0,
+                'brain_type'      => $isEsports && $r->brain_enabled ? $r->brain_type : null,
+                'brain_score'     => $isEsports && $r->brain_enabled ? $r->brain_score : null,
+                'game'            => $isEsports ? $r->game : null,
+                'players_per_team'=> $isEsports ? $r->players_per_team : null,
+                'match_rule'      => $isEsports ? $r->match_rule : null,
+                'points_win'      => $isEsports ? ($r->points_win ?? 0) : 0,
+                'points_draw'     => $isEsports ? ($r->points_draw ?? 0) : 0,
+                'tournament_type' => $isEsports ? $r->esports_tournament_type : $r->xr_tournament_type,
+                'number_of_teams' => $isEsports ? $r->esports_number_of_teams : $r->xr_number_of_teams,
             ]);
+    
             if ($r->filled('activities')) {
                 foreach ($r->activities as $a) {
                     ChallengeActivity::create([
-                        'event_id' => $event->id,
-                        'name' => $a['type'],    // guaranteed to exist
-                        'max_score' => $a['score'],  // guaranteed numeric
+                        'event_id'             => $event->id,
+                        'name'                 => $a['activity_type'] ?? $a['badge_name'] ?? null,
+                        'max_score'            => $a['max_score'] ?? 0,
+                        'activity_or_mission'  => $a['activity_or_mission'],
+                        'activity_type'        => $a['activity_type'] ?? null,
+                        'badge_name'           => $a['badge_name'] ?? null,
+                        'point_structure'      => $a['point_structure'] ?? null,
+    
+                        'brain_type'           => $a['brain_type'] ?? null,
+                        'brain_description'    => $a['brain_description'] ?? null,
+    
+                        'esports_type'         => $a['esports_type'] ?? null,
+                        'esports_players'      => $a['esports_players'] ?? null,
+                        'esports_structure'    => $a['esports_structure'] ?? null,
+                        'esports_description'  => $a['esports_description'] ?? null,
+    
+                        'egaming_type'         => $a['egaming_type'] ?? null,
+                        'egaming_mode'         => $a['egaming_mode'] ?? null,
+                        'egaming_structure'    => $a['egaming_structure'] ?? null,
+                        'egaming_description'  => $a['egaming_description'] ?? null,
+    
+                        'playground_description' => $a['playground_description'] ?? null,
                     ]);
                 }
             }
         });
-
-        return redirect()
-            ->route('events.index')
-            ->with('success', 'Event created successfully');
-    }
-    public function loadBracket($id)
-{
-    $event = Event::with('tournamentSetting')->findOrFail($id);
-
-    $teamsCount = $event->tournamentSetting->number_of_teams;
-    $teams = []; 
-    for ($i = 1; $i <= $teamsCount; $i++) {
-        $teams[] = "Team " . $i;
-    }
-
-    $bracket = $this->generateBracket($teams);
-
-    // Return **HTML partial** for modal
-    return view('events.partials.bracket', compact('bracket'));
-}
-    private function generateBracket($teams)
-    {
-        $rounds = [];
-        $roundTeams = $teams;
     
-        while (count($roundTeams) > 1) {
-            $matches = [];
-            for ($i = 0; $i < ceil(count($roundTeams) / 2); $i++) {
-                $matches[] = [
-                    'team1' => $roundTeams[$i*2] ?? null,
-                    'team2' => $roundTeams[$i*2+1] ?? null,
-                    'winner' => null
-                ];
-            }
-            $rounds[] = $matches;
-    
-            // Prepare next round placeholders
-            $roundTeams = array_fill(0, count($matches), null);
-        }
-    
-        return $rounds;
+        return redirect()->back()->with('success', 'Event created successfully');
     }
 
 
@@ -159,120 +151,206 @@ class EventController extends Controller
 
 
     public function edit(Event $event): JsonResponse
-{
-    try {
-        // Load related tournament settings and activities
-        $event->load('tournamentSetting', 'activities');
-
-        return response()->json([
-            'success' => true,
-            'data' => $event
+    {
+        try {
+            $event->load('tournamentSetting', 'activities');
+            return response()->json(['success' => true, 'data' => $event]);
+        } catch (\Throwable $e) {
+            \Log::error('Event edit fetch error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to fetch event data.'], 500);
+        }
+    }
+    
+    public function update(Request $request, Event $event): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'name'         => 'required|string|max:255',
+            'type'         => 'required|in:esports,xr',
+            'location'     => 'required|string|max:255',
+            'status'       => 'required|in:draft,live,closed',
+    
+            'brain_type'   => 'nullable|string|max:255|required_if:brain_enabled,1',
+            'brain_score'  => 'nullable|numeric|required_if:brain_enabled,1',
+    
+            'activities'                              => 'nullable|array',
+            'activities.*.activity_or_mission'        => 'required|in:activity,mission',
+            'activities.*.activity_type'              => 'nullable|in:brain,esports,egaming,playground',
+            'activities.*.badge_name'                 => 'nullable|string|max:255',
+            'activities.*.max_score'                  => 'nullable|numeric|min:0',
+            'activities.*.point_structure'            => 'nullable|in:per_team,per_player',
+            'activities.*.brain_type'                 => 'nullable|string|max:255',
+            'activities.*.brain_description'          => 'nullable|string|max:500',
+            'activities.*.esports_type'               => 'nullable|string|max:255',
+            'activities.*.esports_players'            => 'nullable|string|max:50',
+            'activities.*.esports_structure'          => 'nullable|string|max:50',
+            'activities.*.esports_description'        => 'nullable|string|max:500',
+            'activities.*.egaming_type'               => 'nullable|string|max:255',
+            'activities.*.egaming_mode'               => 'nullable|string|max:255',
+            'activities.*.egaming_structure'          => 'nullable|string|max:255',
+            'activities.*.egaming_description'        => 'nullable|string|max:500',
+            'activities.*.playground_description'     => 'nullable|string|max:500',
         ]);
-    } catch (\Throwable $e) {
-        \Log::error('Event edit fetch error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch event data.'
-        ], 500);
-    }
-}
-
-public function update(Request $request, Event $event): JsonResponse
-{
-    $validator = Validator::make($request->all(), [
-        'name' => 'required|string|max:255',
-        'type' => 'required|in:esports,xr',
-        'location' => 'required|string|max:255',
-        'start_date' => 'required|date',
-        'end_date' => 'nullable|date|after_or_equal:start_date',
-        'status' => 'required|in:draft,live,closed',
-        'brain_enabled' => 'nullable|boolean',
-        'brain_type' => 'nullable|string|max:255|required_if:brain_enabled,1',
-        'brain_score' => 'nullable|numeric|required_if:brain_enabled,1',
-        'game' => 'nullable|string|max:255',
-        'players_per_team' => 'nullable|numeric',
-        'match_rule' => 'nullable|string|max:50',
-        'points_win' => 'nullable|numeric',
-        'points_draw' => 'nullable|numeric',
-        'tournament_type' => 'nullable|string|max:50',
-        'number_of_teams' => 'nullable|numeric',
-        'activities' => 'nullable|array',
-        'activities.*.type' => 'required|string|max:255',
-        'activities.*.score' => 'required|numeric|min:0',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    try {
-        DB::transaction(function () use ($request, $event) {
-
-            // Update event basic info
-            $event->update([
-                'name' => $request->name,
-                'type' => $request->type,
-                'location' => $request->location,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'status' => $request->status
-            ]);
-
-            // Update tournament settings
-            $tournament = $event->tournamentSetting;
-            $tournament->update([
-                'brain_enabled' => $request->brain_enabled ?? 0,
-                'brain_type' => $request->brain_enabled ? $request->brain_type : null,
-                'brain_score' => $request->brain_enabled ? $request->brain_score : null,
-                'game' => $request->game ?? null,
-                'players_per_team' => $request->players_per_team ?? null,
-                'match_rule' => $request->match_rule ?? null,
-                'points_win' => $request->points_win ?? 0,
-                'points_draw' => $request->points_draw ?? 0,
-                'tournament_type' => $request->tournament_type ?? null,
-                'number_of_teams' => $request->number_of_teams ?? null
-            ]);
-
-            // Remove old activities
-            $event->activities()->delete();
-
-            // Add new activities
-            if ($request->filled('activities')) {
-                foreach ($request->activities as $a) {
-                    ChallengeActivity::create([
-                        'event_id' => $event->id,
-                        'name' => $a['type'],
-                        'max_score' => $a['score'],
-                    ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+    
+        try {
+            DB::transaction(function () use ($request, $event) {
+                $isEsports = $request->type === 'esports';
+    
+                $event->update([
+                    'name'       => $request->name,
+                    'type'       => $request->type,
+                    'location'   => $request->location,
+                    'start_date' => $request->start_date,
+                    'end_date'   => $request->end_date,
+                    'status'     => $request->status,
+                ]);
+    
+                $event->tournamentSetting->update([
+                    'brain_enabled'    => $isEsports ? ($request->brain_enabled ?? 0) : 0,
+                    'brain_type'       => $isEsports && $request->brain_enabled ? $request->brain_type  : null,
+                    'brain_score'      => $isEsports && $request->brain_enabled ? $request->brain_score : null,
+                    'game'             => $isEsports ? $request->game             : null,
+                    'players_per_team' => $isEsports ? $request->players_per_team : null,
+                    'match_rule'       => $isEsports ? $request->match_rule       : null,
+                    'points_win'       => $isEsports ? ($request->points_win  ?? 0) : 0,
+                    'points_draw'      => $isEsports ? ($request->points_draw ?? 0) : 0,
+                    'tournament_type' => $isEsports ? $request->esports_tournament_type : $request->xr_tournament_type,
+                    'number_of_teams' => $isEsports ? $request->esports_number_of_teams : $request->xr_number_of_teams,
+                ]);
+    
+                $event->activities()->delete();
+    
+                if ($request->filled('activities')) {
+                    foreach ($request->activities as $a) {
+                        ChallengeActivity::create([
+                            'event_id'               => $event->id,
+                            'max_score'              => $a['max_score']              ?? 0,
+                            'activity_or_mission'    => $a['activity_or_mission'],
+                            'activity_type'          => $a['activity_type']          ?? null,
+                            'badge_name'             => $a['badge_name']             ?? null,
+                            'point_structure'        => $a['point_structure']        ?? null,
+                            'brain_type'             => $a['brain_type']             ?? null,
+                            'brain_description'      => $a['brain_description']      ?? null,
+                            'esports_type'           => $a['esports_type']           ?? null,
+                            'esports_players'        => $a['esports_players']        ?? null,
+                            'esports_structure'      => $a['esports_structure']      ?? null,
+                            'esports_description'    => $a['esports_description']    ?? null,
+                            'egaming_type'           => $a['egaming_type']           ?? null,
+                            'egaming_mode'           => $a['egaming_mode']           ?? null,
+                            'egaming_structure'      => $a['egaming_structure']      ?? null,
+                            'egaming_description'    => $a['egaming_description']    ?? null,
+                            'playground_description' => $a['playground_description'] ?? null,
+                        ]);
+                    }
                 }
-            }
-        });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Event updated successfully.'
-        ]);
-    } catch (\Throwable $e) {
-        \Log::error('Event update error: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to update event.'
-        ], 500);
+            });
+    
+            return response()->json(['success' => true, 'message' => 'Event updated successfully.']);
+        } catch (\Throwable $e) {
+            \Log::error('Event update error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to update event.'], 500);
+        }
     }
-}
-
 public function show(Event $event)
 {
     $event->load([
-        'organizations.groups.subgroups.teams.students',
-        'activities'
+        'activities',
+        'organizations.groups.teams.students',        // teams directly under group
+        'organizations.groups.subgroups.teams.students' // teams under subgroup
     ]);
 
     return response()->json($event);
 }
 
+
+
+
+
+
+
+
+
+
+public function bracket(Event $event): JsonResponse
+{
+    $event->load('tournamentSetting', 'activities');
+    $ts       = $event->tournamentSetting;
+    $numTeams = (int) ($ts->number_of_teams ?? 0);
+    $type     = $ts->tournament_type ?? 'single_elimination';
+
+    $teams  = collect(range(1, max($numTeams, 2)))->map(fn($n) => ['seed' => $n, 'name' => 'TBD']);
+    $rounds = match($type) {
+        'round_robin'        => $this->buildRoundRobin($teams),
+        'double_elimination' => $this->buildDoubleElimination($teams),
+        default              => $this->buildSingleElimination($teams),
+    };
+
+    return response()->json([
+        'success'    => true,
+        'event'      => $event->only('id', 'name', 'type', 'location', 'status', 'start_date', 'end_date'),
+        'setting'    => $ts,
+        'activities' => $event->activities,
+        'type'       => $type,
+        'rounds'     => $rounds,
+    ]);
+}
+
+private function buildSingleElimination(\Illuminate\Support\Collection $teams): array
+{
+    $slots = $teams->toArray();
+    $size  = max(2, (int) pow(2, ceil(log(max(count($slots), 2), 2))));
+    while (count($slots) < $size) $slots[] = ['seed' => null, 'name' => 'BYE'];
+
+    $rounds  = [];
+    $current = array_chunk($slots, 2);
+    $num     = 1;
+
+    while (count($current) >= 1) {
+        $rounds[] = [
+            'name'    => match(true) {
+                count($current) === 1 => 'Final',
+                count($current) === 2 => 'Semi-Finals',
+                count($current) === 4 => 'Quarter-Finals',
+                default               => 'Round ' . $num,
+            },
+            'bracket' => 'Winners',
+            'matches' => $current,
+        ];
+        if (count($current) <= 1) break;
+        $current = array_chunk(array_fill(0, (int)(count($current) / 2), [['seed' => null, 'name' => 'TBD'], ['seed' => null, 'name' => 'TBD']]), 1);
+        $current = array_map(fn($m) => $m[0], $current);
+        $current = array_chunk($current, 2);
+        $num++;
+    }
+
+    return $rounds;
+}
+
+private function buildRoundRobin(\Illuminate\Support\Collection $teams): array
+{
+    $slots   = $teams->toArray();
+    $matches = [];
+    for ($i = 0; $i < count($slots); $i++)
+        for ($j = $i + 1; $j < count($slots); $j++)
+            $matches[] = [$slots[$i], $slots[$j]];
+
+    return [['name' => 'Round Robin', 'bracket' => 'Round Robin', 'matches' => $matches]];
+}
+
+private function buildDoubleElimination(\Illuminate\Support\Collection $teams): array
+{
+    $winners = $this->buildSingleElimination($teams);
+    $losers  = [['name' => 'Losers Round 1', 'bracket' => 'Losers', 'matches' => $winners[0]['matches'] ?? []]];
+    $grand   = [['name' => 'Grand Final',    'bracket' => 'Grand Final', 'matches' => [[['seed' => null, 'name' => 'TBD'], ['seed' => null, 'name' => 'TBD']]]]];
+
+    return array_merge(
+        array_map(fn($r) => array_merge($r, ['bracket' => 'Winners']), $winners),
+        $losers,
+        $grand
+    );
+}
  
 }

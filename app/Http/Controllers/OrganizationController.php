@@ -5,26 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class OrganizationController extends Controller
 {
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'    => 'required|string|max:255',
-            'email'   => 'nullable|email|max:255',
-            'event_id'   => 'required|integer|exists:events,id',
-            'organization_type'    => 'required|in:School,Parks and Recreation,Youth Organization,Other',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'event_id' => 'required|integer|exists:events,id',
+            'organization_type' => 'required|in:School,Parks and Recreation,Youth Organization,Other',
             'profile' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ], [
             'event_id.required' => 'Selection Of Event is required',
             'name.required' => 'Organization name is required.',
             'organization_type.required' => 'Organization type is required.',
-            'type.in'       => 'Invalid organization type selected.',
+            'type.in' => 'Invalid organization type selected.',
             'profile.image' => 'Profile must be an image file.',
         ]);
     
-        // custom readable errors
         if ($validator->fails()) {
             return back()
                 ->withErrors($validator)
@@ -34,22 +34,33 @@ class OrganizationController extends Controller
     
         $validated = $validator->validated();
     
-        // photo upload
         if ($request->hasFile('profile')) {
-            $validated['profile'] = $request->file('profile')
-                ->store('organizations', 'public');
+    
+            $file = $request->file('profile');
+    
+            $extension = $file->getClientOriginalExtension() ?: $file->extension();
+            $filename = time().'_'.Str::random(8).'.'.$extension;
+    
+            $destinationDir = public_path('storage/organization');
+    
+            if (!is_dir($destinationDir)) {
+                mkdir($destinationDir, 0755, true);
+            }
+    
+            $file->move($destinationDir, $filename);
+    
+            $validated['profile'] = 'organization/'.$filename;
         }
     
         Organization::create($validated);
     
-        return redirect()->back()->with('active_tab', 'groups-tab')->with('success', 'Organization created successfully!');
+        return redirect()->back()
+            ->with('active_tab', 'groups-tab')
+            ->with('success', 'Organization created successfully!');
     }
     public function destroy(Organization $organization)
     {
-        // Delete the photo file if exists
-        if ($organization->profile && file_exists(storage_path('app/public/' . $organization->profile))) {
-            unlink(storage_path('app/public/' . $organization->profile));
-        }
+    
     
         $organization->delete();
     

@@ -11,9 +11,12 @@ return new class extends Migration
         Schema::create('teams', function (Blueprint $t) {
             $t->engine = 'InnoDB';
             $t->id();
-            $t->foreignId('sub_group_id')->constrained()->cascadeOnDelete();
+            $t->foreignId('sub_group_id')->nullable()->constrained()->cascadeOnDelete();
+            $t->foreignId('group_id')->constrained()->cascadeOnDelete();
             $t->string('name');
             $t->string('profile')->nullable();
+            $t->enum('division',['Primary','Junior'])->nullable(); 
+        
             $t->timestamps();
          
         });
