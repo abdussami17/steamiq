@@ -141,6 +141,35 @@ Route::get('subgroup/fetch/{id}', [SubGroupController::class, 'show'])->name('su
 Route::put('subgroup/update/{subgroup}', [SubGroupController::class, 'update'])->name('subgroup.update'); // Update
 
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NEW HIERARCHY ROUTES (for dropdown flow)
+    |--------------------------------------------------------------------------
+    */
+
+    // Event → Organizations
+    Route::get('/events/{event}/organizations', [ScoreController::class, 'getEventOrganizations']);
+
+    // Organization → Groups
+    Route::get('/organizations/{id}/groups', [ScoreController::class, 'getOrganizationGroups']);
+
+    // Group → SubGroups
+    Route::get('/groups/{id}/subgroups', [ScoreController::class, 'getGroupSubgroups']);
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTERED DATA ROUTES (NEW)
+    |--------------------------------------------------------------------------
+    */
+
+    // Filtered Students
+    Route::get('/students', [ScoreController::class, 'getFilteredStudents']);
+
+    // Filtered Teams
+    Route::get('/teams', [ScoreController::class, 'getFilteredTeams']);
+
         // Leaderboard routes
         Route::get('/leaderboard-events', [LeaderboardController::class, 'events'])->name('leaderboard.events');
         Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])->name('leaderboard.data');

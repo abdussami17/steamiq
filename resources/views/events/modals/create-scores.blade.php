@@ -1,8 +1,8 @@
 <!-- Assign Points Modal -->
 <div class="modal fade" id="scoreModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            <form id="scoreForm">
+            <form id="sc_scoreForm">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">Assign Points</h5>
@@ -11,10 +11,11 @@
 
                 <div class="modal-body">
 
-                    <!-- Event -->
-                    <div class="mb-3">
+                  <div class="row g-3">
+                      <!-- Event -->
+                      <div class="mb-3 col-md-4">
                         <label class="form-label">Event</label>
-                        <select id="modalEventSelect" class="form-select" required>
+                        <select id="sc_eventSelect" class="form-select" required>
                             <option value="">-- Select Event --</option>
                             @foreach ($events as $event)
                                 <option value="{{ $event->id }}">{{ $event->name }}</option>
@@ -23,27 +24,27 @@
                     </div>
 
                     <!-- Organization -->
-                    <div class="mb-3 d-none" id="organizationDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_organizationDiv">
                         <label class="form-label">Organization</label>
-                        <select id="organizationSelect" class="form-select"></select>
+                        <select id="sc_organizationSelect" class="form-select"></select>
                     </div>
 
                     <!-- Group -->
-                    <div class="mb-3 d-none" id="groupDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_groupDiv">
                         <label class="form-label">Group</label>
-                        <select id="groupSelect" class="form-select"></select>
+                        <select id="sc_groupSelect" class="form-select"></select>
                     </div>
 
                     <!-- SubGroup -->
-                    <div class="mb-3 d-none" id="subgroupDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_subgroupDiv">
                         <label class="form-label">Sub Group</label>
-                        <select id="subgroupSelect" class="form-select"></select>
+                        <select id="sc_subgroupSelect" class="form-select"></select>
                     </div>
 
                     <!-- Assign To -->
-                    <div class="mb-3 d-none" id="typeDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_typeDiv">
                         <label class="form-label">Assign To</label>
-                        <select id="entityType" class="form-select">
+                        <select id="sc_entityType" class="form-select">
                             <option value="">-- Select --</option>
                             <option value="student">Player</option>
                             <option value="team">Team</option>
@@ -51,25 +52,26 @@
                     </div>
 
                     <!-- Student -->
-                    <div class="mb-3 d-none" id="studentDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_studentDiv">
                         <label class="form-label">Player</label>
-                        <select id="studentSelect" class="form-select"></select>
+                        <select id="sc_studentSelect" class="form-select"></select>
                     </div>
 
                     <!-- Team -->
-                    <div class="mb-3 d-none" id="teamDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_teamDiv">
                         <label class="form-label">Team</label>
-                        <select id="teamSelect" class="form-select"></select>
+                        <select id="sc_teamSelect" class="form-select"></select>
                     </div>
 
                     <!-- Activity -->
-                    <div class="mb-3 d-none" id="activityDiv">
+                    <div class="mb-3 col-md-4 d-none" id="sc_activityDiv">
                         <label class="form-label">Activity</label>
-                        <select id="activitySelect" class="form-select"></select>
+                        <select id="sc_activitySelect" class="form-select"></select>
                     </div>
+                  </div>
 
                     <!-- Points -->
-                    <div class="d-none" id="pointsDiv">
+                    <div class="d-none" id="sc_pointsDiv">
                         <table class="table table-bordered table-dark">
                             <thead>
                                 <tr>
@@ -77,7 +79,7 @@
                                     <th>Points</th>
                                 </tr>
                             </thead>
-                            <tbody id="steamPointsBody"></tbody>
+                            <tbody id="sc_steamPointsBody"></tbody>
                         </table>
                     </div>
 
@@ -85,187 +87,204 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Save Points</button>
+                    <button type="submit" class="btn btn-primary" id="sc_submitBtn" disabled>Save Points</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
     
-        const eventSelect = document.getElementById('modalEventSelect');
-        const organizationDiv = document.getElementById('organizationDiv');
-        const groupDiv = document.getElementById('groupDiv');
-        const subgroupDiv = document.getElementById('subgroupDiv');
-        const typeDiv = document.getElementById('typeDiv');
+        const sc_eventSelect = document.getElementById('sc_eventSelect');
+        const sc_organizationDiv = document.getElementById('sc_organizationDiv');
+        const sc_groupDiv = document.getElementById('sc_groupDiv');
+        const sc_subgroupDiv = document.getElementById('sc_subgroupDiv');
+        const sc_typeDiv = document.getElementById('sc_typeDiv');
     
-        const organizationSelect = document.getElementById('organizationSelect');
-        const groupSelect = document.getElementById('groupSelect');
-        const subgroupSelect = document.getElementById('subgroupSelect');
+        const sc_organizationSelect = document.getElementById('sc_organizationSelect');
+        const sc_groupSelect = document.getElementById('sc_groupSelect');
+        const sc_subgroupSelect = document.getElementById('sc_subgroupSelect');
     
-        const entityType = document.getElementById('entityType');
-        const studentDiv = document.getElementById('studentDiv');
-        const teamDiv = document.getElementById('teamDiv');
-        const studentSelect = document.getElementById('studentSelect');
-        const teamSelect = document.getElementById('teamSelect');
+        const sc_entityType = document.getElementById('sc_entityType');
+        const sc_studentDiv = document.getElementById('sc_studentDiv');
+        const sc_teamDiv = document.getElementById('sc_teamDiv');
+        const sc_studentSelect = document.getElementById('sc_studentSelect');
+        const sc_teamSelect = document.getElementById('sc_teamSelect');
     
-        const activityDiv = document.getElementById('activityDiv');
-        const activitySelect = document.getElementById('activitySelect');
+        const sc_activityDiv = document.getElementById('sc_activityDiv');
+        const sc_activitySelect = document.getElementById('sc_activitySelect');
     
-        const pointsDiv = document.getElementById('pointsDiv');
-        const steamPointsBody = document.getElementById('steamPointsBody');
-        const submitBtn = document.getElementById('submitBtn');
+        const sc_pointsDiv = document.getElementById('sc_pointsDiv');
+        const sc_steamPointsBody = document.getElementById('sc_steamPointsBody');
+        const sc_submitBtn = document.getElementById('sc_submitBtn');
     
         let currentEvent = '';
     
         function resetAll() {
-            [organizationDiv, groupDiv, subgroupDiv, typeDiv, studentDiv, teamDiv, activityDiv, pointsDiv]
-                .forEach(el => el.classList.add('d-none'));
+            [
+                sc_organizationDiv, sc_groupDiv, sc_subgroupDiv, sc_typeDiv,
+                sc_studentDiv, sc_teamDiv, sc_activityDiv, sc_pointsDiv
+            ].forEach(el => el.classList.add('d-none'));
     
-            [organizationSelect, groupSelect, subgroupSelect, studentSelect, teamSelect, activitySelect]
-                .forEach(el => el.innerHTML = '');
+            [
+                sc_organizationSelect, sc_groupSelect, sc_subgroupSelect,
+                sc_studentSelect, sc_teamSelect, sc_activitySelect
+            ].forEach(el => el.innerHTML = '');
     
-            submitBtn.disabled = true;
+            sc_submitBtn.disabled = true;
         }
     
         // EVENT → ORGANIZATION
-        eventSelect.addEventListener('change', function () {
+        sc_eventSelect.addEventListener('change', function () {
             currentEvent = this.value;
             resetAll();
     
             if (!this.value) return;
     
-            organizationDiv.classList.remove('d-none');
+            sc_organizationDiv.classList.remove('d-none');
     
-            fetch(`/api/events/${currentEvent}/organizations`)
+            fetch(`/events/${currentEvent}/organizations`)
                 .then(r => r.json())
                 .then(data => {
-                    organizationSelect.innerHTML = '<option value="">-- Select Organization --</option>';
+                    sc_organizationSelect.innerHTML = '<option value="">-- Select Organization --</option>';
                     data.forEach(o => {
-                        organizationSelect.innerHTML += `<option value="${o.id}">${o.name}</option>`;
+                        sc_organizationSelect.innerHTML += `<option value="${o.id}">${o.name}</option>`;
                     });
                 });
         });
     
         // ORGANIZATION → GROUP
-        organizationSelect.addEventListener('change', function () {
-            groupDiv.classList.add('d-none');
-            subgroupDiv.classList.add('d-none');
-            typeDiv.classList.add('d-none');
+        sc_organizationSelect.addEventListener('change', function () {
+    
+            sc_groupDiv.classList.add('d-none');
+            sc_subgroupDiv.classList.add('d-none');
+            sc_typeDiv.classList.add('d-none');
     
             if (!this.value) return;
     
-            groupDiv.classList.remove('d-none');
+            sc_groupDiv.classList.remove('d-none');
     
-            fetch(`/api/organizations/${this.value}/groups`)
+            fetch(`/organizations/${this.value}/groups`)
                 .then(r => r.json())
                 .then(data => {
-                    groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
+                    sc_groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
                     data.forEach(g => {
-                        groupSelect.innerHTML += `<option value="${g.id}">${g.name}</option>`;
+                        sc_groupSelect.innerHTML += `<option value="${g.id}">${g.group_name}</option>`;
                     });
                 });
         });
     
         // GROUP → SUBGROUP
-        groupSelect.addEventListener('change', function () {
-            subgroupDiv.classList.add('d-none');
-            typeDiv.classList.add('d-none');
+        sc_groupSelect.addEventListener('change', function () {
+    
+            sc_subgroupDiv.classList.add('d-none');
+            sc_typeDiv.classList.add('d-none');
     
             if (!this.value) return;
     
-            fetch(`/api/groups/${this.value}/subgroups`)
+            fetch(`/groups/${this.value}/subgroups`)
                 .then(r => r.json())
                 .then(data => {
     
                     if (data.length > 0) {
-                        subgroupDiv.classList.remove('d-none');
-                        subgroupSelect.innerHTML = '<option value="">-- Select SubGroup --</option>';
+                        sc_subgroupDiv.classList.remove('d-none');
+    
+                        sc_subgroupSelect.innerHTML = '<option value="">-- Select SubGroup --</option>';
                         data.forEach(s => {
-                            subgroupSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                            sc_subgroupSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
                         });
+    
                     } else {
-                        typeDiv.classList.remove('d-none');
+                        sc_typeDiv.classList.remove('d-none');
                     }
                 });
         });
     
         // SUBGROUP → TYPE
-        subgroupSelect.addEventListener('change', function () {
-            if (this.value) typeDiv.classList.remove('d-none');
+        sc_subgroupSelect.addEventListener('change', function () {
+            if (this.value) sc_typeDiv.classList.remove('d-none');
         });
     
         // TYPE → STUDENT / TEAM
-        entityType.addEventListener('change', function () {
+        sc_entityType.addEventListener('change', function () {
     
-            studentDiv.classList.add('d-none');
-            teamDiv.classList.add('d-none');
+            sc_studentDiv.classList.add('d-none');
+            sc_teamDiv.classList.add('d-none');
     
-            const params = `event_id=${currentEvent}&organization_id=${organizationSelect.value}&group_id=${groupSelect.value}&sub_group_id=${subgroupSelect.value}`;
+            const params = `event_id=${currentEvent}&organization_id=${sc_organizationSelect.value}&group_id=${sc_groupSelect.value}&sub_group_id=${sc_subgroupSelect.value}`;
     
             if (this.value === 'student') {
-                studentDiv.classList.remove('d-none');
     
-                fetch(`/api/students?${params}`)
+                sc_studentDiv.classList.remove('d-none');
+    
+                fetch(`/students?${params}`)
                     .then(r => r.json())
                     .then(data => {
-                        studentSelect.innerHTML = '<option>-- Select Player --</option>';
-                        data.forEach(s => studentSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`);
+                        sc_studentSelect.innerHTML = '<option>-- Select Player --</option>';
+                        data.forEach(s => {
+                            sc_studentSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                        });
                     });
     
             } else if (this.value === 'team') {
-                teamDiv.classList.remove('d-none');
     
-                fetch(`/api/teams?${params}`)
+                sc_teamDiv.classList.remove('d-none');
+    
+                fetch(`/teams?${params}`)
                     .then(r => r.json())
                     .then(data => {
-                        teamSelect.innerHTML = '<option>-- Select Team --</option>';
-                        data.forEach(t => teamSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`);
+                        sc_teamSelect.innerHTML = '<option>-- Select Team --</option>';
+                        data.forEach(t => {
+                            sc_teamSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+                        });
                     });
             }
         });
     
         // PLAYER/TEAM → ACTIVITY
-        [studentSelect, teamSelect].forEach(select => {
+        [sc_studentSelect, sc_teamSelect].forEach(select => {
             select.addEventListener('change', function () {
     
                 if (!this.value) return;
     
-                activityDiv.classList.remove('d-none');
-    
+                sc_activityDiv.classList.remove('d-none');
+                
                 fetch(`/api/events/${currentEvent}/activities`)
                     .then(r => r.json())
                     .then(data => {
-                        activitySelect.innerHTML = '<option>-- Select Activity --</option>';
+                        sc_activitySelect.innerHTML = '<option>-- Select Activity --</option>';
                         data.forEach(a => {
                             let name = a.badge_name || a.brain_type || a.esports_type || a.egaming_type || a.name || 'Playground';
-                            activitySelect.innerHTML += `<option value="${a.id}">${name}</option>`;
+                            sc_activitySelect.innerHTML += `<option value="${a.id}">${name}</option>`;
                         });
                     });
             });
         });
     
         // ACTIVITY → POINTS
-        activitySelect.addEventListener('change', function () {
+        sc_activitySelect.addEventListener('change', function () {
+    
             if (!this.value) return;
     
-            pointsDiv.classList.remove('d-none');
+            sc_pointsDiv.classList.remove('d-none');
     
             fetch('/api/steam-categories')
                 .then(r => r.json())
                 .then(data => {
-                    steamPointsBody.innerHTML = '';
+    
+                    sc_steamPointsBody.innerHTML = '';
+    
                     data.forEach(c => {
-                        steamPointsBody.innerHTML += `
+                        sc_steamPointsBody.innerHTML += `
                             <tr>
                                 <td>${c.name}</td>
-                                <td><input type="number" min="0" class="form-input steam-point" data-id="${c.id}" value="0"></td>
+                                <td><input type="number" min="0" class="form-input sc-steam-point" data-id="${c.id}" value="0"></td>
                             </tr>
                         `;
                     });
-                    submitBtn.disabled = false;
+    
+                    sc_submitBtn.disabled = false;
                 });
         });
     

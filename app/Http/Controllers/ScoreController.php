@@ -122,7 +122,62 @@ class ScoreController extends Controller
     }
 
 
+    public function getEventOrganizations(Event $event)
+    {
+        return response()->json(
+            $event->organizations()->select('id','name')->get()
+        );
+    }
+    
+    public function getOrganizationGroups($id)
+    {
+        return response()->json(
+            \App\Models\Group::where('organization_id',$id)->select('id','group_name')->get()
+        );
+    }
+    
+    public function getGroupSubgroups($id)
+    {
+        return response()->json(
+            \App\Models\SubGroup::where('group_id',$id)->select('id','name')->get()
+        );
+    }
+    public function getFilteredStudents(Request $request)
+{
+    $query = Student::query();
 
+    $query->whereHas('team.group.organization', function ($q) use ($request) {
+        if ($request->event_id) $q->where('event_id', $request->event_id);
+    });
+
+    if ($request->group_id) {
+        $query->whereHas('team', fn($q) => $q->where('group_id', $request->group_id));
+    }
+
+    if ($request->sub_group_id) {
+        $query->whereHas('team', fn($q) => $q->where('sub_group_id', $request->sub_group_id));
+    }
+
+    return response()->json(
+        $query->select('id','name')->get()
+    );
+}
+public function getFilteredTeams(Request $request)
+{
+    $query = Team::query();
+
+    if ($request->group_id) {
+        $query->where('group_id', $request->group_id);
+    }
+
+    if ($request->sub_group_id) {
+        $query->where('sub_group_id', $request->sub_group_id);
+    }
+
+    return response()->json(
+        $query->select('id','name')->get()
+    );
+}
     public function fetchScores(Request $request)
     {
         $event_id = $request->event_id;
