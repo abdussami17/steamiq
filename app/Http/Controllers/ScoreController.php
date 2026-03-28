@@ -131,7 +131,7 @@ class ScoreController extends Controller
             return response()->json(['error' => 'Event not selected'], 422);
         }
     
-        $event = Event::with('organizations.groups.subgroups.teams.students')->find($event_id);
+        $event = Event::with('organizations.groups.teams.students','organizations.groups.subgroups.teams.students')->find($event_id);
     
         if (!$event) {
             return response()->json(['error' => 'Event not found'], 404);
@@ -140,56 +140,57 @@ class ScoreController extends Controller
         $categories = SteamCategory::all();
         $table = [];
     
-        // Traverse all teams in hierarchy
         foreach ($event->organizations as $org) {
             foreach ($org->groups as $group) {
-                foreach ($group->subgroups as $subgroup) {
-                    foreach ($subgroup->teams as $team) {
     
-                        // Team row
-                        $teamScores = Score::where('event_id', $event_id)
-                            ->where('team_id', $team->id)
-                            ->whereNull('student_id')
+                $teams = $group->teams
+                    ->concat($group->subgroups->flatMap->teams)
+                    ->unique('id')
+                    ->values();
+    
+                foreach ($teams as $team) {
+    
+                    $teamScores = Score::where('event_id', $event_id)
+                        ->where('team_id', $team->id)
+                        ->whereNull('student_id')
+                        ->get()
+                        ->keyBy('steam_category_id');
+    
+                    $row = [
+                        'type' => 'team',
+                        'id' => $team->id,
+                        'name' => $team->name,
+                        'team_name' => $team->name,
+                        'scores' => []
+                    ];
+    
+                    foreach ($categories as $cat) {
+                        $row['scores'][$cat->id] = optional($teamScores->get($cat->id))->points ?? 0;
+                    }
+    
+                    $table[] = $row;
+    
+                    foreach ($team->students as $student) {
+    
+                        $studentScores = Score::where('event_id', $event_id)
+                            ->where('student_id', $student->id)
                             ->get()
                             ->keyBy('steam_category_id');
     
-                        $row = [
-                            'type' => 'team',
-                            'id' => $team->id,
-                            'name' => $team->name,
+                        $srow = [
+                            'type' => 'student',
+                            'id' => $student->id,
+                            'name' => $student->name,
                             'team_name' => $team->name,
+                            'team_id' => $team->id,
                             'scores' => []
                         ];
     
                         foreach ($categories as $cat) {
-                            $row['scores'][$cat->id] = optional($teamScores->get($cat->id))->points ?? 0;
+                            $srow['scores'][$cat->id] = optional($studentScores->get($cat->id))->points ?? 0;
                         }
     
-                        $table[] = $row;
-    
-                        // Student rows
-                        foreach ($team->students as $student) {
-                            $studentScores = Score::where('event_id', $event_id)
-                                ->where('student_id', $student->id)
-                                ->get()
-                                ->keyBy('steam_category_id');
-    
-                            $srow = [
-                                'type' => 'student',
-                                'id' => $student->id,
-                                'name' => $student->name,
-                                'team_name' => $team->name,
-                                'team_id' => $team->id,
-                                'scores' => []
-                            ];
-    
-                            foreach ($categories as $cat) {
-                                $srow['scores'][$cat->id] = optional($studentScores->get($cat->id))->points ?? 0;
-                            }
-    
-                            $table[] = $srow;
-                        }
-    
+                        $table[] = $srow;
                     }
                 }
             }

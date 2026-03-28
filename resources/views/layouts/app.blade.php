@@ -8,49 +8,51 @@
     <title>@yield('title')</title>
     <style>
         /* ===== CRITICAL LOADER CSS (must be first) ===== */
-        
-        #page-loader{
-          position:fixed;
-          top:0;
-          left:0;
-          width:100vw;
-          height:100vh;
-        
-          background:#000;
-        
-          display:flex;
-          align-items:center;
-          justify-content:center;
-        
-          z-index:999999;
-        
-          opacity:1;
-          transition:opacity .4s ease;
+
+        #page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+
+            background: #000;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            z-index: 999999;
+
+            opacity: 1;
+            transition: opacity .4s ease;
         }
-        
+
         /* simple clean spinner */
-        .loader-spinner{
-          width:48px;
-          height:48px;
-        
-          border:4px solid #333;
-          border-top-color:#fff;
-        
-          border-radius:50%;
-        
-          animation:spin .8s linear infinite;
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+
+            border: 4px solid #333;
+            border-top-color: #fff;
+
+            border-radius: 50%;
+
+            animation: spin .8s linear infinite;
         }
-        
-        @keyframes spin{
-          to{ transform:rotate(360deg); }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
-        
+
         /* fade out only */
-        #page-loader.hide{
-          opacity:0;
-          pointer-events:none;
+        #page-loader.hide {
+            opacity: 0;
+            pointer-events: none;
         }
-        </style>
+    </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link href="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.css" rel="stylesheet">
@@ -74,6 +76,9 @@
 
         .toast-error {
             background-color: #BD362F !important;
+        }
+        .swal2-confirm-custom{
+            border: 2px solid #ccc;
         }
     </style>
     @stack('styles')
@@ -111,10 +116,10 @@
                             Events
                         </a>
 
-                        <a href="{{ route('student.index') }}"
+                        {{-- <a href="{{ route('student.index') }}"
                             class="nav-link-custom {{ request()->routeIs('student.*') ? 'active' : '' }}">
                             Players
-                        </a>
+                        </a> --}}
 
                         {{-- <a href="{{ route('tournaments.index') }}"
                             class="nav-link-custom {{ request()->routeIs('tournaments.*') ? 'active' : '' }}">
@@ -124,12 +129,12 @@
 
                         @auth
                             {{-- username --}}
-                            <span class="nav-link-custom disabled-link">
+                            {{-- <span class="nav-link-custom disabled-link">
                                 {{ Auth::user()->username }}
-                            </span>
+                            </span> --}}
 
                             {{-- Logout link --}}
-                            <a href="{{ route('logout') }}" class="nav-link-custom"
+                            <a href="{{ route('logout') }}" class="nav-link-custom filled"
                                 onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                 Logout
                             </a>
@@ -157,6 +162,7 @@
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Toastr default options
@@ -172,6 +178,23 @@
             "showMethod": "fadeIn",
             "hideMethod": "fadeOut"
         };
+         // SweetAlert popup for backend errors
+    @if(session('popup_error'))
+    Swal.fire({
+            icon: 'error',
+            title: 'Warning!',
+            text: '{{ session("popup_error") }}',
+            confirmButtonText: 'OK',
+
+            // Custom styling
+            background: '#000000', // popup background black
+            color: '#ffffff',      // text color white
+            confirmButtonColor: '#000000', // button background black
+            customClass: {
+                confirmButton: 'swal2-confirm-custom' // custom class for border
+            }
+        });
+    @endif
 
         @if (session('success'))
             toastr.success(@json(session('success')));
@@ -226,16 +249,16 @@
         });
     </script>
 
-<script>
-    window.addEventListener("load", function () {
-        const loader = document.getElementById("page-loader");
-    
-        loader.classList.add("hide");
-    
-        setTimeout(() => {
-            loader.remove();
-        }, 400);
-    });
+    <script>
+        window.addEventListener("load", function() {
+            const loader = document.getElementById("page-loader");
+
+            loader.classList.add("hide");
+
+            setTimeout(() => {
+                loader.remove();
+            }, 400);
+        });
     </script>
     @stack('scripts')
 </body>

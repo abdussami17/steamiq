@@ -33,10 +33,10 @@
                                 <span class="badge me-2 badge-{{ $allevent->status }}">
                                     {{ ucfirst($allevent->status) }}
                                 </span>
-            
+
                                 <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
-                                      style="display:inline; height:0"
-                                      onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                    style="display:inline; height:0"
+                                    onsubmit="return confirm('Are you sure you want to delete this event?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-link p-0 m-0 align-baseline">
@@ -45,19 +45,18 @@
                                 </form>
                             </div>
                         </div>
-            
+
                         <div class="stats-grid">
-            
+
                             @php
                                 // Merge all teams under groups + subgroups and remove duplicates
-                                $allTeams = $allevent->organizations
-                                    ->flatMap->groups
+                                $allTeams = $allevent->organizations->flatMap->groups
                                     ->flatMap(function ($group) {
                                         return $group->teams->concat($group->subgroups->flatMap->teams);
                                     })
                                     ->unique('id');
                             @endphp
-            
+
                             {{-- TEAMS --}}
                             <div class="stat">
                                 <div class="stat-label">Teams</div>
@@ -65,7 +64,7 @@
                                     {{ $allTeams->count() ?: 'N/A' }}
                                 </div>
                             </div>
-            
+
                             {{-- PLAYERS --}}
                             <div class="stat">
                                 <div class="stat-label">Players</div>
@@ -73,7 +72,7 @@
                                     {{ $allTeams->flatMap->students->count() ?: 'N/A' }}
                                 </div>
                             </div>
-            
+
                             {{-- GROUPS --}}
                             <div class="stat">
                                 <div class="stat-label">Groups</div>
@@ -81,7 +80,7 @@
                                     {{ $allevent->organizations->flatMap->groups->count() ?: 'N/A' }}
                                 </div>
                             </div>
-            
+
                             {{-- SUBGROUPS --}}
                             <div class="stat">
                                 <div class="stat-label">Sub Groups</div>
@@ -89,9 +88,9 @@
                                     {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A' }}
                                 </div>
                             </div>
-            
+
                         </div>
-            
+
                         <div class="card-actions">
                             <button class="btn btn-primary" style="flex:1;" onclick="openEventModal({{ $allevent->id }})">
                                 View Event
@@ -132,6 +131,8 @@
                     Group</button>
                 <button class="tab {{ $activeTab == 'teams-tab' ? 'active' : '' }}"
                     onclick="switchTab('teams')">Teams</button>
+                <button class="tab {{ $activeTab == 'players-tab' ? 'active' : '' }}"
+                    onclick="switchTab('players')">Players</button>
                 <button class="tab {{ $activeTab == 'scores-tab' ? 'active' : '' }}"
                     onclick="switchTab('scores')">Scores</button>
             </div>
@@ -174,7 +175,7 @@
                                 <th>End Date</th>
                                 <th>Status</th>
 
-                                <th>Brain Game</th>
+
                                 <th>Game Settings</th>
                                 <th>Tournament</th>
                                 <th>Activities</th>
@@ -222,15 +223,7 @@
                                             N/A
                                         @endif
                                     </td>
-                                    {{-- Brain Game --}}
-                                    <td>
-                                        @if ($allevent->tournamentSetting && $allevent->tournamentSetting->brain_enabled)
-                                            Type: {{ $allevent->tournamentSetting->brain_type }}<br>
-                                            Score: {{ $allevent->tournamentSetting->brain_score }}<br>
-                                        @else
-                                            N/A
-                                        @endif
-                                    </td>
+
 
                                     {{-- Game Settings --}}
                                     <td>
@@ -284,6 +277,10 @@
                                                     <i data-lucide="trash-2"></i>
                                                 </button>
                                             </form>
+                                            <button class="btn btn-icon btn-copy"
+                                                onclick="duplicateEvent({{ $allevent->id }})">
+                                                <i data-lucide="copy"></i>
+                                            </button>
                                             <button class="btn btn-icon btn-view"
                                                 onclick="openBracketModal({{ $allevent->id }})">
                                                 <i data-lucide="trophy"></i>
@@ -388,6 +385,8 @@
                 </div>
             </div>
 
+            {{-- Group Tab --}}
+
             <div id="groups-tab" class="tab-content {{ $activeTab == 'groups-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
@@ -453,6 +452,9 @@
                     </table>
                 </div>
             </div>
+
+            {{-- Subgroup Tab --}}
+
             <div id="subgroup-tab" class="tab-content {{ $activeTab == 'subgroup-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
@@ -510,7 +512,9 @@
                     </table>
                 </div>
             </div>
+
             <!-- Teams Tab -->
+
             <div id="teams-tab" class="tab-content {{ $activeTab == 'teams-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
@@ -553,6 +557,44 @@
 
 
                     </table>
+                </div>
+            </div>
+            <!-- Players Tab -->
+
+            <div id="players-tab" class="tab-content {{ $activeTab == 'players-tab' ? 'active show' : '' }}">
+                <div class="spreadsheet-container">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                            <i data-lucide="plus"></i> Add New Player
+                        </button>
+
+                        <button class="btn btn-secondary" onclick="loadLeaderboard()">
+                            <i data-lucide="refresh-cw"></i> Refresh
+                        </button>
+
+                    </div>
+                  <div class="row g-3">
+                      <!-- Event Filter -->
+                      <div class="mb-4 col-md-4">
+                        <label for="eventFilter" class="form-label">Select Event <span
+                                class="text-danger">*</span></label>
+                        <select id="eventFilter" class="form-select">
+                            <option hidden>-- Select Event --</option>
+                            @foreach ($allevents as $event)
+                                <option value="{{ $event->id }}">{{ $event->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-4 col-md-4">
+                        <label for="organizationFilter" class="form-label">Select Organization<span
+                            class="text-danger">*</span></label>
+                        <select id="organizationFilter" class="form-select">
+                            <option value="">-- Select Organization --</option>
+                        </select>
+                    </div>
+                  </div>
+                    <!-- AG Grid Container -->
+                    <div id="playersGrid" class="ag-theme-alpine" style="width:100%; height:400px;"></div>
                 </div>
             </div>
 
@@ -612,9 +654,7 @@
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
                             <i data-lucide="plus"></i> Add Score
                         </button>
-                        {{-- <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importScoresModal">
-                <i data-lucide="download"></i> Bulk Import
-            </button> --}}
+
                         <button class="btn btn-secondary" onclick="fetchScores()">
                             <i data-lucide="refresh-cw"></i> Refresh
                         </button>
@@ -715,6 +755,7 @@
     @include('events.modals.edit-organization')
     @include('events.modals.edit-group')
     @include('events.modals.create-subgroup')
+    @include('students.modals.create-students')
     @include('events.modals.edit-subgroup')
 @endpush
 
@@ -725,4 +766,6 @@
     {{-- @include('events.matches-script') --}}
     @include('events.edit-event-script')
     @include('events.edit-subgroup-script')
+    @include('events.duplicate-event-script')
+    @include('students.script')
 @endpush

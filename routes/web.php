@@ -62,6 +62,7 @@ Route::get('/events/{event}/bracket', [EventController::class, 'bracket'])->name
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
         Route::delete('/events/{event}', [EventController::class, 'destroy'])
     ->name('events.destroy');
+    Route::post('/events/{event}/duplicate', [EventController::class, 'duplicate'])->name('events.duplicate');
     Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit'); 
 Route::post('/events/{event}/update', [EventController::class, 'update'])->name('events.update');
         Route::get('/events/{event}/players', [TeamController::class, 'playersByEvent'])->name('teams.get_players');
@@ -114,10 +115,12 @@ Route::get('/matches/teams', [MatchController::class, 'fetchTeams'])->name('matc
 Route::post('/matches/{match}/round', [MatchController::class, 'addRound'])->name('matches.round');
 Route::get('/matches/export/all', [MatchController::class, 'exportAllSchedule'])
     ->name('matches.export.all');
-
-
+    Route::get('/event/{eventId}/organizations', [EventController::class, 'getOrganizations']);
+    Route::get('/organization/{orgId}/groups', [GroupController::class, 'getByOrganization']);
 
     // Organization Routes
+    Route::get('/get-groups/{orgId}', [TeamController::class, 'getGroups']);
+Route::get('/get-teams/{groupId}', [TeamController::class, 'getTeams']);
     Route::post('/organization/store',[OrganizationController::class,'store'])->name('organizations.store');
     Route::delete('/organizations/{organization}', 
     [OrganizationController::class, 'destroy']

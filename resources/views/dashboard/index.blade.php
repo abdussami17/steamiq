@@ -172,7 +172,7 @@
                     </div>
                     <h3 style="margin-bottom: 0.5rem; color:var(--text);font-weight:700">Add Players</h3>
                     <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Register new participants</p>
-                    <a href="{{ route('student.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
+                    <a href="{{ route('events.index') }}" class="btn btn-primary" style="width: 100%;">Add Players</a>
 
                 </div>
             </div>

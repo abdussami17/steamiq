@@ -14,13 +14,7 @@ use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
-    public function index()
-    {
-        $events = Event::select('id', 'name')
-        ->get();
-        $teams = Team::select('id','name')->get();   
-        return view('students.index', compact('events','teams'));
-    }
+    
     public function store(Request $request)
     {
         $request->validate([
@@ -34,29 +28,42 @@ class StudentController extends Controller
         DB::beginTransaction();
     
         try {
+            // Load team with relations up to Event -> TournamentSetting
+            $team = Team::with(['subgroup.group.organization.event.tournamentSetting', 'students'])->findOrFail($request->team_id);
     
-            $team = Team::findOrFail($request->team_id);
+            // Get actual Event model
+            $event = $team->eventRelation();
+            if (!$event) {
+                return back()->with('error', 'Event not found for this team.');
+            }
+    
+            // Get TournamentSetting for this event
+            $tournamentSetting = $event->tournamentSetting;
+            $maxPlayers = $tournamentSetting->players_per_team ?? 2; // fallback to 2
+    
+           
+            // Current players
+            $currentCount = $team->students()->count();
+            $addingCount = count($request->students);
+
+            
+            if ($currentCount + $addingCount > $maxPlayers) {
+                return back()->with('popup_error', "Cannot add more than {$maxPlayers} players per team.");
+            }
     
             foreach ($request->students as $studentData) {
-    
                 $profilePath = null;
     
                 if (isset($studentData['profile'])) {
-    
                     $file = $studentData['profile'];
-    
                     $extension = $file->getClientOriginalExtension() ?: $file->extension();
-                    $filename = time().'_'.Str::random(8).'.'.$extension;
+                    $filename = time() . '_' . \Str::random(8) . '.' . $extension;
     
                     $destinationDir = public_path('storage/players');
-    
-                    if (!is_dir($destinationDir)) {
-                        mkdir($destinationDir, 0755, true);
-                    }
+                    if (!is_dir($destinationDir)) mkdir($destinationDir, 0755, true);
     
                     $file->move($destinationDir, $filename);
-    
-                    $profilePath = 'players/'.$filename;
+                    $profilePath = 'players/' . $filename;
                 }
     
                 Student::create([
@@ -68,29 +75,28 @@ class StudentController extends Controller
             }
     
             DB::commit();
-    
             return back()->with('success', 'Player added successfully.');
-    
         } catch (\Throwable $e) {
-    
             DB::rollBack();
-            Log::error($e->getMessage());
-    
+            \Log::error($e->getMessage());
             return back()->with('error', 'Failed to add Players.');
         }
     }
-
-    public function leaderboard($eventId)
+    public function leaderboard(Request $request, $eventId)
     {
-        $categories = SteamCategory::orderBy('id')->get(); // dynamic
+        $categories = SteamCategory::orderBy('id')->get();
+        $organizationId = $request->organization_id;
     
-        // Fetch students belonging to the event via team -> group -> event
         $students = Student::with([
             'team.subgroup.group.organization',
             'scores.challengeActivity'
         ])
-        ->whereHas('team.group.organization', function ($q) use ($eventId) {
+        ->whereHas('team.group.organization', function ($q) use ($eventId, $organizationId) {
             $q->where('event_id', $eventId);
+    
+            if ($organizationId) {
+                $q->where('id', $organizationId);
+            }
         })
         ->get();
     
@@ -99,16 +105,18 @@ class StudentController extends Controller
         foreach ($students as $student) {
     
             $scoreMap = $student->scores->keyBy('steam_category_id');
-    
             $team = $student->team;
             $subgroup = $team->subgroup ?? null;
+    
+            // Determine activity name using your getDisplayNameAttribute logic
+            $activityName = optional($student->scores->first()?->challengeActivity)?->display_name ?? 'N/A';
     
             $row = [
                 'id' => $student->id,
                 'student' => $student->name,
                 'team' => $team->name ?? 'N/A',
-                'subgroup' => $subgroup->name ?? 'N/A', // optional subgroup
-                'activity' => optional($student->scores->first()?->challengeActivity)->name ?? 'N/A',
+                'subgroup' => $subgroup->name ?? 'N/A',
+                'activity' => $activityName,
                 'total' => 0
             ];
     
@@ -121,7 +129,6 @@ class StudentController extends Controller
             $rows[] = $row;
         }
     
-        // sort by total points DESC + assign rank
         $rows = collect($rows)->sortByDesc('total')->values();
     
         $rank = 1;

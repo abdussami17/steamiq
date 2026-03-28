@@ -1276,7 +1276,7 @@ color: #000;
     position: relative;
 }
 
-.nav-link-custom:hover {
+.nav-link-custom:hover,.nav-link-custom.filled {
     color: #000;
     background: #fff;
 }

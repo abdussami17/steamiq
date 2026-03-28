@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\TeamsExport;
 use App\Imports\TeamsImport;
+use App\Models\Group;
 use App\Models\Player; 
 use App\Models\Score;
 use App\Models\Student;
@@ -30,7 +31,17 @@ class TeamController extends Controller
         return response()->json($players);
     }
 
-    
+    public function getGroups($orgId)
+{
+    $groups = Group::where('organization_id', $orgId)->get();
+    return response()->json($groups);
+}
+
+public function getTeams($groupId)
+{
+    $teams = Team::where('group_id', $groupId)->get();
+    return response()->json($teams);
+}
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -260,32 +271,39 @@ class TeamController extends Controller
             'members' => $members
         ]);
     }
-    public function edit(Team $team)
-    {
-        $team->load('subgroup.group');
-    
-        // Load all groups for dropdown
-        $groups = \App\Models\Group::select('id','group_name')->get();
-    
-        // Load subgroups for the team’s current group
-        $subgroups = \App\Models\SubGroup::where('group_id', $team->group_id)
-            ->select('id','name','group_id')
-            ->get();
-    
-        return response()->json([
-            'team' => [
-                'id' => $team->id,
-                'name' => $team->name,
-                'division' => $team->division,
-                'group_id' => $team->group_id,
-                'sub_group_id' => $team->sub_group_id,
-                'profile' => $team->profile ? asset('storage/' . $team->profile) : null
-            ],
-            'groups' => $groups,
-            'subgroups' => $subgroups
-        ]);
-    }
-    
+  public function edit(Team $team)
+{
+    // Eager load subgroup and group relationships
+    $team->load('subgroup.group', 'group.organization');
+
+    // Load all organizations for dropdown
+    $organizations = \App\Models\Organization::select('id', 'name')->get();
+
+    // Load all groups for the team's organization
+    $groups = \App\Models\Group::where('organization_id', $team->group->organization_id ?? null)
+        ->select('id', 'group_name', 'organization_id')
+        ->get();
+
+    // Load subgroups for the team’s current group
+    $subgroups = \App\Models\SubGroup::where('group_id', $team->group_id)
+        ->select('id', 'name', 'group_id')
+        ->get();
+
+    return response()->json([
+        'team' => [
+            'id' => $team->id,
+            'name' => $team->name,
+            'division' => $team->division,
+            'organization_id' => $team->group->organization_id ?? null,
+            'group_id' => $team->group_id,
+            'sub_group_id' => $team->sub_group_id,
+            'profile' => $team->profile ? asset('storage/' . $team->profile) : null
+        ],
+        'organizations' => $organizations,
+        'groups' => $groups,
+        'subgroups' => $subgroups
+    ]);
+}
     public function update(Request $request, Team $team)
     {
         $validated = $request->validate([
@@ -345,7 +363,7 @@ class TeamController extends Controller
     // Delete team
     public function destroy(Team $team)
     {
-        $team->players()->detach();
+        
         $team->delete();
 
         return response()->json(['success' => true, 'message' => 'Team deleted successfully.']);

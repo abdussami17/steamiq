@@ -61,6 +61,7 @@ if (d.type === 'esports') {
 } else if (d.type === 'xr') {
     document.getElementById('editXrTournamentType').value = ts.tournament_type ?? '';
     document.getElementById('editXrNumberOfTeams').value  = ts.number_of_teams ?? '';
+    document.getElementById('editXrPlayersPerTeam').value = ts.players_per_team ?? '';
 }
                 }
     
@@ -94,10 +95,10 @@ if (d.type === 'esports') {
         <div class="card-header d-flex justify-content-between align-items-center py-2">
             <span class="text-white fw-semibold camp-row-label">Activity Row</span>
             <div class="d-flex gap-2">
-                <button type="button" class="btn btn-icon btn-view"  title="Save"      onclick="saveCampRow(this)"><i data-lucide="save"></i></button>
-            <button type="button" class="btn btn-icon btn-edit"  title="Edit"      onclick="editCampRow(this)"><i data-lucide="pencil"></i></button>
-            <button type="button" class="btn btn-icon btn-copy"     title="Duplicate" onclick="duplicateCampRow(this)"><i data-lucide="copy"></i></button>
-            <button type="button" class="btn btn-icon btn-delete"   title="Delete"    onclick="deleteCampRow(this)"><i data-lucide="trash-2"></i></button>
+                <button type="button" class="btn btn-icon btn-view"  title="Save"      onclick="saveEditCampRow(this)"><i data-lucide="save"></i></button>
+            <button type="button" class="btn btn-icon btn-edit"  title="Edit"      onclick="editEditCampRow(this)"><i data-lucide="pencil"></i></button>
+            <button type="button" class="btn btn-icon btn-copy"     title="Duplicate" onclick="duplicateEditCampRow(this)"><i data-lucide="copy"></i></button>
+            <button type="button" class="btn btn-icon btn-delete"   title="Delete"    onclick="deleteEditCampRow(this)"><i data-lucide="trash-2"></i></button>
             </div>
         </div>
         <div class="card-body camp-row-body">

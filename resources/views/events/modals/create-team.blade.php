@@ -17,14 +17,20 @@
                             <label class="form-label">Team Name </label>
                             <input type="text" name="team_name" class="form-input" required>
                         </div>
-
+                        <div class="col-md-6">
+                            <label class="form-label">Organization</label>
+                            <select name="organization_id"  id="teamOrganizationSelect" class="form-select" required>
+                                <option value="">-- Select Organization --</option>
+                                @foreach($organizations as $org)
+                                    <option value="{{ $org->id }}">{{ $org->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Group</label>
                             <select name="group_id"  id="groupSelect" class="form-select" required>
                                 <option value="">-- Select Group --</option>
-                                @foreach($groups as $group)
-                                    <option value="{{ $group->id }}">{{ $group->group_name }}</option>
-                                @endforeach
+                               
                             </select>
                         </div>
                         
@@ -64,31 +70,58 @@
 </div>
 
 <script>
-const groupSelect = document.getElementById('groupSelect');
-const subgroupSelect = document.getElementById('subgroupSelect');
-
-groupSelect.addEventListener('change', function(){
-
-    const groupId = this.value;
-
-    subgroupSelect.innerHTML = '<option value="">-- Select Subgroup --</option>';
-
-    if(!groupId) return;
-
-    fetch(`/groups/${groupId}/subgroups`)
-    .then(res => res.json())
-    .then(data => {
-
-        if(data.length === 0){
+    document.addEventListener('DOMContentLoaded', function(){
+    
+        const orgSelect = document.getElementById('teamOrganizationSelect');
+        const groupSelect = document.getElementById('groupSelect');
+        const subgroupSelect = document.getElementById('subgroupSelect');
+    
+        orgSelect.addEventListener('change', function(){
+    
+            const orgId = this.value;
+    
+            groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
             subgroupSelect.innerHTML = '<option value="">-- Select Subgroup --</option>';
-            return;
-        }
-
-        data.forEach(sub => {
-            subgroupSelect.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+    
+            if(!orgId) return;
+    
+            fetch(`/organization/${orgId}/groups`)
+            .then(res => res.json())
+            .then(data => {
+    
+                data.forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group.id;
+                    option.textContent = group.group_name;
+                    groupSelect.appendChild(option);
+                });
+    
+            });
+    
         });
-
+    
+        groupSelect.addEventListener('change', function(){
+    
+            const groupId = this.value;
+    
+            subgroupSelect.innerHTML = '<option value="">-- Select Subgroup --</option>';
+    
+            if(!groupId) return;
+    
+            fetch(`/groups/${groupId}/subgroups`)
+            .then(res => res.json())
+            .then(data => {
+    
+                data.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.id;
+                    option.textContent = sub.name;
+                    subgroupSelect.appendChild(option);
+                });
+    
+            });
+    
+        });
+    
     });
-
-}); 
-</script>
+    </script>

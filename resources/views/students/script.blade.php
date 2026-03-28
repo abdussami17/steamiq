@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const gridDiv = document.getElementById('playersGrid');
 const eventFilter = document.getElementById('eventFilter');
+const orgFilter = document.getElementById('organizationFilter');
 
 let gridOptions;
 
@@ -21,7 +22,7 @@ function buildGrid(categories){
     }));
 
     const columnDefs = [
-        { headerName:"Student", field:"student" },
+        { headerName:"Player", field:"student" },
         { headerName:"Team", field:"team" },
         { headerName:"Activity", field:"activity" },
         ...editableCols,
@@ -90,10 +91,18 @@ function recalc(){
 
 async function loadLeaderboard(){
 
-    const id = eventFilter.value;
-    if(!id) return;
+    const eventId = eventFilter.value;
+    const orgId = orgFilter.value;
 
-    const res = await fetch(`/event/${id}/students-leaderboard`);
+    if(!eventId) return;
+
+    let url = `/event/${eventId}/students-leaderboard`;
+
+    if(orgId){
+        url += `?organization_id=${orgId}`;
+    }
+
+    const res = await fetch(url);
     const data = await res.json();
 
     if(!gridOptions){
@@ -103,8 +112,31 @@ async function loadLeaderboard(){
     gridOptions.api.setRowData(data.rows);
 }
 
-eventFilter.addEventListener('change', loadLeaderboard);
+eventFilter.addEventListener('change', async () => {
+
+const eventId = eventFilter.value;
+
+if(!eventId) return;
+
+orgFilter.innerHTML = '<option value="">-- Select Organization --</option>';
+orgFilter.value = "";
+
+const res = await fetch(`/event/${eventId}/organizations`);
+const data = await res.json();
+
+data.forEach(org => {
+    const option = document.createElement('option');
+    option.value = org.id;
+    option.textContent = org.name;
+    orgFilter.appendChild(option);
+});
+
+if(gridOptions){
+    gridOptions.api.setRowData([]);
+}
 
 });
-    </script>
-    
+orgFilter.addEventListener('change', loadLeaderboard);
+
+});
+</script>

@@ -125,7 +125,7 @@
                     <!-- ================= XR SECTION ================= -->
                     <div id="xrSection" style="display:none">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="text-white fw-bold mb-0">C.A.M.P ACTIVITIES &amp; MISSION</h5>
+                            <h5 class="text-white fw-bold mb-0">C.A.M ACTIVITIES &amp; MISSION</h5>
                             <button type="button" class="btn btn-primary btn-sm" onclick="addCampActivity()"><i data-lucide="plus"></i> Add Activity</button>
                         </div>
 
@@ -146,6 +146,10 @@
                             <div class="col-md-6">
                                 <label class="form-label">Number of Teams</label>
                                 <input required name="xr_number_of_teams" type="number" class="form-input">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Players Per Team</label>
+                                <input name="xr_players_per_team" required type="number" class="form-input">
                             </div>
                         </div>
                     </div>

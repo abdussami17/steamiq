@@ -23,6 +23,10 @@ class GroupController extends Controller
     
         return redirect()->back()->with('active_tab', 'subgroup-tab')->with('success', 'Group created successfully!');
     }
+    public function getByOrganization($orgId)
+{
+    return \App\Models\Group::where('organization_id', $orgId)->get();
+}
     public function update(Request $request, $id)
     {
         $group = Group::findOrFail($id);

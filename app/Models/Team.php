@@ -65,4 +65,16 @@ public function subgroup() { return $this->belongsTo(SubGroup::class,'sub_group_
 public function students() { return $this->hasMany(Student::class,'team_id'); }
 public function scores() { return $this->hasMany(Score::class); }
 public function challengeActivity(){return $this->hasMany(ChallengeActivity::class);}
+
+
+// helper to get Event via group → organization → event
+public function eventRelation()
+{
+    // if team has subgroup
+    if ($this->subgroup_id) {
+        return $this->subgroup->group->organization->event; // note: remove parentheses to get model
+    }
+    // else via group
+    return $this->group->organization->event; // again, no parentheses
+}
 }

@@ -11,16 +11,33 @@
                 @csrf
                 <div class="modal-body">
 
-                    <div class="mb-3">
-                        <label class="form-label">Select Team </label>
-                        <select class="form-select" id="teamSelect" name="team_id" required>
-                            <option value="">-- Select Team --</option>
-                            @foreach($teams as $team)
-                                <option value="{{ $team->id }}">
-                                    {{ $team->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="row">
+                        <!-- Organization -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Organization</label>
+                            <select class="form-select" id="createStdorganizationSelect">
+                                <option value="">-- Select Organization --</option>
+                                @foreach($organizations as $org)
+                                    <option value="{{ $org->id }}">{{ $org->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    
+                        <!-- Group -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Group</label>
+                            <select class="form-select" id="createStdgroupSelect">
+                                <option value="">-- Select Group --</option>
+                            </select>
+                        </div>
+                    
+                        <!-- Team -->
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Team</label>
+                            <select class="form-select" id="createStdteamSelect" name="team_id" required>
+                                <option value="">-- Select Team --</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div id="studentsContainer">
@@ -61,7 +78,8 @@
         </div>
     </div>
 </div>
-<script>
+@push('scripts')
+    <script>
     document.addEventListener('DOMContentLoaded', function(){
     
     let studentIndex = 1;
@@ -70,7 +88,7 @@
     document.getElementById('addMoreBtn').addEventListener('click', function(){
     
         const row = document.createElement('div');
-        row.classList.add('student-row','row','g-3','mb-2','align-items-end');
+        row.classList.add('student-row','row','g-3','mb-2','align-items-center');
     
         row.innerHTML = `
             <div class="col-md-4">
@@ -109,3 +127,56 @@
     
     });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        
+            const orgSelect = document.getElementById('createStdorganizationSelect');
+            const groupSelect = document.getElementById('createStdgroupSelect');
+            const teamSelect = document.getElementById('createStdteamSelect');
+        
+            // Organization → Groups
+            orgSelect.addEventListener('change', function () {
+                const orgId = this.value;
+        
+                groupSelect.innerHTML = '<option value="">Loading...</option>';
+                teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
+        
+                if (!orgId) return;
+        
+                fetch(`/get-groups/${orgId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
+        
+                        data.forEach(group => {
+                            groupSelect.innerHTML += `
+                                <option value="${group.id}">${group.group_name}</option>
+                            `;
+                        });
+                    });
+            });
+        
+            // Group → Teams
+            groupSelect.addEventListener('change', function () {
+                const groupId = this.value;
+        
+                teamSelect.innerHTML = '<option value="">Loading...</option>';
+        
+                if (!groupId) return;
+        
+                fetch(`/get-teams/${groupId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
+        
+                        data.forEach(team => {
+                            teamSelect.innerHTML += `
+                                <option value="${team.id}">${team.name}</option>
+                            `;
+                        });
+                    });
+            });
+        
+        });
+        </script>
+@endpush
