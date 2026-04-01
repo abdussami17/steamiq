@@ -68,20 +68,15 @@
                         <label class="form-label">Activity</label>
                         <select id="sc_activitySelect" class="form-select"></select>
                     </div>
+
+                                        <!-- Points -->
+                                        <div class="mb-3 col-md-4 d-none" id="sc_pointsDiv">
+                                            <label class="form-label">Points</label>
+                                            <input type="number" min="0" id="sc_pointsInput" class="form-input" placeholder="Enter points">
+                                        </div>
                   </div>
 
-                    <!-- Points -->
-                    <div class="d-none" id="sc_pointsDiv">
-                        <table class="table table-bordered table-dark">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Points</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sc_steamPointsBody"></tbody>
-                        </table>
-                    </div>
+
 
                 </div>
 
@@ -262,31 +257,105 @@
             });
         });
     
-        // ACTIVITY → POINTS
         sc_activitySelect.addEventListener('change', function () {
-    
-            if (!this.value) return;
-    
-            sc_pointsDiv.classList.remove('d-none');
-    
-            fetch('/api/steam-categories')
-                .then(r => r.json())
-                .then(data => {
-    
-                    sc_steamPointsBody.innerHTML = '';
-    
-                    data.forEach(c => {
-                        sc_steamPointsBody.innerHTML += `
-                            <tr>
-                                <td>${c.name}</td>
-                                <td><input type="number" min="0" class="form-input sc-steam-point" data-id="${c.id}" value="0"></td>
-                            </tr>
-                        `;
-                    });
-    
-                    sc_submitBtn.disabled = false;
-                });
-        });
+
+if (!this.value) return;
+
+sc_pointsDiv.classList.remove('d-none');
+
+const params = new URLSearchParams({
+    event_id: sc_eventSelect.value,
+    challenge_activity_id: this.value,
+    student_id: sc_entityType.value === 'student' ? sc_studentSelect.value : '',
+    team_id: sc_entityType.value === 'team' ? sc_teamSelect.value : ''
+});
+
+
+
+fetch(`/scores/existing?${params.toString()}`)
+    .then(r => {
+      
+        return r.json();
+    })
+    .then(data => {
+
+        
+
+        const input = document.getElementById('sc_pointsInput');
+
+        if (data.points !== null) {
+            input.value = data.points;
+            sc_submitBtn.disabled = false;
+        } else {
+            input.value = '';
+            sc_submitBtn.disabled = true;
+        }
+    })
+    .catch(err => {
+        console.error("❌ Fetch Error:", err);
+    });
+
+});
+
+// Enable submit only when points entered
+document.getElementById('sc_pointsInput').addEventListener('input', function () {
+    sc_submitBtn.disabled = !this.value || this.value <= 0;
+});
+document.getElementById('sc_scoreForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const fd = new FormData();
+
+    fd.append('event_id', sc_eventSelect.value);
+    fd.append('challenge_activity_id', sc_activitySelect.value);
+
+    if (sc_entityType.value === 'student') {
+        fd.append('student_id', sc_studentSelect.value);
+    } else {
+        fd.append('team_id', sc_teamSelect.value);
+    }
+
+    fd.append('points', document.getElementById('sc_pointsInput').value);
+
+    fetch("{{ route('scores.store') }}", {
+    method: 'POST',
+    headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json'
+    },
+    body: fd
+})
+.then(async (response) => {
+
+
+    let data;
+    try {
+        data = await response.json();
+    } catch (e) {
+        throw new Error('Invalid JSON response');
+    }
+
+    if (!response.ok) {
+        throw new Error(data.message || 'Request failed');
+    }
+
+    return data;
+})
+.then(d => {
+    if (d.success) {
+        toastr.success(d.message);
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('scoreModal'));
+        modal.hide();
+    } else {
+        toastr.error(d.message || 'Failed');
+    }
+})
+.catch(err => {
+    console.error(err);
+    toastr.error(err.message || 'Error occurred');
+});
+});
     
     });
     </script>

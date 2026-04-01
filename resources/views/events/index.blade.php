@@ -13,10 +13,15 @@
                     </span>
                     Events Management
                 </h2>
-                <button class="btn btn-primary" data-bs-target="#createEventModal" data-bs-toggle="modal">
-                    <i data-lucide="plus"></i>
-                    <span>Create New Event</span>
-                </button>
+                 <div class="d-flex gap-2">
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#scoreModal">
+                        <i data-lucide="plus"></i> Add Score
+                    </button>
+            <button class="btn btn-primary" data-bs-target="#createEventModal" data-bs-toggle="modal">
+                <i data-lucide="plus"></i>
+                <span>Create New Event</span>
+            </button>
+                 </div>
             </div>
 
             <div class="card-grid">
@@ -393,6 +398,10 @@
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
                             <i data-lucide="plus"></i> Add Group
                         </button>
+                        <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="group">
+                            <i data-lucide="club"></i> Assign Cards
+                        </a>
+
                     </div>
 
                     <table class="data-table">
@@ -530,6 +539,9 @@
                         <a href="{{ route('teams.export') }}" class="btn btn-secondary">
                             <i data-lucide="upload"></i> Export Teams
                         </a>
+                        <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="team">
+                            <i data-lucide="club"></i> Assign Cards
+                        </a>
 
 
 
@@ -571,6 +583,10 @@
                         <button class="btn btn-secondary" onclick="loadLeaderboard()">
                             <i data-lucide="refresh-cw"></i> Refresh
                         </button>
+                        <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="player">
+                            <i data-lucide="club"></i> Assign Cards
+                        </a>
+
 
                     </div>
                   <div class="row g-3">
@@ -671,20 +687,16 @@
                         <table class="data-table">
                             <thead id="scoreHead">
                                 <tr>
-                                    <th>Type</th>
-                                    <th>Team</th>
-                                    <th>Name</th>
-                                    <th>Science</th>
-                                    <th>Technology</th>
-                                    <th>Engineering</th>
-                                    <th>Art</th>
-                                    <th>Math</th>
-                                    <th>Total</th>
+                                    <th style="width: 100px">Type</th>
+                                    <th style="width: 150px">Name</th>
+                                    <th style="width: 150px">Activity</th>
+                                    <th style="width: 100px">Total</th>
+                                    <th style="width: 80px">Rank</th>
                                 </tr>
                             </thead>
                             <tbody id="scoreBody">
                                 <tr>
-                                    <td colspan="9">Select event to load scores...</td>
+                                    <td colspan="5">Select event to load scores...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -739,6 +751,7 @@
     @include('events.modals.view-team')
     {{-- @include('events.modals.show-event') --}}
     @include('events.modals.bracket')
+    @include('card.assign-card-modal')
 
 
 
@@ -768,4 +781,5 @@
     @include('events.edit-subgroup-script')
     @include('events.duplicate-event-script')
     @include('students.script')
+    @include('card.assign-script')
 @endpush

@@ -14,9 +14,52 @@
 
     <style>
         body {
-            background: linear-gradient(135deg,#1a1a1a,#2d2d2d,#1a1a1a);
+            background: #f8f9fa;
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #212529;
+        }
+
+        /* Card / container styling */
+        .auth-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        /* Tabs */
+        .auth-tabs button {
+            border: 1px solid #dee2e6;
+            background: transparent;
+            color: #6c757d;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .auth-tabs button.active {
+            background: #ffffff;
+            color: #000;
+            border-color: #ced4da;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Inputs */
+        input.form-control {
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+        }
+
+        input.form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.15rem rgba(13,110,253,.15);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            border-radius: 8px;
+            padding: 10px;
         }
     </style>
 </head>
@@ -64,21 +107,17 @@ toastr.options = {
 function showLogin() {
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('registerForm').style.display = 'none';
-     // Update button styles
-     document.getElementById('loginTab').style.backgroundColor = '#ffffff';
-            document.getElementById('loginTab').style.color = '#000000';
-            document.getElementById('registerTab').style.backgroundColor = 'transparent';
-            document.getElementById('registerTab').style.color = '#b0b0b0';
+
+    document.getElementById('loginTab').classList.add('active');
+    document.getElementById('registerTab').classList.remove('active');
 }
 
 function showRegister() {
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
-     // Update button styles
-     document.getElementById('registerTab').style.backgroundColor = '#ffffff';
-            document.getElementById('registerTab').style.color = '#000000';
-            document.getElementById('loginTab').style.backgroundColor = 'transparent';
-            document.getElementById('loginTab').style.color = '#b0b0b0';
+
+    document.getElementById('registerTab').classList.add('active');
+    document.getElementById('loginTab').classList.remove('active');
 }
 
 // Password visibility

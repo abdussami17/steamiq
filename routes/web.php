@@ -2,6 +2,7 @@
 
 use App\Exports\LeaderboardExport;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CardController;
 use App\Http\Controllers\ChallengeActivityController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\DashboardController;
@@ -91,12 +92,23 @@ Route::post('/events/{event}/update', [EventController::class, 'update'])->name(
         Route::post('/activities/{activity}/update', [ChallengeActivityController::class, 'update']);
         Route::delete('/activities/{activity}/delete', [ChallengeActivityController::class, 'destroy']);
   // Score routes
+  Route::post('/scores/create', [ScoreController::class, 'store'])->name('scores.store');
+  Route::get('/scores/existing', [ScoreController::class, 'getExistingScore'])->name('scores.existing');
   Route::prefix('scores')->name('scores.')->group(function () {
     Route::post('/', [ScoreController::class, 'store'])->name('store');
 });
 Route::post('/scores/fetch', [App\Http\Controllers\ScoreController::class, 'fetchScores']);
 Route::post('/scores/update', [App\Http\Controllers\ScoreController::class, 'updateScore']);
 Route::post('/scores/bulk-update', [App\Http\Controllers\ScoreController::class, 'bulkUpdate']);
+
+Route::get('/cards', [CardController::class, 'index'])->name('cards.index');
+Route::post('/cards/store', [CardController::class, 'store'])->name('cards.store');
+Route::get('/cards/{card}/edit', [CardController::class, 'edit'])->name('cards.edit');
+Route::post('/cards/{card}/update', [CardController::class, 'update'])->name('cards.update');
+Route::delete('/cards/{card}/delete', [CardController::class, 'destroy'])->name('cards.delete');
+Route::post('/card-assignments', [CardController::class, 'assignCard'])->name('card.assignments.store');
+Route::post('/scores/update-by-name', [ScoreController::class, 'updateScoreByName'])
+    ->name('scores.updateByName');
 
 // API routes for AJAX dropdowns
 Route::prefix('api')->name('api.')->group(function () {

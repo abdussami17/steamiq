@@ -3,141 +3,239 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\Score;
-use App\Models\SteamCategory;
-use App\Models\Team;
 use Illuminate\Http\Request;
 
 class LeaderboardController extends Controller
 {
-    // Fetch all events for dropdown
     public function events()
     {
-        $events = Event::orderByDesc('start_date')->get(['id','name']);
+        $events = Event::orderByDesc('start_date')->get(['id', 'name']);
         return response()->json($events);
     }
 
     public function data(Request $request)
     {
         $eventId = $request->event_id;
-        if (!$eventId) return response()->json([]);
-    
+        if (!$eventId) return response()->json(['categories' => [], 'rows' => []]);
+
         try {
-            // Load event with full hierarchy
+            /*
+             * ── EAGER LOAD ────────────────────────────────────────────────────
+             */
             $event = Event::with([
-                'organizations.groups.teams.students.scores.challengeActivity', // teams directly under group
-                'organizations.groups.subgroups.teams.students.scores.challengeActivity' // teams under subgroup
+                'organizations.groups.teams.scores.challengeActivity',
+                'organizations.groups.teams.students.scores.challengeActivity',
+                'organizations.groups.subgroups.teams.scores.challengeActivity',
+                'organizations.groups.subgroups.teams.students.scores.challengeActivity',
             ])->findOrFail($eventId);
-    
-            // Map categories once
-            $categories = SteamCategory::pluck('name', 'id')->toArray(); // [id => name]
-    
-            $rows = [];
-    
+
+            /*
+             * ── COLLECT UNIQUE ACTIVITY DISPLAY NAMES ────────────────────────
+             * Order: team-level scores first, then student-level.
+             * Deduplication preserves first-seen order.
+             */
+            $activityNames = collect();
+
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
-    
-                    // ------------------- 1) Teams directly under group -------------------
-                    foreach ($group->teams as $team) {
-                        if ($team->sub_group_id) continue; // skip if attached to subgroup
-    
-                        $rows = array_merge($rows, $this->generateTeamRows($event, $org, $group, null, $team, $categories));
-                    }
-    
-                    // ------------------- 2) Teams under subgroups -------------------
-                    foreach ($group->subgroups as $subgroup) {
-                        foreach ($subgroup->teams as $team) {
-                            $rows = array_merge($rows, $this->generateTeamRows($event, $org, $group, $subgroup, $team, $categories));
+
+                    $allTeams = $group->teams->merge(
+                        $group->subgroups->flatMap(fn($sg) => $sg->teams)
+                    );
+
+                    foreach ($allTeams as $team) {
+                        foreach ($team->scores as $score) {
+                            if ($score->student_id === null && $score->challengeActivity) {
+                                $activityNames->push($score->challengeActivity->display_name);
+                            }
+                        }
+                        foreach ($team->students as $student) {
+                            foreach ($student->scores as $score) {
+                                if ($score->challengeActivity) {
+                                    $activityNames->push($score->challengeActivity->display_name);
+                                }
+                            }
                         }
                     }
                 }
             }
-    
-            // Sort by total points descending
-            $rows = collect($rows)->sortByDesc('total_points')->values();
-    
-            // Assign ranks properly (tie handling)
-            $rank = 1;
-            $previousPoints = null;
-            foreach ($rows as $index => $row) {
-                if ($previousPoints !== null && $row['total_points'] == $previousPoints) {
-                    $row['rank'] = $rows[$index - 1]['rank']; // tie
-                } else {
-                    $row['rank'] = $rank;
+
+            $categories = $activityNames->filter(fn($v) => !empty($v))
+                ->unique()
+                ->values()
+                ->toArray();
+
+            /*
+             * ── BUILD BLOCKS ──────────────────────────────────────────────────
+             *
+             * PRIMARY SORT: group → team insertion order (natural hierarchy).
+             * RANK is assigned by grand_total DESC (tie-aware) AFTER blocks
+             * are collected, but the ROW ORDER stays group → team.
+             */
+            $blocks = [];
+
+            foreach ($event->organizations as $org) {
+                foreach ($org->groups as $group) {
+
+                    // Direct-group teams (no sub_group_id)
+                    foreach ($group->teams as $team) {
+                        if ($team->sub_group_id) continue;
+                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categories);
+                    }
+
+                    // Subgroup teams
+                    foreach ($group->subgroups as $subgroup) {
+                        foreach ($subgroup->teams as $team) {
+                            $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categories);
+                        }
+                    }
                 }
-                $previousPoints = $row['total_points'];
-                $rank++;
-                $rows[$index] = $row;
             }
-    
+
+            /*
+             * ── ASSIGN RANKS by grand_total (tie-aware) ───────────────────────
+             * Ranking is separate from display order.
+             * We compute ranks then inject them back into blocks.
+             */
+            $sorted = collect($blocks)
+                ->sortByDesc(fn($b) => $b['team']['grand_total'])
+                ->values();
+
+            $rank     = 1;
+            $prevGT   = null;
+            $prevRank = 1;
+            $rankMap  = []; // team_id -> rank
+
+            foreach ($sorted as $idx => $block) {
+                $gt = $block['team']['grand_total'];
+                if ($prevGT !== null && $gt === $prevGT) {
+                    $rankMap[$block['team']['id']] = $prevRank;
+                } else {
+                    $rankMap[$block['team']['id']] = $rank;
+                    $prevRank = $rank;
+                }
+                $prevGT = $gt;
+                $rank++;
+            }
+
+            // Inject ranks back (blocks remain in group→team order)
+            foreach ($blocks as &$block) {
+                $block['team']['rank'] = $rankMap[$block['team']['id']] ?? null;
+            }
+            unset($block);
+
+            /*
+             * ── FLATTEN to rows array ─────────────────────────────────────────
+             */
+            $rows = [];
+            foreach ($blocks as $block) {
+                $rows[] = $block['team'];
+                foreach ($block['students'] as $s) {
+                    $rows[] = $s;
+                }
+            }
+
             return response()->json([
-                'categories' => array_values($categories),
-                'rows' => $rows
+                'categories' => $categories,
+                'rows'       => array_values($rows),
             ]);
-    
+
         } catch (\Throwable $e) {
             \Log::error('Leaderboard fetch error', [
                 'event_id' => $eventId,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'message'  => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
             ]);
-            return response()->json([]);
+            return response()->json(['categories' => [], 'rows' => []]);
         }
     }
-    
+
     /**
-     * Helper function to generate team + student rows
+     * Build one block: team row + student rows.
      */
-    private function generateTeamRows($event, $org, $group, $subgroup, $team, $categories)
+    private function buildBlock($event, $org, $group, $subgroup, $team, $categories): array
     {
-        $rows = [];
-    
-        // TEAM ROW
-        $teamRow = [
-            'type' => 'team',
-            'id' => $team->id,
-            'event' => $event->name,
-            'organization' => $org->name ?? 'N/A',
-            'group' => $group->group_name ?? '-',
-            'subgroup' => $subgroup->name ?? '-', // null if no subgroup
-            'team_name' => $team->name,
-            'student_name' => null,
-            'scores' => [],
-            'total_points' => 0
-        ];
-    
-        foreach ($categories as $catId => $catName) {
-            $points = optional($team->scores->whereNull('student_id')->where('steam_category_id', $catId)->first())->points ?? 0;
-            $teamRow['scores'][$catName] = $points;
-            $teamRow['total_points'] += $points;
+        // Team-level score lookup: display_name → summed points (student_id IS NULL)
+        $teamLookup = [];
+        foreach ($team->scores as $score) {
+            if ($score->student_id !== null) continue;
+            if (!$score->challengeActivity) continue;
+            $name = $score->challengeActivity->display_name;
+            if (!$name) continue;
+            $teamLookup[$name] = ($teamLookup[$name] ?? 0) + (int)($score->points ?? 0);
         }
-    
-        $rows[] = $teamRow;
-    
-        // STUDENT ROWS
+
+        $teamScores = [];
+        $teamPoints = 0;
+        foreach ($categories as $cat) {
+            $pts = $teamLookup[$cat] ?? 0;
+            $teamScores[$cat] = $pts;
+            $teamPoints      += $pts;
+        }
+
+        // Student rows
+        $studentRows  = [];
+        $playerPoints = 0;
+
         foreach ($team->students as $student) {
-            $studentRow = [
-                'type' => 'student',
-                'id' => $student->id,
-                'event' => $event->name,
-                'organization' => $org->name ?? 'N/A',
-                'group' => $group->group_name ?? '-',
-                'subgroup' => $subgroup->name ?? '-',
-                'team_name' => $team->name,
-                'student_name' => $student->name,
-                'scores' => [],
-                'total_points' => 0
-            ];
-    
-            foreach ($categories as $catId => $catName) {
-                $points = optional($student->scores->where('steam_category_id', $catId)->first())->points ?? 0;
-                $studentRow['scores'][$catName] = $points;
-                $studentRow['total_points'] += $points;
+
+            $studentLookup = [];
+            foreach ($student->scores as $score) {
+                if (!$score->challengeActivity) continue;
+                $name = $score->challengeActivity->display_name;
+                if (!$name) continue;
+                $studentLookup[$name] = ($studentLookup[$name] ?? 0) + (int)($score->points ?? 0);
             }
-    
-            $rows[] = $studentRow;
+
+            $studentScores = [];
+            $studentTotal  = 0;
+            foreach ($categories as $cat) {
+                $pts = $studentLookup[$cat] ?? 0;
+                $studentScores[$cat] = $pts;
+                $studentTotal       += $pts;
+            }
+
+            $playerPoints += $studentTotal;
+
+            $studentRows[] = [
+                'type'         => 'student',
+                'id'           => $student->id,
+                'event'        => $event->name,
+                'organization' => $org->name ?? 'N/A',
+                'group'        => $group->group_name ?? '-',
+                'subgroup'     => $subgroup->name ?? '-',
+                'team_name'    => $team->name,
+                'division'     => $team->division ?? '-',
+                'student_name' => $student->name,
+                'scores'       => $studentScores,
+                'total_points' => $studentTotal,
+                'rank'         => null,
+            ];
         }
-    
-        return $rows;
+
+        $grandTotal = $teamPoints + $playerPoints;
+
+        $teamRow = [
+            'type'          => 'team',
+            'id'            => $team->id,
+            'event'         => $event->name,
+            'organization'  => $org->name ?? 'N/A',
+            'group'         => $group->group_name ?? '-',
+            'subgroup'      => $subgroup->name ?? '-',
+            'team_name'     => $team->name,
+            'division'      => $team->division ?? '-',
+            'student_name'  => null,
+            'scores'        => $teamScores,
+            'team_points'   => $teamPoints,
+            'player_points' => $playerPoints,
+            'total_points'  => $grandTotal,
+            'grand_total'   => $grandTotal,
+            'rank'          => null, // filled after rank computation above
+        ];
+
+        return [
+            'team'     => $teamRow,
+            'students' => $studentRows,
+        ];
     }
 }

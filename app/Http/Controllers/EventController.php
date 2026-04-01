@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Card;
 use App\Models\ChallengeActivity;
 use App\Models\Challenges;
 use App\Models\Event;
@@ -40,10 +41,15 @@ class EventController extends Controller
         $subgroups = SubGroup::with('group', 'event')->get();
         $teams = Team::select('id','name')->get();
         $steamCategories = SteamCategory::all();
-
+        $cards = Card::all();
+        $assignables = [
+            'team'   => $teams,
+            'player' => $allplayers,
+            'group'  => $groups
+        ];
 
         $activities = ChallengeActivity::with('event')->get();
-        return view('events.index', compact('steamCategories' ,'teams','activities', 'subgroups', 'groups', 'organizations', 'allevents', 'events', 'allplayers'));
+        return view('events.index', compact('cards','assignables','steamCategories' ,'teams','activities', 'subgroups', 'groups', 'organizations', 'allevents', 'events', 'allplayers'));
     }
 
 

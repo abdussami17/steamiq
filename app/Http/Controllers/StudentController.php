@@ -84,63 +84,65 @@ class StudentController extends Controller
     }
     public function leaderboard(Request $request, $eventId)
     {
-        $categories = SteamCategory::orderBy('id')->get();
-        $organizationId = $request->organization_id;
+        try {
+            $organizationId = $request->organization_id;
     
-        $students = Student::with([
-            'team.subgroup.group.organization',
-            'scores.challengeActivity'
-        ])
-        ->whereHas('team.group.organization', function ($q) use ($eventId, $organizationId) {
-            $q->where('event_id', $eventId);
+            $students = Student::with([
+                'team.subgroup.group.organization',
+                'scores.challengeActivity',
+                'cards'
+            ])
+            ->whereHas('team.group.organization', function ($q) use ($eventId, $organizationId) {
+                $q->where('event_id', $eventId);
+                if ($organizationId) $q->where('id', $organizationId);
+            })
+            ->get();
     
-            if ($organizationId) {
-                $q->where('id', $organizationId);
+            $rows = [];
+    
+            foreach ($students as $student) {
+                $team = $student->team;
+                $subgroup = $team->subgroup ?? null;
+    
+                $totalPoints = 0;
+                $activityName = '';
+    
+                foreach ($student->scores as $score) {
+                    $points = (int) $score->points;
+                    $totalPoints += $points;
+    
+                    if (!$activityName && $score->challengeActivity) {
+                        $activityName = $score->challengeActivity->display_name;
+                    }
+                }
+    
+                $totalNegative = optional($student->cards)->sum('negative_points') ?? 0;
+                $totalPoints = max(0, $totalPoints - $totalNegative);
+    
+                $rows[] = [
+                    'id' => $student->id,
+                    'student' => $student->name,
+                    'team' => $team->name ?? 'N/A',
+                    'activity' => $activityName,
+                    'total' => $totalPoints
+                ];
             }
-        })
-        ->get();
     
-        $rows = [];
-    
-        foreach ($students as $student) {
-    
-            $scoreMap = $student->scores->keyBy('steam_category_id');
-            $team = $student->team;
-            $subgroup = $team->subgroup ?? null;
-    
-            // Determine activity name using your getDisplayNameAttribute logic
-            $activityName = optional($student->scores->first()?->challengeActivity)?->display_name ?? 'N/A';
-    
-            $row = [
-                'id' => $student->id,
-                'student' => $student->name,
-                'team' => $team->name ?? 'N/A',
-                'subgroup' => $subgroup->name ?? 'N/A',
-                'activity' => $activityName,
-                'total' => 0
-            ];
-    
-            foreach ($categories as $cat) {
-                $points = (int) optional($scoreMap->get($cat->id))->points ?? 0;
-                $row[$cat->name] = $points;
-                $row['total'] += $points;
+            $rows = collect($rows)->sortByDesc('total')->values();
+            foreach ($rows as $i => $r) {
+                $r['rank'] = $i + 1;
+                $rows[$i] = $r;
             }
     
-            $rows[] = $row;
+            return response()->json([
+                'rows' => $rows
+            ]);
+    
+        } catch (\Throwable $e) {
+            return response()->json([
+                'rows' => []
+            ], 500);
         }
-    
-        $rows = collect($rows)->sortByDesc('total')->values();
-    
-        $rank = 1;
-        foreach ($rows as $i => $r) {
-            $r['rank'] = $rank++;
-            $rows[$i] = $r;
-        }
-    
-        return response()->json([
-            'categories' => $categories->pluck('name'),
-            'rows' => $rows
-        ]);
     }
     public function updateScoreInline(Request $request)
 {

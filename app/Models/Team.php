@@ -77,4 +77,11 @@ public function eventRelation()
     // else via group
     return $this->group->organization->event; // again, no parentheses
 }
+// Get all card assignments for team, with actual card data
+public function cards()
+{
+    return $this->hasMany(CardAssignment::class, 'assignable_id')
+                ->where('assignable_type', 'team')
+                ->with('card'); // load card details
+}
 }

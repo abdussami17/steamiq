@@ -2,141 +2,96 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@29.3.3/styles/ag-theme-alpine.css">
 <script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@29.3.3/dist/ag-grid-enterprise.min.js"></script>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
-const gridDiv = document.getElementById('playersGrid');
-const eventFilter = document.getElementById('eventFilter');
-const orgFilter = document.getElementById('organizationFilter');
+    const gridDiv = document.getElementById('playersGrid');
+    const eventFilter = document.getElementById('eventFilter');
+    const orgFilter = document.getElementById('organizationFilter');
 
-let gridOptions;
+    let gridOptions;
 
-function buildGrid(categories){
+    // Build the grid with fixed columns (no dynamic categories)
+    function buildGrid() {
+        const columnDefs = [
+    { headerName:"Player", field:"student", flex:1, minWidth:150 },
+    { headerName:"Team", field:"team", flex:1, minWidth:120 },
+    { headerName:"Activity", field:"activity", flex:1, minWidth:150 },
+    { headerName:"Total", field:"total", cellStyle:{fontWeight:700}, flex:1, minWidth:100 },
+    { headerName:"Rank", field:"rank", cellStyle:{fontWeight:700}, flex:1, minWidth:80 }
+];
 
-    const editableCols = categories.map(cat => ({
-        headerName: cat,
-        field: cat,
-        editable: true,
-        cellEditor: 'agNumberCellEditor',
-        valueParser: p => Number(p.newValue || 0)
-    }));
+        gridOptions = {
+            columnDefs,
+            rowData: [],
+            defaultColDef:{
+                sortable:true,
+                filter:true,
+                resizable:true
+            }
+        };
 
-    const columnDefs = [
-        { headerName:"Player", field:"student" },
-        { headerName:"Team", field:"team" },
-        { headerName:"Activity", field:"activity" },
-        ...editableCols,
-        { headerName:"Total", field:"total", cellStyle:{fontWeight:700} },
-        { headerName:"Rank", field:"rank", cellStyle:{fontWeight:700} }
-    ];
+        new agGrid.Grid(gridDiv, gridOptions);
+gridOptions.api.sizeColumnsToFit();
+    }
 
-    gridOptions = {
-        columnDefs,
-        rowData: [],
-        defaultColDef:{
-            sortable:true,
-            filter:true,
-            resizable:true
-        },
+    // Load leaderboard data
+    async function loadLeaderboard() {
+        const eventId = eventFilter.value;
+        const orgId = orgFilter.value;
+        if (!eventId) return;
 
-        onCellValueChanged: async (params) => {
+        let url = `/event/${eventId}/students-leaderboard`;
+        if (orgId) url += `?organization_id=${orgId}`;
 
-            const col = params.colDef.field;
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
 
-            if(['total','rank','student','team','activity'].includes(col)) return;
+            if (!gridOptions) buildGrid();
 
-            await fetch('/score/update-inline', {
-                method:'POST',
-                headers:{
-                    'Content-Type':'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({
-                    student_id: params.data.id,
-                    category: col,
-                    points: params.newValue
-                })
+            gridOptions.api.setRowData(data.rows);
+gridOptions.api.sizeColumnsToFit(); 
+
+        } catch (err) {
+            console.error("Error loading leaderboard:", err);
+            if (!gridOptions) buildGrid();
+            gridOptions.api.setRowData([]);
+        }
+    }
+
+    // Load organizations when event changes
+    eventFilter.addEventListener('change', async () => {
+        const eventId = eventFilter.value;
+        if (!eventId) return;
+
+        orgFilter.innerHTML = '<option value="">-- Select Organization --</option>';
+        orgFilter.value = "";
+
+        try {
+            const res = await fetch(`/event/${eventId}/organizations`);
+            const data = await res.json();
+
+            data.forEach(org => {
+                const option = document.createElement('option');
+                option.value = org.id;
+                option.textContent = org.name;
+                orgFilter.appendChild(option);
             });
 
-            recalc();
+            if (gridOptions) gridOptions.api.setRowData([]);
+        } catch (err) {
+            console.error("Error loading organizations:", err);
         }
-    };
-
-    new agGrid.Grid(gridDiv, gridOptions);
-}
-
-function recalc(){
-
-    const rows = [];
-
-    gridOptions.api.forEachNode(node => {
-
-        const cats = Object.keys(node.data)
-            .filter(k => !['id','student','team','activity','total','rank'].includes(k));
-
-        let total = 0;
-
-        cats.forEach(c => total += Number(node.data[c] || 0));
-
-        node.data.total = total;
-        rows.push(node.data);
     });
 
-    rows.sort((a,b)=>b.total-a.total);
+    orgFilter.addEventListener('change', loadLeaderboard);
 
-    rows.forEach((r,i)=> r.rank = i+1);
-
-    gridOptions.api.setRowData(rows);
-}
-
-async function loadLeaderboard(){
-
-    const eventId = eventFilter.value;
-    const orgId = orgFilter.value;
-
-    if(!eventId) return;
-
-    let url = `/event/${eventId}/students-leaderboard`;
-
-    if(orgId){
-        url += `?organization_id=${orgId}`;
-    }
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if(!gridOptions){
-        buildGrid(data.categories);
-    }
-
-    gridOptions.api.setRowData(data.rows);
-}
-
-eventFilter.addEventListener('change', async () => {
-
-const eventId = eventFilter.value;
-
-if(!eventId) return;
-
-orgFilter.innerHTML = '<option value="">-- Select Organization --</option>';
-orgFilter.value = "";
-
-const res = await fetch(`/event/${eventId}/organizations`);
-const data = await res.json();
-
-data.forEach(org => {
-    const option = document.createElement('option');
-    option.value = org.id;
-    option.textContent = org.name;
-    orgFilter.appendChild(option);
+    // Initialize grid on page load
+    buildGrid();
 });
-
-if(gridOptions){
-    gridOptions.api.setRowData([]);
-}
-
-});
-orgFilter.addEventListener('change', loadLeaderboard);
-
+window.addEventListener('resize', () => {
+    if(gridOptions && gridOptions.api) gridOptions.api.sizeColumnsToFit();
 });
 </script>

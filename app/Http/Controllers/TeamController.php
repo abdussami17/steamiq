@@ -100,81 +100,110 @@ public function getTeams($groupId)
     }
     
    
-
     public function teamsData(Request $request)
     {
         try {
-
             // =============================
-            // 1) Load teams + subgroup
+            // 1) Load teams + subgroup + card assignments
             // =============================
             $teams = Team::with([
                 'subgroup.group',
-                'group'
+                'group',
+                'cards.card' // ensure card details are loaded
             ])->get();
-
+    
+          
+    
             // =============================
             // 2) Get total points per team (SCORES TABLE ONLY)
             // =============================
             $pointsMap = Score::selectRaw('team_id, SUM(points) as total_points')
                 ->groupBy('team_id')
                 ->pluck('total_points', 'team_id');
-
+    
+            
+    
             // =============================
             // 3) Count students per team
             // =============================
             $membersMap = Student::selectRaw('team_id, COUNT(*) as total')
                 ->groupBy('team_id')
                 ->pluck('total', 'team_id');
-
+    
+   
+    
             // =============================
-            // 4) Build rows
+            // 4) Build rows with total points adjusted for negative points
             // =============================
             $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
-
+    
+                // Fetch assigned cards for this team
+                $assignedCards = $team->cards ?? collect();
+    
+                // Calculate total negative points from assigned cards
+                $negativePoints = $assignedCards->sum(function($assignment) {
+                    return $assignment->card->negative_points ?? 0;
+                });
+    
+             
+    
+                // Determine total_points logic
+                $basePoints = $pointsMap[$team->id] ?? 0;
+    
+                if ($assignedCards->isEmpty()) {
+                    // No card assigned
+                    $totalPoints = $basePoints;
+                } else {
+                    // Cards assigned
+                    $totalPoints = $negativePoints == 0 ? 0 : $basePoints - $negativePoints;
+                    $totalPoints = max(0, $totalPoints); // avoid negative total
+                }
+    
+               
+    
                 return [
                     'id' => $team->id,
                     'name' => $team->display_name ?? 'N/A',
                     'pod' => $team->subgroup
-                    ? $team->subgroup->group->pod
-                    : $team->group->pod ?? 'N/A',
-            
-            'subgroup_name' => $team->subgroup->name ?? 'N/A',
+                        ? $team->subgroup->group->pod
+                        : $team->group->pod ?? 'N/A',
+                    'subgroup_name' => $team->subgroup->name ?? 'N/A',
                     'division' => $team->division ?? 'N/A',
                     'group_name' => $team->subgroup
-                    ? $team->subgroup->group->group_name
-                    : ($team->group->group_name ?? 'N/A'),
+                        ? $team->subgroup->group->group_name
+                        : ($team->group->group_name ?? 'N/A'),
                     'members_count' => $membersMap[$team->id] ?? 0,
-                    'total_points' => $pointsMap[$team->id] ?? 0,
+                    'total_points' => $totalPoints,
                     'profile' => $team->profile ?? null,
                 ];
             });
-
+    
             // =============================
-            // 5) Sort by points DESC
+            // 5) Sort by total_points DESC
             // =============================
             $rows = $rows->sortByDesc('total_points')->values();
-
+    
             // =============================
-            // 6) Assign rank (CORRECT way)
+            // 6) Assign rank
             // =============================
             $rows = $rows->map(function ($row, $index) {
                 $row['rank'] = $index + 1;
                 return $row;
             });
-
+    
+        
+    
             return response()->json($rows);
-
+    
         } catch (\Throwable $e) {
-
             \Log::error('Teams Data Error', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-
+    
             return response()->json([]);
         }
     }
-
     public function export(Request $request)
     {
         $eventId = $request->event_id;

@@ -16,7 +16,7 @@
             width: 100vw;
             height: 100vh;
 
-            background: #000;
+            background: #fff;
 
             display: flex;
             align-items: center;
@@ -33,7 +33,7 @@
             width: 48px;
             height: 48px;
 
-            border: 4px solid #333;
+            border: 4px solid #000;
             border-top-color: #fff;
 
             border-radius: 50%;
@@ -61,7 +61,7 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('assets/styles/style.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/styles/style.css?v=' . time()) }}">
 
     <style>
         /* Improve font and icon visibility */
@@ -106,6 +106,10 @@
                     {{-- Common nav links --}}
                     <nav class="d-flex align-items-center gap-4">
 
+                        <a href="{{ route('cards.index') }}"
+                        class="nav-link-custom {{ request()->routeIs('cards.index') ? 'active' : '' }}">
+                        Cards
+                    </a>
                         <a href="{{ route('dashboard.index') }}"
                             class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
                             Dashboard
