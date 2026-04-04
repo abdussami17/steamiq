@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title')</title>
+
     <style>
         /* ===== CRITICAL LOADER CSS (must be first) ===== */
 
@@ -62,7 +63,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
         rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('assets/styles/style.css?v=' . time()) }}">
-
+<link rel="icon" href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-32x32.png" sizes="32x32">
+<link rel="icon" href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-192x192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-180x180.png">
     <style>
         /* Improve font and icon visibility */
         .toast {
@@ -94,68 +97,75 @@
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <div class="logo-icon">XR</div>
+                    <img src="{{ asset('assets/logo.png') }}" alt="Logo">
                     <div class="logo-text">
-                        <h1>STEAM IQ</h1>
-                        <p>EVENT MANAGEMENT</p>
+                        <p>EVENT & TOURNEY<br>MANAGEMENT</p>
                     </div>
                 </div>
-
-                <nav class="d-flex align-items-center gap-4">
-
-                    {{-- Common nav links --}}
-                    <nav class="d-flex align-items-center gap-4">
-
-                        <a href="{{ route('cards.index') }}"
-                        class="nav-link-custom {{ request()->routeIs('cards.index') ? 'active' : '' }}">
-                        Cards
+    
+                <nav class="nav-menu">
+                    {{-- Dashboard always visible --}}
+                    <a href="{{ route('dashboard.index') }}"
+                       class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                        Dashboard
                     </a>
-                        <a href="{{ route('dashboard.index') }}"
-                            class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
-                            Dashboard
-                        </a>
-
-                        <a href="{{ route('events.index') }}"
-                            class="nav-link-custom {{ request()->routeIs('events.*') ? 'active' : '' }}">
-                            Events
-                        </a>
-
-                        {{-- <a href="{{ route('student.index') }}"
-                            class="nav-link-custom {{ request()->routeIs('student.*') ? 'active' : '' }}">
-                            Players
-                        </a> --}}
-
-                        {{-- <a href="{{ route('tournaments.index') }}"
-                            class="nav-link-custom {{ request()->routeIs('tournaments.*') ? 'active' : '' }}">
-                            Tournaments
-                        </a> --}}
-
-
-                        @auth
-                            {{-- username --}}
-                            {{-- <span class="nav-link-custom disabled-link">
-                                {{ Auth::user()->username }}
-                            </span> --}}
-
-                            {{-- Logout link --}}
-                            <a href="{{ route('logout') }}" class="nav-link-custom filled"
-                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                Logout
+    
+                    @auth
+                        {{-- Admin role check --}}
+                        @if(Auth::user()->role == 1)
+                            <a href="{{ route('events.index') }}"
+                               class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
+                                Events
                             </a>
-
-                            {{-- Hidden logout form --}}
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        @else
-                            <a href="{{ route('register-login') }}" class="nav-link-custom">Login</a>
-                        @endauth
-
-                    </nav>
-
-
+    
+                            <!-- Boards Dropdown -->
+                            <div class="nav-item dropdown">
+                                <button class="nav-link-custom dropdown-toggle">
+                                    The Boards
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a href="{{ route('leaderboard.index') }}">Leaderboards</a>
+                                    <a href="{{ route('scoreboard.index') }}">Scoreboards</a>
+                                    <a href="#">Tournament Bracket</a>
+                                    <a href="{{ route('scoring.index') }}">Scoring</a>
+                                </div>
+                            </div>
+    
+                            <!-- Q-Action Dropdown -->
+                            <div class="nav-item dropdown">
+                                <button class="nav-link-custom dropdown-toggle">
+                                    Q-Action
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a href="#" data-bs-target="#createEventModal" data-bs-toggle="modal">Create Event</a>
+                                    <a href="#" data-bs-target="#addStudentModal" data-bs-toggle="modal">Add Player</a>
+                                    <a href="#" data-bs-target="#addCardModal" data-bs-toggle="modal">Create Cards</a>
+                                </div>
+                            </div>
+    
+                            <a href="{{ route('settings.index') }}"
+                               class="nav-link-custom {{ request()->routeIs('settings.index') ? 'active' : '' }}">
+                                Settings
+                            </a>
+                        @endif
+    
+                        {{-- Logout for all logged-in users --}}
+                        <a href="{{ route('logout') }}" class="nav-link-custom filled"
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            Logout
+                        </a>
+    
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+    
+                    @else
+                        {{-- Login for guests --}}
+                        <a href="{{ route('login') }}" class="nav-link-custom">Login</a>
+                    @endauth
+    
+                </nav>
             </div>
-
         </div>
     </header>
 
@@ -163,6 +173,14 @@
         @yield('content')
 
         @stack('modals')
+        @include('card.create')
+        @include('events.modals.create-event', [
+            'steamCategories' => \App\Models\SteamCategory::all()
+        ])
+        @include('students.modals.create-students',[
+              'organizations' => \App\Models\Organization::all()
+        ])
+
     </main>
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"></script>
@@ -265,6 +283,8 @@
         });
     </script>
     @stack('scripts')
+
+    
 </body>
 
 </html>

@@ -13,23 +13,15 @@
                     </span>
                     Events Management
                 </h2>
-                 <div class="d-flex gap-2">
-                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                        <i data-lucide="plus"></i> Add Score
-                    </button>
-            <button class="btn btn-primary" data-bs-target="#createEventModal" data-bs-toggle="modal">
-                <i data-lucide="plus"></i>
-                <span>Create New Event</span>
-            </button>
-                 </div>
+          
             </div>
 
-            <div class="card-grid">
+            <div class="card-grid events_grid">
                 @forelse($allevents as $allevent)
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="events_card">
+                        <div class="events_card-header">
                             <div>
-                                <h3 class="card-title">{{ $allevent->name }}</h3>
+                                <h3 class="events_card-title">{{ $allevent->name }}</h3>
                                 <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem;">
                                     {{ ucfirst($allevent->event_type) }}
                                 </p>
@@ -51,7 +43,7 @@
                             </div>
                         </div>
 
-                        <div class="stats-grid">
+                        <div class="events_stats-grid">
 
                             @php
                                 // Merge all teams under groups + subgroups and remove duplicates
@@ -63,40 +55,40 @@
                             @endphp
 
                             {{-- TEAMS --}}
-                            <div class="stat">
-                                <div class="stat-label">Teams</div>
-                                <div class="stat-value" style="font-size:1.3rem;">
+                            <div class="events_stat">
+                                <div class="events_stat-label">Teams</div>
+                                <div class="events_stat-value" >
                                     {{ $allTeams->count() ?: 'N/A' }}
                                 </div>
                             </div>
 
                             {{-- PLAYERS --}}
-                            <div class="stat">
-                                <div class="stat-label">Players</div>
-                                <div class="stat-value" style="font-size:1.3rem;">
+                            <div class="events_stat">
+                                <div class="events_stat-label">Players</div>
+                                <div class="events_stat-value" >
                                     {{ $allTeams->flatMap->students->count() ?: 'N/A' }}
                                 </div>
                             </div>
 
                             {{-- GROUPS --}}
-                            <div class="stat">
-                                <div class="stat-label">Groups</div>
-                                <div class="stat-value" style="font-size:1.3rem;">
+                            <div class="events_stat">
+                                <div class="events_stat-label">Groups</div>
+                                <div class="events_stat-value" >
                                     {{ $allevent->organizations->flatMap->groups->count() ?: 'N/A' }}
                                 </div>
                             </div>
 
                             {{-- SUBGROUPS --}}
-                            <div class="stat">
-                                <div class="stat-label">Sub Groups</div>
-                                <div class="stat-value" style="font-size:1.3rem;">
+                            <div class="events_stat">
+                                <div class="events_stat-label">Sub Groups</div>
+                                <div class="events_stat-value" >
                                     {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A' }}
                                 </div>
                             </div>
 
                         </div>
 
-                        <div class="card-actions">
+                        <div class="events_card-actions">
                             <button class="btn btn-primary" style="flex:1;" onclick="openEventModal({{ $allevent->id }})">
                                 View Event
                             </button>
@@ -138,8 +130,7 @@
                     onclick="switchTab('teams')">Teams</button>
                 <button class="tab {{ $activeTab == 'players-tab' ? 'active' : '' }}"
                     onclick="switchTab('players')">Players</button>
-                <button class="tab {{ $activeTab == 'scores-tab' ? 'active' : '' }}"
-                    onclick="switchTab('scores')">Scores</button>
+                
             </div>
             @if (session('active_tab'))
                 <script>
@@ -533,12 +524,12 @@
                         <button class="btn btn-danger" onclick="deleteSelectedTeams()">
                             Delete Selected
                         </button>
-                        {{-- <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
-                            <i data-lucide="download"></i> Import CSV
-                        </button> --}}
-                        <a href="{{ route('teams.export') }}" class="btn btn-secondary">
+                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
+                            <i data-lucide="upload"></i> Import Teams
+                        </button>
+                        {{-- <a href="{{ route('teams.export') }}" class="btn btn-secondary">
                             <i data-lucide="upload"></i> Export Teams
-                        </a>
+                        </a> --}}
                         <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="team">
                             <i data-lucide="club"></i> Assign Cards
                         </a>
@@ -614,120 +605,12 @@
                 </div>
             </div>
 
-            <!-- activites Tab -->
-            {{-- <div id="activites-tab" class="tab-content">
-                <div class="spreadsheet-container">
-                    <div class="spreadsheet-toolbar">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createActivityModal">
-                            <i data-lucide="plus"></i> Add Activity
-                        </button>
-
-                    </div>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Event</th>
-                                <th>Name</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if ($activities->isEmpty())
-                                <tr>
-                                    <td colspan="4" class="text-center">No data</td>
-                                </tr>
-                            @else
-                                @foreach ($activities as $act)
-                                    <tr>
-                                        <td>{{ $act->id ?? 'N/A' }}</td>
-                                        <td>{{ $act->event->name ?? 'N/A' }}</td>
-                                        <td>{{ $act->name ?? 'N/A' }}</td>
-                                        <td>
-                                            <div class="d-flex gap-1">
-                                                <button class="btn btn-icon btn-edit"
-                                                    onclick="openEditActivityModal({{ $act->id }})">
-                                                    <i data-lucide="edit-2"></i>
-                                                </button>
-                                                <button class="btn btn-icon btn-delete"
-                                                    onclick="deleteActivity({{ $act->id }}, '{{ $act->name ?? 'N/A' }}')">
-                                                    <i data-lucide="trash-2"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-            </div> --}}
-
-            <!-- Scores Tab -->
-            <div id="scores-tab" class="tab-content">
-                <div class="spreadsheet-container">
-                    <div class="spreadsheet-toolbar" id="scoreToolbar">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                            <i data-lucide="plus"></i> Add Score
-                        </button>
-
-                        <button class="btn btn-secondary" onclick="fetchScores()">
-                            <i data-lucide="refresh-cw"></i> Refresh
-                        </button>
-                    </div>
-
-                    <select id="eventSelect" class="form-select mb-3">
-                        <option value="">Select Event</option>
-                        @foreach ($events as $event)
-                            <option value="{{ $event->id }}">{{ $event->name }}</option>
-                        @endforeach
-                    </select>
-
-                    <div class="table-responsive">
-                        <table class="data-table">
-                            <thead id="scoreHead">
-                                <tr>
-                                    <th style="width: 100px">Type</th>
-                                    <th style="width: 150px">Name</th>
-                                    <th style="width: 150px">Activity</th>
-                                    <th style="width: 100px">Total</th>
-                                    <th style="width: 80px">Rank</th>
-                                </tr>
-                            </thead>
-                            <tbody id="scoreBody">
-                                <tr>
-                                    <td colspan="5">Select event to load scores...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+         
 
 
 
 
 
-
-
-            {{-- <div id="schedule-tab" class="tab-content">
-                <div class="spreadsheet-container">
-                    <div class="spreadsheet-toolbar">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#matchModal">
-                            <i data-lucide="plus"></i> Schedule Match
-                        </button>
-
-                        <a href="{{ route('matches.export.all') }}" class="btn btn-secondary">
-                            <i data-lucide="upload"></i> Export All Schedule
-                        </a>
-
-
-                    </div>
-                    <div class="schedule-grid" id="scheduleGrid">
-                        <!-- Matches will be dynamically loaded here -->
-                    </div>
-                </div>
-            </div> --}}
 
 
 
@@ -739,47 +622,62 @@
 @endsection
 
 
-
 @push('modals')
-    @include('events.modals.create-team')
-    @include('events.modals.create-event')
-    {{-- @include('events.modals.create-activity') --}}
-    @include('events.modals.create-scores')
+    {{-- Teams Modals --}}
+    @include('teams.modals.create-team')
+    @include('teams.modals.view-team')
+    @include('teams.modals.import-team')
+    @include('teams.modals.edit-team')
+
+    {{-- Events Modals --}}
+
     @include('events.modals.view-event')
-    @include('events.modals.import-team')
-    @include('events.modals.edit-team')
-    @include('events.modals.view-team')
-    {{-- @include('events.modals.show-event') --}}
-    @include('events.modals.bracket')
-    @include('card.assign-card-modal')
-
-
-
-
-    @include('events.modals.edit-score')
     @include('events.modals.edit-event')
-    {{-- @include('events.modals.import-scores') --}}
-    {{-- @include('events.modals.edit-activity') --}}
-    @include('events.modals.add-match')
-    @include('events.modals.match-pin')
-    @include('events.modals.add-round')
-    @include('events.modals.create-organization')
-    @include('events.modals.create-group')
-    @include('events.modals.edit-organization')
-    @include('events.modals.edit-group')
-    @include('events.modals.create-subgroup')
+    @include('events.modals.bracket')
+
+
+
+    {{-- Matches Modals --}}
+    @include('matches.modals.add-match')
+    @include('matches.modals.match-pin')
+    @include('matches.modals.add-round')
+
+    {{-- Organization Modals --}}
+    @include('organization.modals.create-organization')
+    @include('organization.modals.edit-organization')
+
+    {{-- Groups & Subgroups Modals --}}
+    @include('groups.modals.create-group')
+    @include('groups.modals.edit-group')
+    @include('subgroups.modals.create-subgroup')
+    @include('subgroups.modals.edit-subgroup')
+
+    {{-- Students Modal --}}
     @include('students.modals.create-students')
-    @include('events.modals.edit-subgroup')
+
+    {{-- Card Modal --}}
+    @include('card.assign-card-modal')
 @endpush
 
 @push('scripts')
-    @include('events.bracket-script')
-    @include('events.team-script')
-    @include('events.score-script')
-    {{-- @include('events.matches-script') --}}
-    @include('events.edit-event-script')
-    @include('events.edit-subgroup-script')
-    @include('events.duplicate-event-script')
+    {{-- Event Scripts --}}
+    @include('events.scripts.bracket-script')
+    @include('events.scripts.edit-event-script')
+    @include('events.scripts.duplicate-event-script')
+    {{-- @include('events.matches-script') --}} {{-- Disabled/commented out --}}
+
+    {{-- Team Scripts --}}
+    @include('teams.scripts.team-script')
+
+    {{-- Score Scripts --}}
+    @include('scores.scripts.score-script')
+
+    {{-- Subgroup Scripts --}}
+    @include('subgroups.scripts.edit-subgroup-script')
+
+    {{-- Student Scripts --}}
     @include('students.script')
+
+    {{-- Card Scripts --}}
     @include('card.assign-script')
 @endpush

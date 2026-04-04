@@ -59,15 +59,6 @@ class AuthController extends Controller
     
     
 
-    // Dashboard
-    public function dashboard()
-    {
-        $user = Auth::user();
-        if($user->role != 1){
-            return redirect()->route('dashboard.index'); 
-        }
-        return view('dashboard.index'); 
-    }
 
     // Logout
     public function logout(Request $request)

@@ -53,11 +53,11 @@
 
                     <!-- ================= ESPORTS SECTION ================= -->
                     <div id="esportsSection" style="display:none">
-                        <h5 class="mb-3 text-white fw-bold">Brain Game Settings</h5>
+                        <h5 class="mb-3 text-dark fw-bold">Brain Game Settings</h5>
                         <div class="form-check form-switch mb-3">
                             <input type="hidden" name="brain_enabled" value="0">
                             <input type="checkbox" class="form-check-input" id="brainToggle" name="brain_enabled" value="1">
-                            <label class="form-check-label text-white">Enable Brain Game</label>
+                            <label class="form-check-label text-dark">Enable Brain Game</label>
                         </div>
                         <div id="brainFields" class="row g-3" style="display:none">
                             <div class="col-md-4">
@@ -75,7 +75,7 @@
                             </div>
                         </div>
                         <hr>
-                        <h5 class="mb-3 text-white fw-bold">Game Settings</h5>
+                        <h5 class="mb-3 text-dark fw-bold">Game Settings</h5>
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Game</label>
@@ -104,7 +104,7 @@
                             </div>
                         </div>
                         <hr>
-                        <h5 class="mb-3 text-white fw-bold">Tournament Setup</h5>
+                        <h5 class="mb-3 text-dark fw-bold">Tournament Setup</h5>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tournament Type</label>
@@ -125,14 +125,14 @@
                     <!-- ================= XR SECTION ================= -->
                     <div id="xrSection" style="display:none">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="text-white fw-bold mb-0">C.A.M ACTIVITIES &amp; MISSION</h5>
+                            <h5 class="text-dark fw-bold mb-0">C.A.M ACTIVITIES &amp; MISSION</h5>
                             <button type="button" class="btn btn-primary btn-sm" onclick="addCampActivity()"><i data-lucide="plus"></i> Add Activity</button>
                         </div>
 
                         <div id="campActivitiesContainer"></div>
 
                         <hr>
-                        <h5 class="mb-3 text-white fw-bold">Tournament Setup</h5>
+                        <h5 class="mb-3 text-dark fw-bold">Tournament Setup</h5>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tournament Type</label>
@@ -275,7 +275,7 @@ function addCampActivity() {
 function buildRowShell(i) {
     return `
     <div class="card-header border-secondary pb-3 d-flex justify-content-between align-items-center py-2">
-        <span class="text-white fw-semibold camp-row-label">Activity / Mission</span>
+        <span class="text-dark fw-semibold camp-row-label">Activity / Mission</span>
         <div class="d-flex gap-2">
             <button type="button" class="btn btn-icon btn-view"  title="Save"      onclick="saveCampRow(this)"><i data-lucide="save"></i></button>
             <button type="button" class="btn btn-icon btn-edit"  title="Edit"      onclick="editCampRow(this)"><i data-lucide="pencil"></i></button>

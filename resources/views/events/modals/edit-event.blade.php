@@ -53,11 +53,11 @@
 
                     <!-- ESPORTS SECTION -->
                     <div id="editEsportsSection" style="display:none">
-                        <h5 class="mb-3 fw-bold text-white">Brain Game Settings</h5>
+                        <h5 class="mb-3 fw-bold text-dark">Brain Game Settings</h5>
                         <div class="form-check form-switch mb-3">
                             <input type="hidden" name="brain_enabled" value="0">
                             <input type="checkbox" class="form-check-input" id="editBrainToggle" name="brain_enabled" value="1">
-                            <label class="form-check-label text-white">Enable Brain Game</label>
+                            <label class="form-check-label text-dark">Enable Brain Game</label>
                         </div>
                         <div id="editBrainFields" class="row g-3" style="display:none">
                             <div class="col-md-4">
@@ -75,7 +75,7 @@
                             </div>
                         </div>
                         <hr>
-                        <h5 class="mb-3 fw-bold text-white">Game Settings</h5>
+                        <h5 class="mb-3 fw-bold text-dark">Game Settings</h5>
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label">Game</label>
@@ -104,7 +104,7 @@
                             </div>
                         </div>
                         <hr>
-                        <h5 class="mb-3 fw-bold text-white">Tournament Setup</h5>
+                        <h5 class="mb-3 fw-bold text-dark">Tournament Setup</h5>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tournament Type</label>
@@ -126,13 +126,13 @@
                     <!-- XR SECTION -->
                     <div id="editXrSection" style="display:none">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="text-white fw-bold mb-0">C.A.M ACTIVITIES &amp; MISSION</h5>
+                            <h5 class="text-dark fw-bold mb-0">C.A.M ACTIVITIES &amp; MISSION</h5>
                             <button type="button" class="btn btn-primary btn-sm" onclick="addEditCampActivity()">+ Add Activity</button>
                         </div>
                         <div id="editCampActivitiesContainer"></div>
 
                         <hr>
-                        <h5 class="mb-3 fw-bold text-white">Tournament Setup</h5>
+                        <h5 class="mb-3 fw-bold text-dark">Tournament Setup</h5>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tournament Type</label>

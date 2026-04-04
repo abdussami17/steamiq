@@ -343,8 +343,9 @@ public function show(Event $event)
 {
     $event->load([
         'activities',
-        'organizations.groups.teams.students',        // teams directly under group
-        'organizations.groups.subgroups.teams.students' // teams under subgroup
+        'tournamentSetting',
+        'organizations.groups.teams.students',        
+        'organizations.groups.subgroups.teams.students' 
     ]);
 
     return response()->json($event);

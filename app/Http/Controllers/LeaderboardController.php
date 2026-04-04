@@ -3,10 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\Score;
+use App\Models\Student;
+use App\Models\Team;
+use App\Models\ChallengeActivity;
 use Illuminate\Http\Request;
 
 class LeaderboardController extends Controller
 {
+
+
+    public function index(){
+
+return view('leaderboard.index');
+
+    }
     public function events()
     {
         $events = Event::orderByDesc('start_date')->get(['id', 'name']);
@@ -30,11 +41,15 @@ class LeaderboardController extends Controller
             ])->findOrFail($eventId);
 
             /*
-             * ── COLLECT UNIQUE ACTIVITY DISPLAY NAMES ────────────────────────
+             * ── COLLECT UNIQUE ACTIVITY DISPLAY NAMES + TYPES ────────────────
+             * We store an ordered map: displayName => slug
+             * so each category column carries the correct CSS slug from
+             * the model's own type fields — not guessed from the string.
+             *
              * Order: team-level scores first, then student-level.
              * Deduplication preserves first-seen order.
              */
-            $activityNames = collect();
+            $activityMap = []; // [ displayName => slug ]  (insertion-ordered)
 
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
@@ -44,15 +59,25 @@ class LeaderboardController extends Controller
                     );
 
                     foreach ($allTeams as $team) {
+                        // Team-level scores (student_id IS NULL)
                         foreach ($team->scores as $score) {
                             if ($score->student_id === null && $score->challengeActivity) {
-                                $activityNames->push($score->challengeActivity->display_name);
+                                $dn   = $score->challengeActivity->display_name;
+                                $slug = $this->activitySlug($score->challengeActivity);
+                                if (!empty($dn) && !array_key_exists($dn, $activityMap)) {
+                                    $activityMap[$dn] = $slug;
+                                }
                             }
                         }
+                        // Student-level scores
                         foreach ($team->students as $student) {
                             foreach ($student->scores as $score) {
                                 if ($score->challengeActivity) {
-                                    $activityNames->push($score->challengeActivity->display_name);
+                                    $dn   = $score->challengeActivity->display_name;
+                                    $slug = $this->activitySlug($score->challengeActivity);
+                                    if (!empty($dn) && !array_key_exists($dn, $activityMap)) {
+                                        $activityMap[$dn] = $slug;
+                                    }
                                 }
                             }
                         }
@@ -60,17 +85,11 @@ class LeaderboardController extends Controller
                 }
             }
 
-            $categories = $activityNames->filter(fn($v) => !empty($v))
-                ->unique()
-                ->values()
-                ->toArray();
+            // category display names in order (used as score keys in buildBlock)
+            $categoryNames = array_keys($activityMap);
 
             /*
              * ── BUILD BLOCKS ──────────────────────────────────────────────────
-             *
-             * PRIMARY SORT: group → team insertion order (natural hierarchy).
-             * RANK is assigned by grand_total DESC (tie-aware) AFTER blocks
-             * are collected, but the ROW ORDER stays group → team.
              */
             $blocks = [];
 
@@ -80,13 +99,13 @@ class LeaderboardController extends Controller
                     // Direct-group teams (no sub_group_id)
                     foreach ($group->teams as $team) {
                         if ($team->sub_group_id) continue;
-                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categories);
+                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categoryNames);
                     }
 
                     // Subgroup teams
                     foreach ($group->subgroups as $subgroup) {
                         foreach ($subgroup->teams as $team) {
-                            $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categories);
+                            $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categoryNames);
                         }
                     }
                 }
@@ -94,8 +113,6 @@ class LeaderboardController extends Controller
 
             /*
              * ── ASSIGN RANKS by grand_total (tie-aware) ───────────────────────
-             * Ranking is separate from display order.
-             * We compute ranks then inject them back into blocks.
              */
             $sorted = collect($blocks)
                 ->sortByDesc(fn($b) => $b['team']['grand_total'])
@@ -104,9 +121,9 @@ class LeaderboardController extends Controller
             $rank     = 1;
             $prevGT   = null;
             $prevRank = 1;
-            $rankMap  = []; // team_id -> rank
+            $rankMap  = [];
 
-            foreach ($sorted as $idx => $block) {
+            foreach ($sorted as $block) {
                 $gt = $block['team']['grand_total'];
                 if ($prevGT !== null && $gt === $prevGT) {
                     $rankMap[$block['team']['id']] = $prevRank;
@@ -118,11 +135,15 @@ class LeaderboardController extends Controller
                 $rank++;
             }
 
-            // Inject ranks back (blocks remain in group→team order)
+            // Inject ranks and then re-sort blocks by grand_total DESC for display
             foreach ($blocks as &$block) {
                 $block['team']['rank'] = $rankMap[$block['team']['id']] ?? null;
             }
             unset($block);
+
+            // ── SORT blocks by grand_total descending so the table rows are
+            //    always shown in ranking order (rank 1 at top, etc.)
+            usort($blocks, fn($a, $b) => $b['team']['grand_total'] <=> $a['team']['grand_total']);
 
             /*
              * ── FLATTEN to rows array ─────────────────────────────────────────
@@ -134,6 +155,17 @@ class LeaderboardController extends Controller
                     $rows[] = $s;
                 }
             }
+
+            /*
+             * ── BUILD categories payload ──────────────────────────────────────
+             * Return each category as {name, type} so the frontend can apply
+             * the correct colour without guessing from the display-name string.
+             */
+            $categories = array_values(array_map(
+                fn($name, $slug) => ['name' => $name, 'type' => $slug],
+                array_keys($activityMap),
+                array_values($activityMap)
+            ));
 
             return response()->json([
                 'categories' => $categories,
@@ -150,10 +182,58 @@ class LeaderboardController extends Controller
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Activity slug helper
+    // -------------------------------------------------------------------------
+
     /**
-     * Build one block: team row + student rows.
+     * Return the CSS slug for a ChallengeActivity, mirroring exactly the same
+     * logic as getDisplayNameAttribute() in the model:
+     *
+     *   activity_or_mission === 'mission'  →  mission
+     *   activity_type === 'brain'          →  science / technology / engineering / art / math
+     *   activity_type === 'egaming'        →  egaming
+     *   activity_type === 'esports'        →  esports
+     *   activity_type === 'playground'     →  playground
+     *   default                            →  other
      */
-    private function buildBlock($event, $org, $group, $subgroup, $team, $categories): array
+    private function activitySlug(ChallengeActivity $activity): string
+    {
+        if ($activity->activity_or_mission === 'mission') {
+            return 'mission';
+        }
+
+        return match ($activity->activity_type) {
+            'egaming'    => 'egaming',
+            'esports'    => 'esports',
+            'playground' => 'playground',
+            'brain'      => $this->brainSlug((string)($activity->brain_type ?? '')),
+            default      => 'other',
+        };
+    }
+
+    /**
+     * Map a brain_type label to a STEAM CSS slug.
+     * Falls back to 'other' if the label doesn't match a known category.
+     */
+    private function brainSlug(string $brainType): string
+    {
+        $n = strtolower($brainType);
+
+        if (str_contains($n, 'science'))                         return 'science';
+        if (str_contains($n, 'tech'))                            return 'technology';
+        if (str_contains($n, 'engineer') || str_contains($n, 'eng')) return 'engineering';
+        if (str_contains($n, 'art'))                             return 'art';
+        if (str_contains($n, 'math'))                            return 'math';
+
+        return 'other';
+    }
+
+    // -------------------------------------------------------------------------
+    // Build one block: team row + student rows
+    // -------------------------------------------------------------------------
+
+    private function buildBlock($event, $org, $group, $subgroup, $team, array $categoryNames): array
     {
         // Team-level score lookup: display_name → summed points (student_id IS NULL)
         $teamLookup = [];
@@ -167,7 +247,7 @@ class LeaderboardController extends Controller
 
         $teamScores = [];
         $teamPoints = 0;
-        foreach ($categories as $cat) {
+        foreach ($categoryNames as $cat) {
             $pts = $teamLookup[$cat] ?? 0;
             $teamScores[$cat] = $pts;
             $teamPoints      += $pts;
@@ -189,7 +269,7 @@ class LeaderboardController extends Controller
 
             $studentScores = [];
             $studentTotal  = 0;
-            foreach ($categories as $cat) {
+            foreach ($categoryNames as $cat) {
                 $pts = $studentLookup[$cat] ?? 0;
                 $studentScores[$cat] = $pts;
                 $studentTotal       += $pts;
@@ -230,12 +310,88 @@ class LeaderboardController extends Controller
             'player_points' => $playerPoints,
             'total_points'  => $grandTotal,
             'grand_total'   => $grandTotal,
-            'rank'          => null, // filled after rank computation above
+            'rank'          => null, // filled after rank computation
         ];
 
         return [
             'team'     => $teamRow,
             'students' => $studentRows,
         ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Top-3 helpers (unchanged)
+    // -------------------------------------------------------------------------
+
+    public function fetchTopThreeTeams(Request $request)
+    {
+        $eventId = $request->event_id;
+
+        $teams = Team::with(['subgroup.group', 'group', 'cards.card'])
+            ->whereHas('group.organization', fn($q) => $q->where('event_id', $eventId))
+            ->get();
+
+        $pointsMap = Score::where('event_id', $eventId)
+            ->selectRaw('team_id, SUM(points) as total_points')
+            ->groupBy('team_id')
+            ->pluck('total_points', 'team_id');
+
+        $membersMap = Student::selectRaw('team_id, COUNT(*) as total')
+            ->whereHas('team.group.organization', fn($q) => $q->where('event_id', $eventId))
+            ->groupBy('team_id')
+            ->pluck('total', 'team_id');
+
+        $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
+            $assignedCards  = $team->cards ?? collect();
+            $negativePoints = $assignedCards->sum(fn($a) => $a->card->negative_points ?? 0);
+            $basePoints     = $pointsMap[$team->id] ?? 0;
+            $totalPoints    = max(0, $basePoints - $negativePoints);
+
+            return [
+                'id'           => $team->id,
+                'avatar'       => $team->profile ?? null,
+                'name'         => $team->display_name ?? 'N/A',
+                'pod'          => $team->subgroup ? $team->subgroup->group->pod : ($team->group->pod ?? 'N/A'),
+                'division'     => $team->division ?? 'N/A',
+                'total_points' => $totalPoints,
+                'rank'         => 0,
+            ];
+        })->sortByDesc('total_points')->take(3)->values();
+
+        $rows->transform(fn($row, $index) => array_merge($row, ['rank' => $index + 1]));
+
+        return response()->json($rows);
+    }
+
+    public function fetchTopThreePlayers(Request $request)
+    {
+        $eventId = $request->event_id;
+
+        $students = Student::with([
+            'team.subgroup.group.organization',
+            'scores.challengeActivity',
+            'cards',
+        ])->whereHas('team.group.organization', fn($q) => $q->where('event_id', $eventId))
+          ->get();
+
+        $rows = $students->map(function ($student) {
+            $team          = $student->team;
+            $totalPoints   = $student->scores->sum(fn($s) => (int)$s->points);
+            $totalNegative = optional($student->cards)->sum('negative_points') ?? 0;
+            $totalPoints   = max(0, $totalPoints - $totalNegative);
+
+            return [
+                'id'           => $student->id,
+                'avatar'       => $student->avatar ?? null,
+                'name'         => $student->name,
+                'team'         => $team->name ?? 'N/A',
+                'total_points' => $totalPoints,
+                'rank'         => 0,
+            ];
+        })->sortByDesc('total_points')->take(3)->values();
+
+        $rows->transform(fn($row, $index) => array_merge($row, ['rank' => $index + 1]));
+
+        return response()->json($rows);
     }
 }

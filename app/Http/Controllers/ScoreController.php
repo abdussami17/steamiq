@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Log;
 
 class ScoreController extends Controller
 {
+    public function index (){
+        $events = Event::all();
+        return view('scores.index',compact('events'));
+    }
     public function store(Request $request)
     {
         $request->validate([
@@ -479,6 +483,12 @@ public function fetchScores(Request $request)
                 'success' => false,
                 'message' => 'A team_id or student_id is required.',
             ], 422);
+        }
+        if (!auth()->check() || auth()->user()->role != 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
         }
  
         /*

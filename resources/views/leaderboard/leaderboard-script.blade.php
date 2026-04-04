@@ -1,16 +1,16 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
-    
+
     :root {
         --lb-bg:        #0f1318;
         --lb-surface:   #181e27;
         --lb-border:    #2a3040;
         --lb-header-bg: #1e2535;
-    
+
         --lb-gold:    #f5c518;
         --lb-silver:  #b8c4d0;
         --lb-bronze:  #cd7f32;
-    
+
         /* ── CATEGORY COLOURS ── */
         --cat-science-bg:     #c0392b;   --cat-science-text:     #ffffff;
         --cat-tech-bg:        #e67e22;   --cat-tech-text:        #ffffff;
@@ -22,16 +22,16 @@
         --cat-esports-bg:     #00bcd4;   --cat-esports-text:     #000000;
         --cat-mission-bg:     #ff6f00;   --cat-mission-text:     #ffffff;
         --cat-other-bg:       #34495e;   --cat-other-text:       #c9d1d9;
-    
+
         --total-team-bg:      #0d2d6e;   --total-team-text:    #79c0ff;
         --total-player-bg:    #1a3a1a;   --total-player-text:  #56d364;
         --total-grand-bg:     #3d1a00;   --total-grand-text:   #f5c518;
-    
+
         --font-head: 'Barlow Condensed', sans-serif;
         --font-body: 'Barlow', sans-serif;
         --radius: 6px;
     }
-    
+
     /* ── WRAPPER & CONTROLS ── */
     #lb-wrapper {
         font-family: var(--font-body);
@@ -41,7 +41,7 @@
         border: 1px solid var(--lb-border);
         margin-top: 12px;
     }
-    
+
     #lb-controls {
         display: flex;
         align-items: center;
@@ -71,7 +71,7 @@
         cursor: pointer;
     }
     #selectEvent:focus { outline: none; border-color: #58a6ff; }
-    
+
     .lb-legend {
         display: flex;
         gap: 10px;
@@ -95,7 +95,7 @@
         border-radius: 3px;
         display: inline-block;
     }
-    
+
     #exportLeaderboard {
         margin-left: auto;
         background: #238636;
@@ -111,14 +111,14 @@
         transition: background .2s;
     }
     #exportLeaderboard:hover { background: #2ea043; }
-    
+
     /* ── TABLE SCROLL ── */
     #lb-scroll {
         overflow-x: auto;
         overflow-y: auto;
         max-height: 74vh;
     }
-    
+
     /* ── TABLE BASE ── */
     #lb-table {
         border-collapse: separate;
@@ -128,7 +128,7 @@
         font-family: var(--font-body);
         font-size: 13px;
     }
-    
+
     /* ── THEAD ROW 1: BANNER ── */
     #lb-table thead tr.row-banner th {
         background: var(--lb-surface);
@@ -160,7 +160,7 @@
     #lb-table thead tr.row-banner th.banner-total-team   { background: var(--total-team-bg);   color: var(--total-team-text); }
     #lb-table thead tr.row-banner th.banner-total-player { background: var(--total-player-bg); color: var(--total-player-text); }
     #lb-table thead tr.row-banner th.banner-total-grand  { background: var(--total-grand-bg);  color: var(--total-grand-text); }
-    
+
     /* ── THEAD ROW 2: COL LABELS ── */
     #lb-table thead tr.row-cols th {
         background: var(--lb-header-bg);
@@ -192,7 +192,7 @@
     #lb-table thead tr.row-cols th.col-total-team   { border-top: 3px solid var(--total-team-text);   color: var(--total-team-text); }
     #lb-table thead tr.row-cols th.col-total-player { border-top: 3px solid var(--total-player-text); color: var(--total-player-text); }
     #lb-table thead tr.row-cols th.col-total-grand  { border-top: 3px solid var(--total-grand-text);  color: var(--total-grand-text); }
-    
+
     /* Sticky fixed-left columns */
     #lb-table thead tr.row-banner th.fix-0,
     #lb-table thead tr.row-cols   th.fix-0 { position: sticky; left: 0;     z-index: 25; }
@@ -204,7 +204,7 @@
     #lb-table thead tr.row-cols   th.fix-3 { position: sticky; left: 230px; z-index: 25; }
     #lb-table thead tr.row-banner th.fix-4,
     #lb-table thead tr.row-cols   th.fix-4 { position: sticky; left: 360px; z-index: 25; }
-    
+
     /* ── TBODY GENERAL ── */
     #lb-table tbody td {
         padding: 5px 10px;
@@ -215,7 +215,7 @@
         color: #c9d1d9;
         text-align: center;
     }
-    
+
     /* GROUP DIVIDER */
     #lb-table tbody tr.tr-divider td {
         background: linear-gradient(90deg, #1a3a2a 0%, #162a20 100%);
@@ -229,7 +229,7 @@
         border-bottom: 2px solid #238636;
         text-align: left;
     }
-    
+
     /* TEAM ROW */
     #lb-table tbody tr.tr-team td {
         background: #1c2638;
@@ -237,7 +237,7 @@
         color: #e6edf3;
         border-bottom: 2px solid #0f1318;
     }
-    
+
     /* STUDENT ROW */
     #lb-table tbody tr.tr-student td {
         background: #151b27;
@@ -245,14 +245,14 @@
         color: #8b949e;
         border-bottom: 1px dashed #1e2535;
     }
-    
+
     /* Sticky body left columns */
     #lb-table tbody td.fix-0 { position: sticky; left: 0;     z-index: 5; background: inherit; }
     #lb-table tbody td.fix-1 { position: sticky; left: 46px;  z-index: 5; background: inherit; }
     #lb-table tbody td.fix-2 { position: sticky; left: 96px;  z-index: 5; background: inherit; }
     #lb-table tbody td.fix-3 { position: sticky; left: 230px; z-index: 5; background: inherit; }
     #lb-table tbody td.fix-4 { position: sticky; left: 360px; z-index: 5; background: inherit; }
-    
+
     /* ── SCORE PILLS ── */
     .score-pill {
         display: inline-block;
@@ -275,12 +275,12 @@
     .score-mission     { background: var(--cat-mission-bg);     color: var(--cat-mission-text); }
     .score-other       { background: var(--cat-other-bg);       color: var(--cat-other-text); }
     .score-zero { color: #3a4454; font-size: 13px; }
-    
+
     /* ── TOTAL CELLS ── */
     td.td-total-team   { background: var(--total-team-bg)   !important; color: var(--total-team-text)   !important; font-family: var(--font-head) !important; font-weight: 800 !important; font-size: 15px !important; }
     td.td-total-player { background: var(--total-player-bg) !important; color: var(--total-player-text) !important; font-family: var(--font-head) !important; font-weight: 700 !important; font-size: 13px !important; }
     td.td-total-grand  { background: var(--total-grand-bg)  !important; color: var(--total-grand-text)  !important; font-family: var(--font-head) !important; font-weight: 900 !important; font-size: 16px !important; }
-    
+
     /* ── RANK MEDALS ── */
     .rank-medal {
         display: inline-flex;
@@ -296,10 +296,10 @@
     .rank-2 { background: var(--lb-silver); color: #000; }
     .rank-3 { background: var(--lb-bronze); color: #fff; }
     .rank-n { background: #21262d; color: #8b949e; font-size: 12px; }
-    
+
     td.td-rank-end { font-family: var(--font-head); font-weight: 900; }
     td.td-org { color: #f5c518 !important; font-family: var(--font-head) !important; font-weight: 700 !important; font-size: 12px !important; letter-spacing: .04em; }
-    
+
     /* ── INLINE EDIT ── */
     .score-edit-cell { position: relative; cursor: pointer; }
     .score-edit-cell:hover .score-pill,
@@ -337,7 +337,7 @@
     .save-ok  { background: #1a3a1a; color: #56d364; }
     .save-err { background: #3a1a1a; color: #f85149; }
     .save-saving { background: #1a2a3a; color: #58a6ff; }
-    
+
     /* ── TOAST ── */
     #lb-toast {
         position: fixed;
@@ -355,7 +355,7 @@
     #lb-toast.show { opacity: 1; }
     #lb-toast.ok   { background: #1a3a1a; color: #56d364; border: 1px solid #238636; }
     #lb-toast.err  { background: #3a1a1a; color: #f85149; border: 1px solid #f85149; }
-    
+
     /* ── STATE ROWS ── */
     .lb-state-row td {
         text-align: center;
@@ -366,7 +366,7 @@
         letter-spacing: .06em;
         background: var(--lb-bg) !important;
     }
-    
+
     @media (max-width: 768px) {
         #lb-controls { flex-direction: column; align-items: flex-start; }
         #exportLeaderboard { margin-left: 0; }
@@ -374,11 +374,13 @@
 </style>
 
 <div id="lb-toast"></div>
-
+<script>
+    window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
+</script>
 <script>
 (function () {
     'use strict';
-
+    const IS_ADMIN = window.USER_ROLE === 1;
     const $id = id => document.getElementById(id);
 
     /* ── Toast helper ── */
@@ -390,24 +392,12 @@
         el._t = setTimeout(() => { el.className = ''; }, 2800);
     }
 
-    /* ── Category slug (matches ChallengeActivity::getDisplayNameAttribute) ── */
-    function catSlug(name) {
-        const n = (name || '').toLowerCase();
-        if (n.includes('science'))                              return 'science';
-        if (n.includes('tech'))                                 return 'technology';
-        if (n.includes('engineer') || n.includes('eng'))        return 'engineering';
-        if (n.includes('art'))                                  return 'art';
-        if (n.includes('math'))                                 return 'math';
-        if (n.includes('playground'))                           return 'playground';
-        if (n.includes('egaming') || n.includes('e-gaming'))   return 'egaming';
-        if (n.includes('esport') || n.includes('e-sport'))     return 'esports';
-        /* mission activities use badge_name — flag them by checking the raw
-           activity_or_mission field injected by the server onto each row, OR
-           fall back to keyword detection */
-        if (n.includes('mission') || n.includes('badge'))      return 'mission';
-        return 'other';
-    }
-
+    /*
+     * ── scorePill ──────────────────────────────────────────────────────────
+     * slug is now always correct because it comes directly from the server
+     * (computed from activity_type / activity_or_mission) — NOT guessed from
+     * the display name string.
+     */
     function scorePill(pts, slug) {
         const v = pts ?? 0;
         if (!v) return '<span class="score-zero">—</span>';
@@ -427,9 +417,6 @@
         const m = document.querySelector('meta[name="csrf-token"]');
         return m ? m.getAttribute('content') : '';
     }
-
-    /* ── State ── */
-    let currentData = null; // { categories, rows } — kept for re-renders after edits
 
     /* ── Main fetch ── */
     async function fetchLeaderboard(eventId) {
@@ -452,7 +439,6 @@
                 return;
             }
 
-            currentData = data;
             buildTable(data, thead, tbody);
         } catch (err) {
             console.error(err);
@@ -463,30 +449,39 @@
     /* ── Re-render after an edit ── */
     function reRender() {
         const eventId = $id('selectEvent').value;
-        if (eventId) {
-            fetchLeaderboard(eventId);
-        }
+        if (eventId) fetchLeaderboard(eventId);
     }
 
-    /* ════════════════════════════════════════════════
+    /* ════════════════════════════════════════════════════════════════════════
        BUILD TABLE
-       Rows come sorted by group → team_number from the
-       server (LeaderboardController already walks the
-       hierarchy in insertion order).
-    ════════════════════════════════════════════════ */
-    function buildTable(data, thead, tbody) {
-        const cats  = data.categories || [];
-        const rows  = data.rows;
-        const slugs = cats.map(catSlug);
+       ─────────────────────────────────────────────────────────────────────
+       data.categories is now an array of { name, type } objects where:
+         name  = display name string (e.g. "Aquaball Clash", "Playground")
+         type  = CSS slug (e.g. "egaming", "esports", "mission", "science"…)
 
-        /* Banner groups — merge consecutive same-slug cols */
+       data.rows comes pre-sorted by grand_total DESC from the server so
+       teams are already in ranking order (rank 1 at the top).
+    ════════════════════════════════════════════════════════════════════════ */
+    function buildTable(data, thead, tbody) {
+        const cats  = data.categories || [];   // [{ name, type }, …]
+        const rows  = data.rows;
+
+        /* Parallel arrays for convenience */
+        const catNames = cats.map(c => c.name);
+        const catSlugs = cats.map(c => c.type); // ← correct slug from server
+
+        /* Banner groups — merge consecutive same-slug columns */
         const bannerGroups = [];
-        slugs.forEach((slug, i) => {
+        catSlugs.forEach((slug, i) => {
             const last = bannerGroups[bannerGroups.length - 1];
             if (last && last.slug === slug) {
                 last.span++;
+                /* Accumulate display labels for merged columns */
+                last.labels.push(catNames[i]);
             } else {
-                bannerGroups.push({ slug, label: cats[i], span: 1 });
+                /* Use a human-readable group label for the banner */
+                const label = slugToLabel(slug);
+                bannerGroups.push({ slug, label, span: 1, labels: [catNames[i]] });
             }
         });
 
@@ -550,10 +545,10 @@
             r2.appendChild(th);
         });
 
-        cats.forEach((cat, i) => {
+        catNames.forEach((name, i) => {
             const th = document.createElement('th');
-            th.textContent = cat;
-            th.className = 'cat-' + slugs[i];
+            th.textContent = name;
+            th.className = 'cat-' + catSlugs[i]; // ← correct class
             th.style.minWidth = '110px';
             r2.appendChild(th);
         });
@@ -581,9 +576,11 @@
         rows.forEach(row => {
             if (row.type === 'team') {
                 lastTeamId = row.id;
-                teamAgg[row.id] = { team_points: row.team_points ?? row.total_points ?? 0, player_points: row.player_points ?? 0 };
+                teamAgg[row.id] = {
+                    team_points:   row.team_points   ?? row.total_points ?? 0,
+                    player_points: row.player_points ?? 0,
+                };
             } else if (row.type === 'student' && lastTeamId !== null) {
-                /* player_points already computed server-side; if not, add manually */
                 if (row.team_points === undefined) {
                     teamAgg[lastTeamId].player_points += row.total_points ?? 0;
                 }
@@ -599,13 +596,13 @@
             const isTeam   = row.type === 'team';
             const groupKey = row.group || 'Ungrouped';
 
-            /* Group divider (team rows trigger it) */
+            /* Group divider (only for team rows, and only on group change) */
             if (isTeam && groupKey !== currentGroup) {
                 currentGroup = groupKey;
                 const divTr = document.createElement('tr');
                 divTr.className = 'tr-divider';
                 const divTd = document.createElement('td');
-                divTd.colSpan = 5 + cats.length + 5;
+                divTd.colSpan = 5 + catNames.length + 5;
                 const sub = (row.subgroup && row.subgroup !== '-') ? '  ›  ' + row.subgroup.toUpperCase() : '';
                 divTd.textContent = '▸  ' + groupKey.toUpperCase() + sub;
                 divTr.appendChild(divTd);
@@ -656,16 +653,22 @@
             tr.appendChild(td4);
 
             /* Activity score columns — editable */
-            cats.forEach((cat, i) => {
-                const td = document.createElement('td');
+            catNames.forEach((cat, i) => {
+                const td   = document.createElement('td');
                 td.className = 'score-edit-cell';
-                const pts = row.scores?.[cat] ?? 0;
-                td.innerHTML = scorePill(pts, slugs[i]);
+                const pts  = row.scores?.[cat] ?? 0;
+                const slug = catSlugs[i]; // ← always correct from server
 
-                /* Attach inline edit behaviour */
-                td.addEventListener('click', function () {
-                    openScoreEditor(td, row, cat, pts, slugs[i]);
-                });
+                td.innerHTML = scorePill(pts, slug);
+
+                if (IS_ADMIN) {
+                    td.addEventListener('click', function () {
+                        openScoreEditor(td, row, cat, pts, slug);
+                    });
+                } else {
+                    td.style.cursor = 'not-allowed';
+                    td.title = 'Only admin can edit';
+                }
 
                 tr.appendChild(td);
             });
@@ -718,19 +721,35 @@
         tbody.appendChild(frag);
     }
 
-    /* ════════════════════════════════════════════════
+    /* ════════════════════════════════════════════════════════════════════════
+       SLUG → HUMAN-READABLE BANNER LABEL
+       Maps the CSS slug back to a display label for the banner row.
+    ════════════════════════════════════════════════════════════════════════ */
+    function slugToLabel(slug) {
+        const map = {
+            science:     'Science',
+            technology:  'Technology',
+            engineering: 'Engineering',
+            art:         'Art',
+            math:        'Math',
+            playground:  'Playground',
+            egaming:     'E-Gaming',
+            esports:     'ESports',
+            mission:     'Missions',
+            other:       'Other',
+        };
+        return map[slug] || slug;
+    }
+
+    /* ════════════════════════════════════════════════════════════════════════
        INLINE SCORE EDITOR
-       row  = the data row object (team or student)
-       cat  = category display name (e.g. "Robotics")
-       pts  = current points
-       slug = css slug
-    ════════════════════════════════════════════════ */
+    ════════════════════════════════════════════════════════════════════════ */
     function openScoreEditor(td, row, cat, currentPts, slug) {
         if (td.querySelector('.score-edit-input')) return; // already open
 
         const input = document.createElement('input');
-        input.type = 'number';
-        input.min  = '0';
+        input.type  = 'number';
+        input.min   = '0';
         input.className = 'score-edit-input';
         input.value = currentPts || 0;
 
@@ -741,10 +760,7 @@
 
         function commit() {
             const newVal = parseInt(input.value, 10);
-            if (isNaN(newVal) || newVal < 0) {
-                cancel();
-                return;
-            }
+            if (isNaN(newVal) || newVal < 0) { cancel(); return; }
             saveScore(td, row, cat, newVal, slug);
         }
 
@@ -762,7 +778,7 @@
         input.addEventListener('blur', commit);
     }
 
-    /* ── Save score to DB ── */
+    /* ── Save score to DB then re-render (re-fetch keeps ranking fresh) ── */
     async function saveScore(td, row, cat, newPts, slug) {
         const indicator = document.createElement('span');
         indicator.className = 'save-indicator save-saving';
@@ -778,7 +794,6 @@
             points:                newPts,
         };
 
-        /* Determine if this is a team-level or student-level score */
         if (row.type === 'student') {
             payload.student_id = row.id;
         } else {
@@ -800,7 +815,7 @@
 
             if (json.success) {
                 toast('Score saved ✓', 'ok');
-                /* Re-fetch the whole leaderboard so ranks/totals update */
+                /* Re-fetch the whole leaderboard so ranks / totals update */
                 reRender();
             } else {
                 throw new Error(json.message || 'Save failed');
@@ -808,7 +823,6 @@
         } catch (err) {
             console.error(err);
             toast('Error: ' + err.message, 'err');
-            /* Restore pill with original value on error */
             td.innerHTML = scorePill(newPts, slug);
             td.addEventListener('click', function () {
                 openScoreEditor(td, row, cat, newPts, slug);

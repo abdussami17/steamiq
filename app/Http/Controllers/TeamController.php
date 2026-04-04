@@ -225,46 +225,6 @@ public function getTeams($groupId)
     
         return response()->json(['success' => true]);
     }
-    public function import(Request $request)
-    {
-        $request->validate([
-            'event_id' => 'required|exists:events,id',
-            'file'     => 'required|file|mimes:xlsx,csv',
-        ]);
-    
-        $eventId = $request->event_id;
-    
-        Excel::import(new class($eventId) implements \Maatwebsite\Excel\Concerns\ToCollection {
-            protected $eventId;
-            public function __construct($eventId) { $this->eventId = $eventId; }
-    
-            public function collection(\Illuminate\Support\Collection $rows)
-            {
-                foreach ($rows as $row) {
-                    $teamName = trim($row[0] ?? '');
-                    $emails   = trim($row[1] ?? '');
-    
-                    if (!$teamName || !$emails) continue;
-    
-                    // Create team
-                    $team = Team::create([
-                        'team_name' => $teamName,
-                        'event_id'  => $this->eventId,
-                    ]);
-    
-                    // Split emails and fetch IDs
-                    $emailArray = array_map('trim', explode(',', $emails));
-                    $playerIds  = Player::whereIn('email', $emailArray)->pluck('id')->toArray();
-    
-                    if ($playerIds) {
-                        $team->players()->attach($playerIds);
-                    }
-                }
-            }
-        }, $request->file('file'));
-    
-        return back()->with('success', 'Teams imported successfully.');
-    }
 
 
 
@@ -411,6 +371,150 @@ public function listTeam()
 {
     return response()->json(
         \App\Models\Team::select('id','name')->get()
+    );
+}
+
+
+// ================================================================
+//  ADD these two methods to your existing TeamController.php
+//  (they replace the old stub import() method)
+// ================================================================
+
+// ── 1.  POST /teams/import  ──────────────────────────────────────
+/**
+ * Handle the spreadsheet upload, run TeamsImport, return JSON result.
+ */
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|file|mimes:xlsx,csv|max:5120',
+    ]);
+
+    try {
+        $importer = new \App\Imports\TeamsImport();
+
+        \Maatwebsite\Excel\Facades\Excel::import($importer, $request->file('file'));
+
+        // ✅ FULL RESULT LOG
+        \Log::info('IMPORT RESULT', $importer->result());
+
+        // ❗ Failed rows separate log (easy debugging)
+        \Log::warning('FAILED ROWS', [
+            'failed' => $importer->failed
+        ]);
+
+        return response()->json($importer->result());
+
+    } catch (\Throwable $e) {
+
+        // ❌ GLOBAL ERROR LOG
+        \Log::error('IMPORT FAILED COMPLETELY', [
+            'message' => $e->getMessage(),
+            'trace'   => $e->getTraceAsString(),
+        ]);
+
+        return response()->json([
+            'error' => true,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
+
+// ── 2.  GET /teams/import/template  ─────────────────────────────
+/**
+ * Stream a pre-built sample .xlsx template so users know the format.
+ */
+public function importTemplate()
+{
+    // Build the template in-memory using a simple array writer
+    // (no extra package required – uses PhpSpreadsheet which ships with laravel-excel)
+    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $sheet       = $spreadsheet->getActiveSheet();
+    $sheet->setTitle('Teams Import');
+
+    // ── Header row (bold) ──
+    $headers = [
+        'team_name',
+        'organization',
+        'group',
+        'subgroup',
+        'division',
+        'student_name',
+        'student_email',
+    ];
+
+    foreach ($headers as $col => $heading) {
+        $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1) . '1';
+        $sheet->setCellValue($cell, $heading);
+        $sheet->getStyle($cell)->getFont()->setBold(true);
+        $sheet->getStyle($cell)->getFill()
+              ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+              ->getStartColor()->setRGB('D9E1F2');
+    }
+
+    // ── Sample rows ──
+    $samples = [
+        // Single student
+        ['Eagles',  'Sunrise Academy', 'Group A', '',      'Junior',  'Ali Hassan',               'ali@example.com'],
+        // Multiple students via comma on one row
+        ['Tigers',  'Sunrise Academy', 'Group A', 'Pod 1', 'Primary', 'Sara Khan, John Doe',      'sara@example.com, john@example.com'],
+        // Team only (no students)
+        ['Falcons', 'City School',     'Group B', 'Pod 2', 'Junior',  '',                         ''],
+        // Mix: repeat team row to add more students (both styles work)
+        ['Eagles',  'Sunrise Academy', 'Group A', '',      'Junior',  'Mariam Ali, Usman Sheikh', 'mariam@example.com, usman@example.com'],
+    ];
+
+    foreach ($samples as $rowIdx => $rowData) {
+        foreach ($rowData as $colIdx => $value) {
+            $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1) . ($rowIdx + 2);
+            $sheet->setCellValue($cell, $value);
+        }
+    }
+
+    // ── Auto-width columns ──
+    foreach (range('A', 'G') as $col) {
+        $sheet->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    // ── Notes sheet ──
+    $notes = $spreadsheet->createSheet();
+    $notes->setTitle('Instructions');
+    $notesContent = [
+        ['Column',         'Required?', 'Accepted values / notes'],
+        ['team_name',      'Yes',       'Unique team name. You can also repeat the same name on multiple rows to add more students.'],
+        ['organization',   'Yes',       'Must match an existing organization name exactly (case-insensitive).'],
+        ['group',          'Yes',       'Must match an existing group name within that organization.'],
+        ['subgroup',       'No',        'Leave blank if there is no subgroup. Must exist under the specified group.'],
+        ['division',       'Yes',       'Allowed values: Junior  or  Primary'],
+        ['student_name',   'No',        'One name, OR comma-separated: "Ali Hassan, Sara Khan". Leave blank for team-only rows.'],
+        ['student_email',  'No',        'Required when student_name is given. Comma-separated in matching order: "ali@example.com, sara@example.com"'],
+    ];
+    foreach ($notesContent as $r => $row) {
+        foreach ($row as $c => $val) {
+            $cell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c + 1) . ($r + 1);
+            $notes->setCellValue($cell, $val);
+            if ($r === 0) {
+                $notes->getStyle($cell)->getFont()->setBold(true);
+            }
+        }
+    }
+    foreach (['A','B','C'] as $col) {
+        $notes->getColumnDimension($col)->setAutoSize(true);
+    }
+
+    // ── Stream download ──
+    $writer   = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $filename = 'teams_import_template.xlsx';
+
+    return response()->streamDownload(
+        fn () => $writer->save('php://output'),
+        $filename,
+        [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control'       => 'max-age=0',
+        ]
     );
 }
 
