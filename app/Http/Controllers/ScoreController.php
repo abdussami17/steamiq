@@ -32,18 +32,21 @@ class ScoreController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'event_id'              => 'required|exists:events,id',
+            'event_id' => 'required|exists:events,id',
             'challenge_activity_id' => 'required|exists:challenge_activities,id',
-            'student_id'            => 'nullable|exists:students,id',
-            'team_id'               => 'nullable|exists:teams,id',
-            'points'                => 'required|numeric|min:0',
+            'student_id' => 'nullable|exists:students,id',
+            'team_id' => 'nullable|exists:teams,id',
+            'points' => 'required|numeric|min:0',
         ]);
 
         if (!$request->student_id && !$request->team_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Please select a student or team.',
-            ], 422);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Please select a student or team.',
+                ],
+                422,
+            );
         }
 
         $activity = ChallengeActivity::find($request->challenge_activity_id);
@@ -52,22 +55,25 @@ class ScoreController extends Controller
         }
 
         if ($request->points > $activity->max_score) {
-            return response()->json([
-                'success' => false,
-                'message' => "Points cannot exceed max score ({$activity->max_score}).",
-            ], 422);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Points cannot exceed max score ({$activity->max_score}).",
+                ],
+                422,
+            );
         }
 
         DB::beginTransaction();
         try {
             $score = Score::updateOrCreate(
                 [
-                    'event_id'              => $request->event_id,
+                    'event_id' => $request->event_id,
                     'challenge_activity_id' => $request->challenge_activity_id,
-                    'student_id'            => $request->student_id,
-                    'team_id'               => $request->team_id,
+                    'student_id' => $request->student_id,
+                    'team_id' => $request->team_id,
                 ],
-                ['points' => $request->points]
+                ['points' => $request->points],
             );
 
             DB::commit();
@@ -90,11 +96,11 @@ class ScoreController extends Controller
     public function updateById(Request $request)
     {
         $request->validate([
-            'event_id'              => 'required|integer|exists:events,id',
+            'event_id' => 'required|integer|exists:events,id',
             'challenge_activity_id' => 'required|integer|exists:challenge_activities,id',
-            'team_id'               => 'nullable|integer|exists:teams,id',
-            'student_id'            => 'nullable|integer|exists:students,id',
-            'points'                => 'required|numeric|min:0',
+            'team_id' => 'nullable|integer|exists:teams,id',
+            'student_id' => 'nullable|integer|exists:students,id',
+            'points' => 'required|numeric|min:0',
         ]);
 
         if (!$request->team_id && !$request->student_id) {
@@ -111,22 +117,25 @@ class ScoreController extends Controller
         }
 
         if ($request->points > $activity->max_score) {
-            return response()->json([
-                'success' => false,
-                'message' => "Points cannot exceed max score ({$activity->max_score}) for \"{$activity->display_name}\".",
-            ], 422);
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Points cannot exceed max score ({$activity->max_score}) for \"{$activity->display_name}\".",
+                ],
+                422,
+            );
         }
 
         DB::beginTransaction();
         try {
             Score::updateOrCreate(
                 [
-                    'event_id'              => $request->event_id,
+                    'event_id' => $request->event_id,
                     'challenge_activity_id' => $request->challenge_activity_id,
-                    'team_id'               => $request->team_id    ?? null,
-                    'student_id'            => $request->student_id ?? null,
+                    'team_id' => $request->team_id ?? null,
+                    'student_id' => $request->student_id ?? null,
                 ],
-                ['points' => $request->points]
+                ['points' => $request->points],
             );
 
             DB::commit();
@@ -145,42 +154,42 @@ class ScoreController extends Controller
     public function bonus(Request $request)
     {
         $request->validate([
-            'event_id'        => 'required|integer|exists:events,id',
-            'target_type'     => 'required|in:organization,group,subgroup,team,player',
-            'bonus_points'    => 'required|integer|min:1',
+            'event_id' => 'required|integer|exists:events,id',
+            'target_type' => 'required|in:organization,group,subgroup,team,player',
+            'bonus_points' => 'required|integer|min:1',
             'organization_id' => 'nullable|integer',
-            'group_id'        => 'nullable|integer',
-            'sub_group_id'    => 'nullable|integer',
-            'team_id'         => 'nullable|integer',
-            'student_id'      => 'nullable|integer',
+            'group_id' => 'nullable|integer',
+            'sub_group_id' => 'nullable|integer',
+            'team_id' => 'nullable|integer',
+            'student_id' => 'nullable|integer',
         ]);
 
         if (!auth()->check() || auth()->user()->role != 1) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $eventId  = $request->event_id;
+        $eventId = $request->event_id;
         $bonusPts = $request->bonus_points;
 
         // Resolve team IDs and student IDs in scope
-        $teamIds    = collect();
+        $teamIds = collect();
         $studentIds = collect();
 
         switch ($request->target_type) {
             case 'organization':
-                $teamIds    = Team::whereHas('group', fn($q) => $q->where('organization_id', $request->organization_id))->pluck('id');
+                $teamIds = Team::whereHas('group', fn($q) => $q->where('organization_id', $request->organization_id))->pluck('id');
                 $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id');
                 break;
             case 'group':
-                $teamIds    = Team::where('group_id', $request->group_id)->pluck('id');
+                $teamIds = Team::where('group_id', $request->group_id)->pluck('id');
                 $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id');
                 break;
             case 'subgroup':
-                $teamIds    = Team::where('sub_group_id', $request->sub_group_id)->pluck('id');
+                $teamIds = Team::where('sub_group_id', $request->sub_group_id)->pluck('id');
                 $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id');
                 break;
             case 'team':
-                $teamIds    = collect([$request->team_id]);
+                $teamIds = collect([$request->team_id]);
                 $studentIds = Student::where('team_id', $request->team_id)->pluck('id');
                 break;
             case 'player':
@@ -194,17 +203,12 @@ class ScoreController extends Controller
 
             // Add bonus to team scores
             if ($teamIds->isNotEmpty()) {
-                $updated += Score::where('event_id', $eventId)
-                    ->whereIn('team_id', $teamIds)
-                    ->whereNull('student_id')
-                    ->increment('bonus_points', $bonusPts);
+                $updated += Score::where('event_id', $eventId)->whereIn('team_id', $teamIds)->whereNull('student_id')->increment('bonus_points', $bonusPts);
             }
 
             // Add bonus to student scores
             if ($studentIds->isNotEmpty()) {
-                $updated += Score::where('event_id', $eventId)
-                    ->whereIn('student_id', $studentIds)
-                    ->increment('bonus_points', $bonusPts);
+                $updated += Score::where('event_id', $eventId)->whereIn('student_id', $studentIds)->increment('bonus_points', $bonusPts);
             }
 
             DB::commit();
@@ -226,11 +230,14 @@ class ScoreController extends Controller
     ========================================================= */
     public function getExistingScore(Request $request)
     {
-        $query = Score::where('event_id', $request->event_id)
-            ->where('challenge_activity_id', $request->challenge_activity_id);
+        $query = Score::where('event_id', $request->event_id)->where('challenge_activity_id', $request->challenge_activity_id);
 
-        if ($request->student_id) $query->where('student_id', $request->student_id);
-        if ($request->team_id)    $query->where('team_id', $request->team_id);
+        if ($request->student_id) {
+            $query->where('student_id', $request->student_id);
+        }
+        if ($request->team_id) {
+            $query->where('team_id', $request->team_id);
+        }
 
         $score = $query->first();
         return response()->json(['points' => $score ? $score->points : null]);
@@ -241,10 +248,7 @@ class ScoreController extends Controller
     ========================================================= */
     public function getTeamStudents($teamId)
     {
-        $students = Student::where('team_id', $teamId)
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->get();
+        $students = Student::where('team_id', $teamId)->select('id', 'name')->orderBy('name')->get();
         return response()->json($students);
     }
 
@@ -265,33 +269,51 @@ class ScoreController extends Controller
     {
         return response()->json(SubGroup::where('group_id', $id)->select('id', 'name')->get());
     }
-
+    public function getStudentsByTeam($teamId)
+    {
+        $students = Student::where('team_id', $teamId)
+            ->select('id', 'name')
+            ->get();
+    
+        return response()->json($students);
+    }
     public function getFilteredStudents(Request $request)
     {
-        $query = Student::query();
-        if ($request->group_id)     $query->whereHas('team', fn($q) => $q->where('group_id', $request->group_id));
-        if ($request->sub_group_id) $query->whereHas('team', fn($q) => $q->where('sub_group_id', $request->sub_group_id));
-        return response()->json($query->select('id', 'name')->get());
+        $query = Student::query()->with('team:id,name'); // only fetch needed columns
+
+        if ($request->group_id) {
+            $query->whereHas('team', fn($q) => $q->where('group_id', $request->group_id));
+        }
+
+        if ($request->sub_group_id) {
+            $query->whereHas('team', fn($q) => $q->where('sub_group_id', $request->sub_group_id));
+        }
+
+        $students = $query->select('id', 'name', 'team_id')->get();
+
+        return response()->json($students);
     }
 
     public function getFilteredTeams(Request $request)
     {
         $query = Team::query();
-        if ($request->group_id)     $query->where('group_id', $request->group_id);
-        if ($request->sub_group_id) $query->where('sub_group_id', $request->sub_group_id);
+        if ($request->group_id) {
+            $query->where('group_id', $request->group_id);
+        }
+        if ($request->sub_group_id) {
+            $query->where('sub_group_id', $request->sub_group_id);
+        }
         return response()->json($query->select('id', 'name')->get());
     }
 
     public function getEventActivities(Event $event)
     {
         return response()->json(
-            $event->activities()->select([
-                'id', 'event_id', 'name', 'max_score', 'activity_or_mission', 'activity_type',
-                'badge_name', 'brain_type', 'brain_description', 'point_structure',
-                'esports_type', 'esports_players', 'esports_structure', 'esports_description',
-                'egaming_type', 'egaming_mode', 'egaming_structure', 'egaming_description',
-                'playground_description', 'created_at', 'updated_at',
-            ])->orderBy('id')->get()
+            $event
+                ->activities()
+                ->select(['id', 'event_id', 'name', 'max_score', 'activity_or_mission', 'activity_type', 'badge_name', 'brain_type', 'brain_description', 'point_structure', 'esports_type', 'esports_players', 'esports_structure', 'esports_description', 'egaming_type', 'egaming_mode', 'egaming_structure', 'egaming_description', 'playground_description', 'created_at', 'updated_at'])
+                ->orderBy('id')
+                ->get(),
         );
     }
 
@@ -314,24 +336,19 @@ class ScoreController extends Controller
     public function data(Request $request)
     {
         $eventId = $request->event_id;
-        if (!$eventId) return response()->json(['categories' => [], 'rows' => []]);
+        if (!$eventId) {
+            return response()->json(['categories' => [], 'rows' => []]);
+        }
 
         try {
-            $event = Event::with([
-                'organizations.groups.teams.scores.challengeActivity',
-                'organizations.groups.teams.students.scores.challengeActivity',
-                'organizations.groups.subgroups.teams.scores.challengeActivity',
-                'organizations.groups.subgroups.teams.students.scores.challengeActivity',
-            ])->findOrFail($eventId);
+            $event = Event::with(['organizations.groups.teams.scores.challengeActivity', 'organizations.groups.teams.students.scores.challengeActivity', 'organizations.groups.subgroups.teams.scores.challengeActivity', 'organizations.groups.subgroups.teams.students.scores.challengeActivity'])->findOrFail($eventId);
 
             // Build activity map: display_name => ['slug'=>..., 'id'=>..., 'max_score'=>...]
             $activityMap = [];
 
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
-                    $allTeams = $group->teams->merge(
-                        $group->subgroups->flatMap(fn($sg) => $sg->teams)
-                    );
+                    $allTeams = $group->teams->merge($group->subgroups->flatMap(fn($sg) => $sg->teams));
                     foreach ($allTeams as $team) {
                         foreach ($team->scores as $score) {
                             if ($score->student_id === null && $score->challengeActivity) {
@@ -356,7 +373,9 @@ class ScoreController extends Controller
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
                     foreach ($group->teams as $team) {
-                        if ($team->sub_group_id) continue;
+                        if ($team->sub_group_id) {
+                            continue;
+                        }
                         $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categoryNames);
                     }
                     foreach ($group->subgroups as $subgroup) {
@@ -368,11 +387,11 @@ class ScoreController extends Controller
             }
 
             // Rank — only teams with grand_total > 0
-            $sorted   = collect($blocks)->sortByDesc(fn($b) => $b['team']['grand_total'])->values();
-            $rank     = 1;
-            $prevGT   = null;
+            $sorted = collect($blocks)->sortByDesc(fn($b) => $b['team']['grand_total'])->values();
+            $rank = 1;
+            $prevGT = null;
             $prevRank = 1;
-            $rankMap  = [];
+            $rankMap = [];
 
             foreach ($sorted as $block) {
                 $gt = $block['team']['grand_total'];
@@ -400,26 +419,29 @@ class ScoreController extends Controller
             $rows = [];
             foreach ($blocks as $block) {
                 $rows[] = $block['team'];
-                foreach ($block['students'] as $s) $rows[] = $s;
+                foreach ($block['students'] as $s) {
+                    $rows[] = $s;
+                }
             }
 
             // Categories payload — include activity id and max_score
-            $categories = array_values(array_map(
-                fn($name, $meta) => [
-                    'name'      => $name,
-                    'type'      => $meta['slug'],
-                    'id'        => $meta['id'],
-                    'max_score' => $meta['max_score'],
-                ],
-                array_keys($activityMap),
-                array_values($activityMap)
-            ));
+            $categories = array_values(
+                array_map(
+                    fn($name, $meta) => [
+                        'name' => $name,
+                        'type' => $meta['slug'],
+                        'id' => $meta['id'],
+                        'max_score' => $meta['max_score'],
+                    ],
+                    array_keys($activityMap),
+                    array_values($activityMap),
+                ),
+            );
 
             return response()->json([
                 'categories' => $categories,
-                'rows'       => array_values($rows),
+                'rows' => array_values($rows),
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Leaderboard data error', ['message' => $e->getMessage()]);
             return response()->json(['categories' => [], 'rows' => []]);
@@ -432,115 +454,139 @@ class ScoreController extends Controller
     private function registerActivity(array &$map, ChallengeActivity $activity): void
     {
         $dn = $activity->display_name;
-        if (empty($dn) || array_key_exists($dn, $map)) return;
+        if (empty($dn) || array_key_exists($dn, $map)) {
+            return;
+        }
         $map[$dn] = [
-            'slug'      => $this->activitySlug($activity),
-            'id'        => $activity->id,
+            'slug' => $this->activitySlug($activity),
+            'id' => $activity->id,
             'max_score' => $activity->max_score ?? 9999,
         ];
     }
 
     private function activitySlug(ChallengeActivity $activity): string
     {
-        if ($activity->activity_or_mission === 'mission') return 'mission';
+        if ($activity->activity_or_mission === 'mission') {
+            return 'mission';
+        }
         return match ($activity->activity_type) {
-            'egaming'    => 'egaming',
-            'esports'    => 'esports',
+            'egaming' => 'egaming',
+            'esports' => 'esports',
             'playground' => 'playground',
-            'brain'      => $this->brainSlug((string)($activity->brain_type ?? '')),
-            default      => 'other',
+            'brain' => $this->brainSlug((string) ($activity->brain_type ?? '')),
+            default => 'other',
         };
     }
 
     private function brainSlug(string $brainType): string
     {
         $n = strtolower($brainType);
-        if (str_contains($n, 'science'))  return 'science';
-        if (str_contains($n, 'tech'))     return 'technology';
-        if (str_contains($n, 'engineer')) return 'engineering';
-        if (str_contains($n, 'eng'))      return 'engineering';
-        if (str_contains($n, 'art'))      return 'art';
-        if (str_contains($n, 'math'))     return 'math';
+        if (str_contains($n, 'science')) {
+            return 'science';
+        }
+        if (str_contains($n, 'tech')) {
+            return 'technology';
+        }
+        if (str_contains($n, 'engineer')) {
+            return 'engineering';
+        }
+        if (str_contains($n, 'eng')) {
+            return 'engineering';
+        }
+        if (str_contains($n, 'art')) {
+            return 'art';
+        }
+        if (str_contains($n, 'math')) {
+            return 'math';
+        }
         return 'other';
     }
 
     private function buildBlock($event, $org, $group, $subgroup, $team, array $categoryNames): array
     {
         // Team-level scores (student_id IS NULL)
-        $teamLookup  = [];
+        $teamLookup = [];
         $bonusLookup = [];
 
         foreach ($team->scores as $score) {
-            if ($score->student_id !== null || !$score->challengeActivity) continue;
+            if ($score->student_id !== null || !$score->challengeActivity) {
+                continue;
+            }
             $name = $score->challengeActivity->display_name;
-            if (!$name) continue;
-            $teamLookup[$name]  = ($teamLookup[$name]  ?? 0) + (int)($score->points       ?? 0);
-            $bonusLookup[$name] = ($bonusLookup[$name] ?? 0) + (int)($score->bonus_points ?? 0);
+            if (!$name) {
+                continue;
+            }
+            $teamLookup[$name] = ($teamLookup[$name] ?? 0) + (int) ($score->points ?? 0);
+            $bonusLookup[$name] = ($bonusLookup[$name] ?? 0) + (int) ($score->bonus_points ?? 0);
         }
 
-        $teamScores  = [];
-        $teamBonus   = [];
-        $teamPoints  = 0;
+        $teamScores = [];
+        $teamBonus = [];
+        $teamPoints = 0;
         $teamBonusTot = 0;
 
         foreach ($categoryNames as $cat) {
-            $pts   = $teamLookup[$name  = $cat] ?? 0;
+            $pts = $teamLookup[($name = $cat)] ?? 0;
             $bonus = $bonusLookup[$cat] ?? 0;
             $teamScores[$cat] = $pts;
-            $teamBonus[$cat]  = $bonus;
-            $teamPoints      += $pts;
-            $teamBonusTot    += $bonus;
+            $teamBonus[$cat] = $bonus;
+            $teamPoints += $pts;
+            $teamBonusTot += $bonus;
         }
 
         // Student rows
-        $studentRows  = [];
+        $studentRows = [];
         $playerPoints = 0;
-        $playerBonus  = 0;
+        $playerBonus = 0;
 
         foreach ($team->students as $student) {
             $sLookup = [];
             $sBonusL = [];
 
             foreach ($student->scores as $score) {
-                if (!$score->challengeActivity) continue;
+                if (!$score->challengeActivity) {
+                    continue;
+                }
                 $name = $score->challengeActivity->display_name;
-                if (!$name) continue;
-                $sLookup[$name] = ($sLookup[$name] ?? 0) + (int)($score->points       ?? 0);
-                $sBonusL[$name] = ($sBonusL[$name] ?? 0) + (int)($score->bonus_points ?? 0);
+                if (!$name) {
+                    continue;
+                }
+                $sLookup[$name] = ($sLookup[$name] ?? 0) + (int) ($score->points ?? 0);
+                $sBonusL[$name] = ($sBonusL[$name] ?? 0) + (int) ($score->bonus_points ?? 0);
             }
 
             $studentScores = [];
-            $studentBonus  = [];
-            $studentTotal  = 0;
+            $studentBonus = [];
+            $studentTotal = 0;
             $studentBonusT = 0;
 
             foreach ($categoryNames as $cat) {
-                $pts   = $sLookup[$cat] ?? 0;
+                $pts = $sLookup[$cat] ?? 0;
                 $bonus = $sBonusL[$cat] ?? 0;
                 $studentScores[$cat] = $pts;
-                $studentBonus[$cat]  = $bonus;
-                $studentTotal       += $pts;
-                $studentBonusT      += $bonus;
+                $studentBonus[$cat] = $bonus;
+                $studentTotal += $pts;
+                $studentBonusT += $bonus;
             }
 
             $playerPoints += $studentTotal;
-            $playerBonus  += $studentBonusT;
+            $playerBonus += $studentBonusT;
 
             $studentRows[] = [
-                'type'          => 'student',
-                'id'            => $student->id,
-                'event'         => $event->name,
-                'organization'  => $org->name        ?? 'N/A',
-                'group'         => $group->group_name ?? '-',
-                'subgroup'      => $subgroup->name    ?? '-',
-                'team_name'     => $team->name,
-                'division'      => $team->division    ?? '-',
-                'student_name'  => $student->name,
-                'scores'        => $studentScores,
-                'bonus'         => $studentBonus,
-                'total_bonus'   => $studentBonusT,
-                'total_points'  => $studentTotal + $studentBonusT,
-                'rank'          => null,
+                'type' => 'student',
+                'id' => $student->id,
+                'event' => $event->name,
+                'organization' => $org->name ?? 'N/A',
+                'group' => $group->group_name ?? '-',
+                'subgroup' => $subgroup->name ?? '-',
+                'team_name' => $team->name,
+                'division' => $team->division ?? '-',
+                'student_name' => $student->name,
+                'scores' => $studentScores,
+                'bonus' => $studentBonus,
+                'total_bonus' => $studentBonusT,
+                'total_points' => $studentTotal + $studentBonusT,
+                'rank' => null,
             ];
         }
 
@@ -548,24 +594,24 @@ class ScoreController extends Controller
 
         return [
             'team' => [
-                'type'          => 'team',
-                'id'            => $team->id,
-                'event'         => $event->name,
-                'organization'  => $org->name        ?? 'N/A',
-                'group'         => $group->group_name ?? '-',
-                'subgroup'      => $subgroup->name    ?? '-',
-                'team_name'     => $team->name,
-                'division'      => $team->division    ?? '-',
-                'student_name'  => null,
-                'scores'        => $teamScores,
-                'bonus'         => $teamBonus,
-                'team_points'   => $teamPoints,
-                'team_bonus'    => $teamBonusTot,
+                'type' => 'team',
+                'id' => $team->id,
+                'event' => $event->name,
+                'organization' => $org->name ?? 'N/A',
+                'group' => $group->group_name ?? '-',
+                'subgroup' => $subgroup->name ?? '-',
+                'team_name' => $team->name,
+                'division' => $team->division ?? '-',
+                'student_name' => null,
+                'scores' => $teamScores,
+                'bonus' => $teamBonus,
+                'team_points' => $teamPoints,
+                'team_bonus' => $teamBonusTot,
                 'player_points' => $playerPoints,
-                'player_bonus'  => $playerBonus,
-                'total_bonus'   => $teamBonusTot + $playerBonus,
-                'grand_total'   => $grandTotal,
-                'rank'          => null,
+                'player_bonus' => $playerBonus,
+                'total_bonus' => $teamBonusTot + $playerBonus,
+                'grand_total' => $grandTotal,
+                'rank' => null,
             ],
             'students' => $studentRows,
         ];

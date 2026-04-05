@@ -44,4 +44,5 @@ class Event extends Model
     }
     public function teams(){ return $this->hasMany(Team::class); }
     public function matches(){ return $this->hasMany(Matches::class); }
+    
 }

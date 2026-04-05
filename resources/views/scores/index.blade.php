@@ -14,9 +14,6 @@
                 <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#scoreModal">
                     <i data-lucide="plus" style="width:13px;height:13px;vertical-align:-1px;"></i> Add Score
                 </button>
-                <button class="btn btn-sm btn-warning fw-bold" id="bonusBtn">
-                    <i data-lucide="zap" style="width:13px;height:13px;vertical-align:-1px;"></i> Bonus
-                </button>
             </div>
         </div>
 
@@ -38,7 +35,6 @@
                     <span class="lb-legend-dot"><span style="background:var(--cat-egaming-bg)"></span>EGaming</span>
                     <span class="lb-legend-dot"><span style="background:var(--cat-esports-bg)"></span>Esports</span>
                     <span class="lb-legend-dot"><span style="background:var(--cat-mission-bg)"></span>Mission</span>
-                    <span class="lb-legend-dot"><span style="background:var(--cat-bonus-bg)"></span>Bonus</span>
                 </div>
 
                 <div class="lb-actions">
@@ -48,12 +44,12 @@
                 </div>
             </div>
 
-            {{-- Bulk bar --}}
+            {{-- Bulk bar (hidden until bulk mode active) --}}
             <div id="bulk-bar">
                 <span style="font-weight:900;color:#f5c518;font-size:12px;letter-spacing:.08em;">BULK EDIT MODE</span>
-                <span style="color:#2a3040;">|</span>
+                <span style="color:#3a4454;">|</span>
                 <span><span id="bulk-count" style="font-weight:900;color:#f5c518;font-size:16px;">0</span> selected</span>
-                <span id="bulk-hint" style="color:#484f58;font-size:11px;">Click score cells to select/deselect</span>
+                <span style="color:#484f58;font-size:11px;">Click score cells to select / deselect</span>
                 <button class="lb-btn lb-btn-bulk-go ms-auto" style="padding:5px 12px;font-size:12px;"
                         onclick="document.getElementById('openBulkModalBtn').click()">
                     Open Edit Panel →

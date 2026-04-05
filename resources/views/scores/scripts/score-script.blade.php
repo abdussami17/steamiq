@@ -1,37 +1,37 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
-    
+
     :root {
         --lb-bg:        #0f1318;
         --lb-surface:   #181e27;
         --lb-border:    #2a3040;
         --lb-header-bg: #1e2535;
-        --lb-gold:      #f5c518;
-        --lb-silver:    #b8c4d0;
-        --lb-bronze:    #cd7f32;
-    
-        --cat-science-bg:     #c0392b; --cat-science-text:     #fff;
-        --cat-tech-bg:        #e67e22; --cat-tech-text:        #fff;
-        --cat-eng-bg:         #27ae60; --cat-eng-text:         #fff;
-        --cat-art-bg:         #2980b9; --cat-art-text:         #fff;
-        --cat-math-bg:        #8e44ad; --cat-math-text:        #fff;
-        --cat-playground-bg:  #7f8c8d; --cat-playground-text:  #fff;
-        --cat-egaming-bg:     #e91e8c; --cat-egaming-text:     #fff;
-        --cat-esports-bg:     #00bcd4; --cat-esports-text:     #000;
-        --cat-mission-bg:     #ff6f00; --cat-mission-text:     #fff;
-        --cat-other-bg:       #34495e; --cat-other-text:       #c9d1d9;
-        --cat-bonus-bg:       #f5c518; --cat-bonus-text:       #000;
-    
-        --total-team-bg:    #0d2d6e; --total-team-text:   #79c0ff;
-        --total-player-bg:  #1a3a1a; --total-player-text: #56d364;
-        --total-bonus-bg:   #2a1a00; --total-bonus-text:  #f5c518;
-        --total-grand-bg:   #3d1a00; --total-grand-text:  #f5c518;
-    
+
+        --lb-gold:    #f5c518;
+        --lb-silver:  #b8c4d0;
+        --lb-bronze:  #cd7f32;
+
+        --cat-science-bg:     #c0392b;   --cat-science-text:     #ffffff;
+        --cat-tech-bg:        #e67e22;   --cat-tech-text:        #ffffff;
+        --cat-eng-bg:         #27ae60;   --cat-eng-text:         #ffffff;
+        --cat-art-bg:         #2980b9;   --cat-art-text:         #ffffff;
+        --cat-math-bg:        #8e44ad;   --cat-math-text:        #ffffff;
+        --cat-playground-bg:  #7f8c8d;   --cat-playground-text:  #ffffff;
+        --cat-egaming-bg:     #e91e8c;   --cat-egaming-text:     #ffffff;
+        --cat-esports-bg:     #00bcd4;   --cat-esports-text:     #000000;
+        --cat-mission-bg:     #ff6f00;   --cat-mission-text:     #ffffff;
+        --cat-other-bg:       #34495e;   --cat-other-text:       #c9d1d9;
+
+        --total-team-bg:      #0d2d6e;   --total-team-text:    #79c0ff;
+        --total-player-bg:    #1a3a1a;   --total-player-text:  #56d364;
+        --total-grand-bg:     #3d1a00;   --total-grand-text:   #f5c518;
+
         --font-head: 'Barlow Condensed', sans-serif;
         --font-body: 'Barlow', sans-serif;
         --radius: 6px;
     }
-    
+
+    /* ── WRAPPER & CONTROLS ── */
     #lb-wrapper {
         font-family: var(--font-body);
         background: var(--lb-bg);
@@ -40,81 +40,123 @@
         border: 1px solid var(--lb-border);
         margin-top: 12px;
     }
+
     #lb-controls {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
+        gap: 16px;
+        padding: 14px 20px;
         background: var(--lb-surface);
         border-bottom: 1px solid var(--lb-border);
         flex-wrap: wrap;
     }
     #lb-controls label {
         font-family: var(--font-head);
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 700;
         color: #8b949e;
         letter-spacing: .08em;
         text-transform: uppercase;
-        white-space: nowrap;
     }
     #selectEvent {
         background: var(--lb-header-bg);
         border: 1px solid var(--lb-border);
         color: #e6edf3;
-        padding: 6px 12px;
+        padding: 7px 14px;
         border-radius: var(--radius);
         font-family: var(--font-body);
-        font-size: 13px;
-        min-width: 220px;
+        font-size: 14px;
+        min-width: 240px;
         cursor: pointer;
     }
     #selectEvent:focus { outline: none; border-color: #58a6ff; }
-    
+
     .lb-legend {
-        display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-left: 8px;
     }
     .lb-legend-dot {
-        display: inline-flex; align-items: center; gap: 4px;
-        font-family: var(--font-head); font-size: 10px; font-weight: 700;
-        letter-spacing: .04em; text-transform: uppercase; color: #c9d1d9;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-head);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #c9d1d9;
     }
-    .lb-legend-dot span { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-    
-    .lb-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+    .lb-legend-dot span {
+        width: 12px; height: 12px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    /* ── ACTION BUTTONS (lb-btn) ── */
+    .lb-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+    }
     .lb-btn {
-        border: none; padding: 7px 14px; border-radius: var(--radius);
-        font-family: var(--font-head); font-weight: 700; font-size: 13px;
-        letter-spacing: .04em; cursor: pointer; transition: all .18s;
-        display: inline-flex; align-items: center; gap: 5px;
+        border: none;
+        padding: 7px 16px;
+        border-radius: var(--radius);
+        font-family: var(--font-head);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: .04em;
+        cursor: pointer;
+        transition: background .2s, opacity .2s;
+        white-space: nowrap;
     }
-    .lb-btn-export  { background: #238636; color: #fff; }
-    .lb-btn-export:hover { background: #2ea043; }
-    .lb-btn-bulk    { background: #1a2a4a; color: #79c0ff; border: 1px solid #1e3a6e; }
-    .lb-btn-bulk:hover { background: #1e3a6e; }
+    .lb-btn-bulk {
+        background: #1a3a6e;
+        color: #79c0ff;
+        border: 1px solid #30507e;
+    }
+    .lb-btn-bulk:hover  { background: #1e4a8a; }
     .lb-btn-bulk.active { background: #58a6ff; color: #000; border-color: #58a6ff; }
-    .lb-btn-bulk-go { background: #1e3a6e; color: #79c0ff; border: 1px solid #30507e; }
-    .lb-btn-bulk-go:hover { background: #2a4a8e; }
-    .lb-btn-bonus   { background: #2a1a00; color: #f5c518; border: 1px solid #7a5a00; }
-    .lb-btn-bonus:hover { background: #3a2a00; }
-    
+
+    .lb-btn-bulk-go {
+        background: #1a4a3a;
+        color: #56d364;
+        border: 1px solid #238636;
+    }
+    .lb-btn-bulk-go:hover { background: #1e5a46; }
+
+    .lb-btn-export {
+        background: #238636;
+        color: #fff;
+    }
+    .lb-btn-export:hover { background: #2ea043; }
+
+    /* ── BULK BAR ── */
     #bulk-bar {
         display: none;
         align-items: center;
         gap: 12px;
-        padding: 7px 16px;
-        background: #0d1e3a;
-        border-bottom: 1px solid #1e3a6e;
+        padding: 9px 20px;
+        background: #1a2a4a;
+        border-bottom: 1px solid #30507e;
         font-family: var(--font-head);
-        font-size: 12px;
+        font-size: 13px;
         color: #79c0ff;
     }
-    #bulk-bar.show { display: flex; }
-    #bulk-count { font-weight: 900; color: #f5c518; font-size: 15px; }
-    #bulk-hint  { color: #484f58; font-size: 11px; }
-    
-    #lb-scroll { overflow-x: auto; overflow-y: auto; max-height: 72vh; }
-    
+    #bulk-bar.visible { display: flex; }
+
+    /* ── TABLE SCROLL ── */
+    #lb-scroll {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 74vh;
+    }
+
+    /* ── TABLE BASE ── */
     #lb-table {
         border-collapse: separate;
         border-spacing: 0;
@@ -123,49 +165,56 @@
         font-family: var(--font-body);
         font-size: 13px;
     }
-    
-    /* THEAD ROW 1 */
+
+    /* ── THEAD ROW 1: BANNER ── */
     #lb-table thead tr.row-banner th {
         background: var(--lb-surface);
         color: #8b949e;
         font-family: var(--font-head);
-        font-size: 10px; font-weight: 700;
-        letter-spacing: .1em; text-transform: uppercase;
-        padding: 7px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: 8px 10px;
         border-bottom: 1px solid var(--lb-border);
         border-right: 1px solid var(--lb-border);
-        white-space: nowrap; text-align: center;
-        position: sticky; top: 0; z-index: 20;
+        white-space: nowrap;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 20;
     }
-    #lb-table thead tr.row-banner th.banner-science     { background: var(--cat-science-bg);   color: var(--cat-science-text); }
-    #lb-table thead tr.row-banner th.banner-technology  { background: var(--cat-tech-bg);       color: var(--cat-tech-text); }
-    #lb-table thead tr.row-banner th.banner-engineering { background: var(--cat-eng-bg);        color: var(--cat-eng-text); }
-    #lb-table thead tr.row-banner th.banner-art         { background: var(--cat-art-bg);        color: var(--cat-art-text); }
-    #lb-table thead tr.row-banner th.banner-math        { background: var(--cat-math-bg);       color: var(--cat-math-text); }
-    #lb-table thead tr.row-banner th.banner-playground  { background: var(--cat-playground-bg); color: var(--cat-playground-text); }
-    #lb-table thead tr.row-banner th.banner-egaming     { background: var(--cat-egaming-bg);    color: var(--cat-egaming-text); }
-    #lb-table thead tr.row-banner th.banner-esports     { background: var(--cat-esports-bg);    color: var(--cat-esports-text); }
-    #lb-table thead tr.row-banner th.banner-mission     { background: var(--cat-mission-bg);    color: var(--cat-mission-text); }
-    #lb-table thead tr.row-banner th.banner-other       { background: var(--cat-other-bg);      color: var(--cat-other-text); }
-    #lb-table thead tr.row-banner th.banner-bonus       { background: var(--cat-bonus-bg);      color: var(--cat-bonus-text); }
+    #lb-table thead tr.row-banner th.banner-science     { background: var(--cat-science-bg);    color: var(--cat-science-text); }
+    #lb-table thead tr.row-banner th.banner-technology  { background: var(--cat-tech-bg);        color: var(--cat-tech-text); }
+    #lb-table thead tr.row-banner th.banner-engineering { background: var(--cat-eng-bg);         color: var(--cat-eng-text); }
+    #lb-table thead tr.row-banner th.banner-art         { background: var(--cat-art-bg);         color: var(--cat-art-text); }
+    #lb-table thead tr.row-banner th.banner-math        { background: var(--cat-math-bg);        color: var(--cat-math-text); }
+    #lb-table thead tr.row-banner th.banner-playground  { background: var(--cat-playground-bg);  color: var(--cat-playground-text); }
+    #lb-table thead tr.row-banner th.banner-egaming     { background: var(--cat-egaming-bg);     color: var(--cat-egaming-text); }
+    #lb-table thead tr.row-banner th.banner-esports     { background: var(--cat-esports-bg);     color: var(--cat-esports-text); }
+    #lb-table thead tr.row-banner th.banner-mission     { background: var(--cat-mission-bg);     color: var(--cat-mission-text); }
+    #lb-table thead tr.row-banner th.banner-other       { background: var(--cat-other-bg);       color: var(--cat-other-text); }
     #lb-table thead tr.row-banner th.banner-total-team   { background: var(--total-team-bg);   color: var(--total-team-text); }
     #lb-table thead tr.row-banner th.banner-total-player { background: var(--total-player-bg); color: var(--total-player-text); }
-    #lb-table thead tr.row-banner th.banner-total-bonus  { background: var(--total-bonus-bg);  color: var(--total-bonus-text); }
     #lb-table thead tr.row-banner th.banner-total-grand  { background: var(--total-grand-bg);  color: var(--total-grand-text); }
-    
-    /* THEAD ROW 2 */
+
+    /* ── THEAD ROW 2: COL LABELS ── */
     #lb-table thead tr.row-cols th {
         background: var(--lb-header-bg);
         color: #c9d1d9;
         font-family: var(--font-head);
-        font-size: 10px; font-weight: 800;
-        letter-spacing: .07em; text-transform: uppercase;
-        padding: 6px 10px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .07em;
+        text-transform: uppercase;
+        padding: 7px 10px;
         border-bottom: 2px solid var(--lb-border);
         border-right: 1px solid var(--lb-border);
-        white-space: nowrap; text-align: center;
-        position: sticky; top: 31px; z-index: 20;
-        max-width: 140px; overflow: hidden; text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+        position: sticky;
+        top: 34px;
+        z-index: 20;
     }
     #lb-table thead tr.row-cols th.cat-science     { border-top: 3px solid var(--cat-science-bg); }
     #lb-table thead tr.row-cols th.cat-technology  { border-top: 3px solid var(--cat-tech-bg); }
@@ -177,1248 +226,1035 @@
     #lb-table thead tr.row-cols th.cat-esports     { border-top: 3px solid var(--cat-esports-bg); }
     #lb-table thead tr.row-cols th.cat-mission     { border-top: 3px solid var(--cat-mission-bg); }
     #lb-table thead tr.row-cols th.cat-other       { border-top: 3px solid var(--cat-other-bg); }
-    #lb-table thead tr.row-cols th.cat-bonus       { border-top: 3px solid var(--cat-bonus-bg);  color: var(--cat-bonus-bg); }
     #lb-table thead tr.row-cols th.col-total-team   { border-top: 3px solid var(--total-team-text);   color: var(--total-team-text); }
     #lb-table thead tr.row-cols th.col-total-player { border-top: 3px solid var(--total-player-text); color: var(--total-player-text); }
-    #lb-table thead tr.row-cols th.col-total-bonus  { border-top: 3px solid var(--total-bonus-text);  color: var(--total-bonus-text); }
     #lb-table thead tr.row-cols th.col-total-grand  { border-top: 3px solid var(--total-grand-text);  color: var(--total-grand-text); }
-    
-    /* Sticky left columns */
+
+    /* Sticky fixed-left columns */
     #lb-table thead tr.row-banner th.fix-0,
-    #lb-table thead tr.row-cols   th.fix-0 { position: sticky; left: 0;     z-index: 25; }
+    #lb-table thead tr.row-cols   th.fix-0 { position: sticky; left: 0;     z-index: 25; background: var(--lb-surface); }
     #lb-table thead tr.row-banner th.fix-1,
-    #lb-table thead tr.row-cols   th.fix-1 { position: sticky; left: 46px;  z-index: 25; }
+    #lb-table thead tr.row-cols   th.fix-1 { position: sticky; left: 46px;  z-index: 25; background: var(--lb-header-bg); }
     #lb-table thead tr.row-banner th.fix-2,
-    #lb-table thead tr.row-cols   th.fix-2 { position: sticky; left: 96px;  z-index: 25; }
+    #lb-table thead tr.row-cols   th.fix-2 { position: sticky; left: 96px;  z-index: 25; background: var(--lb-header-bg); }
     #lb-table thead tr.row-banner th.fix-3,
-    #lb-table thead tr.row-cols   th.fix-3 { position: sticky; left: 230px; z-index: 25; }
+    #lb-table thead tr.row-cols   th.fix-3 { position: sticky; left: 230px; z-index: 25; background: var(--lb-header-bg); }
     #lb-table thead tr.row-banner th.fix-4,
-    #lb-table thead tr.row-cols   th.fix-4 { position: sticky; left: 360px; z-index: 25; }
-    
-    /* TBODY */
+    #lb-table thead tr.row-cols   th.fix-4 { position: sticky; left: 360px; z-index: 25; background: var(--lb-header-bg); }
+
+    /* ── TBODY GENERAL ── */
     #lb-table tbody td {
         padding: 5px 10px;
         border-bottom: 1px solid #1e2535;
         border-right: 1px solid #1e2535;
-        white-space: nowrap; vertical-align: middle;
-        color: #c9d1d9; text-align: center;
+        white-space: nowrap;
+        vertical-align: middle;
+        color: #c9d1d9;
+        text-align: center;
     }
+
+    /* GROUP DIVIDER */
     #lb-table tbody tr.tr-divider td {
-        background: linear-gradient(90deg,#1a3a2a,#162a20);
+        background: linear-gradient(90deg, #1a3a2a 0%, #162a20 100%);
         color: #56d364;
-        font-family: var(--font-head); font-weight: 900; font-size: 12px;
-        letter-spacing: .1em; text-transform: uppercase;
-        padding: 7px 16px; border-bottom: 2px solid #238636; text-align: left;
+        font-family: var(--font-head);
+        font-weight: 900;
+        font-size: 13px;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: 8px 16px;
+        border-bottom: 2px solid #238636;
+        text-align: left;
     }
+
+    /* TEAM ROW */
     #lb-table tbody tr.tr-team td {
-        background: #1c2638; font-weight: 600; color: #e6edf3;
+        background: #1c2638;
+        font-weight: 600;
+        color: #e6edf3;
         border-bottom: 2px solid #0f1318;
     }
+
+    /* STUDENT ROW */
     #lb-table tbody tr.tr-student td {
-        background: #151b27; font-size: 12px; color: #8b949e;
+        background: #151b27;
+        font-size: 12px;
+        color: #8b949e;
         border-bottom: 1px dashed #1e2535;
     }
-    
-    /* Sticky body cells */
-    #lb-table tbody td.fix-0 { position: sticky; left: 0;     z-index: 5; }
-    #lb-table tbody td.fix-1 { position: sticky; left: 46px;  z-index: 5; }
-    #lb-table tbody td.fix-2 { position: sticky; left: 96px;  z-index: 5; }
-    #lb-table tbody td.fix-3 { position: sticky; left: 230px; z-index: 5; }
-    #lb-table tbody td.fix-4 { position: sticky; left: 360px; z-index: 5; }
-    #lb-table tbody tr.tr-team    td.fix-0,
-    #lb-table tbody tr.tr-team    td.fix-1,
-    #lb-table tbody tr.tr-team    td.fix-2,
-    #lb-table tbody tr.tr-team    td.fix-3,
-    #lb-table tbody tr.tr-team    td.fix-4 { background: #1c2638; }
-    #lb-table tbody tr.tr-student td.fix-0,
-    #lb-table tbody tr.tr-student td.fix-1,
-    #lb-table tbody tr.tr-student td.fix-2,
-    #lb-table tbody tr.tr-student td.fix-3,
-    #lb-table tbody tr.tr-student td.fix-4 { background: #151b27; }
-    
-    /* Score pills */
+
+    /* Sticky body left columns */
+    #lb-table tbody td.fix-0 { position: sticky; left: 0;     z-index: 5; background: inherit; }
+    #lb-table tbody td.fix-1 { position: sticky; left: 46px;  z-index: 5; background: inherit; }
+    #lb-table tbody td.fix-2 { position: sticky; left: 96px;  z-index: 5; background: inherit; }
+    #lb-table tbody td.fix-3 { position: sticky; left: 230px; z-index: 5; background: inherit; }
+    #lb-table tbody td.fix-4 { position: sticky; left: 360px; z-index: 5; background: inherit; }
+
+    /* ── SCORE PILLS ── */
     .score-pill {
-        display: inline-block; min-width: 40px;
-        padding: 2px 6px; border-radius: 4px;
-        font-family: var(--font-head); font-weight: 700; font-size: 13px; text-align: center;
+        display: inline-block;
+        min-width: 44px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-family: var(--font-head);
+        font-weight: 700;
+        font-size: 13px;
+        text-align: center;
     }
-    .score-science     { background: var(--cat-science-bg);   color: var(--cat-science-text); }
-    .score-technology  { background: var(--cat-tech-bg);       color: var(--cat-tech-text); }
-    .score-engineering { background: var(--cat-eng-bg);        color: var(--cat-eng-text); }
-    .score-art         { background: var(--cat-art-bg);        color: var(--cat-art-text); }
-    .score-math        { background: var(--cat-math-bg);       color: var(--cat-math-text); }
-    .score-playground  { background: var(--cat-playground-bg); color: var(--cat-playground-text); }
-    .score-egaming     { background: var(--cat-egaming-bg);    color: var(--cat-egaming-text); }
-    .score-esports     { background: var(--cat-esports-bg);    color: var(--cat-esports-text); }
-    .score-mission     { background: var(--cat-mission-bg);    color: var(--cat-mission-text); }
-    .score-other       { background: var(--cat-other-bg);      color: var(--cat-other-text); }
-    .score-zero        { color: #3a4454; font-size: 12px; }
-    .score-bonus-pill  { background: var(--cat-bonus-bg); color: var(--cat-bonus-text); font-family: var(--font-head); font-weight: 900; font-size: 13px; padding: 2px 8px; border-radius: 4px; display:inline-block; }
-    
-    /* Totals */
-    td.td-total-team   { background: var(--total-team-bg)   !important; color: var(--total-team-text)   !important; font-family: var(--font-head) !important; font-weight: 800 !important; font-size: 14px !important; }
+    .score-science     { background: var(--cat-science-bg);    color: var(--cat-science-text); }
+    .score-technology  { background: var(--cat-tech-bg);        color: var(--cat-tech-text); }
+    .score-engineering { background: var(--cat-eng-bg);         color: var(--cat-eng-text); }
+    .score-art         { background: var(--cat-art-bg);         color: var(--cat-art-text); }
+    .score-math        { background: var(--cat-math-bg);        color: var(--cat-math-text); }
+    .score-playground  { background: var(--cat-playground-bg);  color: var(--cat-playground-text); }
+    .score-egaming     { background: var(--cat-egaming-bg);     color: var(--cat-egaming-text); }
+    .score-esports     { background: var(--cat-esports-bg);     color: var(--cat-esports-text); }
+    .score-mission     { background: var(--cat-mission-bg);     color: var(--cat-mission-text); }
+    .score-other       { background: var(--cat-other-bg);       color: var(--cat-other-text); }
+    .score-zero { color: #3a4454; font-size: 13px; }
+
+    /* ── TOTAL CELLS ── */
+    td.td-total-team   { background: var(--total-team-bg)   !important; color: var(--total-team-text)   !important; font-family: var(--font-head) !important; font-weight: 800 !important; font-size: 15px !important; }
     td.td-total-player { background: var(--total-player-bg) !important; color: var(--total-player-text) !important; font-family: var(--font-head) !important; font-weight: 700 !important; font-size: 13px !important; }
-    td.td-total-bonus  { background: var(--total-bonus-bg)  !important; color: var(--total-bonus-text)  !important; font-family: var(--font-head) !important; font-weight: 800 !important; font-size: 14px !important; }
-    td.td-total-grand  { background: var(--total-grand-bg)  !important; color: var(--total-grand-text)  !important; font-family: var(--font-head) !important; font-weight: 900 !important; font-size: 15px !important; }
-    td.td-org { color: #f5c518 !important; font-family: var(--font-head) !important; font-weight: 700 !important; font-size: 11px !important; letter-spacing:.04em; }
-    
-    /* Rank medals */
+    td.td-total-grand  { background: var(--total-grand-bg)  !important; color: var(--total-grand-text)  !important; font-family: var(--font-head) !important; font-weight: 900 !important; font-size: 16px !important; }
+
+    /* ── RANK MEDALS ── */
     .rank-medal {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 26px; height: 26px; border-radius: 50%;
-        font-family: var(--font-head); font-weight: 900; font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        font-family: var(--font-head);
+        font-weight: 900;
+        font-size: 14px;
     }
     .rank-1 { background: var(--lb-gold);   color: #000; }
     .rank-2 { background: var(--lb-silver); color: #000; }
     .rank-3 { background: var(--lb-bronze); color: #fff; }
-    .rank-n { background: #21262d; color: #8b949e; font-size: 11px; }
-    
-    /* Inline edit cell */
-    .score-edit-cell { position: relative; cursor: pointer; transition: background .12s; }
-    .score-edit-cell:hover { background: rgba(88,166,255,.07) !important; }
-    .score-edit-cell:hover .score-pill  { opacity: .65; }
-    .score-edit-cell:hover .score-zero  { opacity: .65; }
+    .rank-n { background: #21262d; color: #8b949e; font-size: 12px; }
+
+    td.td-rank-end { font-family: var(--font-head); font-weight: 900; }
+    td.td-org { color: #f5c518 !important; font-family: var(--font-head) !important; font-weight: 700 !important; font-size: 12px !important; letter-spacing: .04em; }
+
+    /* ── INLINE EDIT ── */
+    .score-edit-cell { position: relative; cursor: pointer; transition: background .15s; }
+    .score-edit-cell:hover .score-pill,
+    .score-edit-cell:hover .score-zero { opacity: 0.6; }
     .score-edit-cell:hover::after {
-        content: '✎'; position: absolute; right: 3px; top: 50%;
-        transform: translateY(-50%); font-size: 9px; color: #58a6ff; pointer-events: none;
+        content: '✎';
+        position: absolute;
+        right: 3px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 10px;
+        color: #58a6ff;
+        pointer-events: none;
     }
-    /* Bulk mode */
-    .bulk-active .score-edit-cell { cursor: crosshair; }
-    .bulk-active .score-edit-cell:hover { background: rgba(88,166,255,.12) !important; }
-    .score-edit-cell.bulk-sel {
-        background: rgba(88,166,255,.22) !important;
-        outline: 2px solid #58a6ff; outline-offset: -2px;
+    .score-edit-cell.no-edit { cursor: not-allowed; }
+    .score-edit-cell.no-edit:hover::after { display: none; }
+
+    /* ── BULK EDIT MODE ── */
+    .bulk-mode .score-edit-cell { cursor: crosshair; }
+    .bulk-mode .score-edit-cell:hover { background: rgba(88,166,255,.08) !important; }
+    .score-edit-cell.bulk-selected {
+        background: rgba(88,166,255,.18) !important;
+        outline: 2px solid #58a6ff;
+        outline-offset: -2px;
     }
-    .score-edit-cell.bulk-sel::after { display: none; }
-    
+    .score-edit-cell.bulk-selected::after { display: none; }
+
     .score-edit-input {
-        width: 60px; background: #0d1117;
-        border: 1.5px solid #58a6ff; color: #e6edf3;
-        border-radius: 4px; padding: 2px 4px;
-        font-family: var(--font-head); font-size: 14px; font-weight: 700;
-        text-align: center; outline: none;
+        width: 64px;
+        background: #0d1117;
+        border: 1px solid #58a6ff;
+        color: #e6edf3;
+        border-radius: 4px;
+        padding: 2px 5px;
+        font-family: var(--font-head);
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+        outline: none;
     }
-    
-    /* Bulk table rows */
-    #bulkEditTbody tr { border-bottom: 1px solid #1e2535; }
-    #bulkEditTbody td { padding: 8px 12px; background: #151b27; border: none; vertical-align: middle; }
-    #bulkEditTbody tr:hover td { background: #1a2230; }
-    .bulk-pts-inp {
-        width: 72px; background: #0d1117;
-        border: 1.5px solid #30507e; color: #e6edf3;
-        border-radius: 4px; padding: 3px 5px;
-        font-family: var(--font-head); font-size: 14px; font-weight: 700;
-        text-align: center; outline: none;
-        transition: border-color .15s;
+
+    /* ── BULK EDIT MODAL ── */
+    #bulkEditModal .modal-content { background: #0f1318; border: 1px solid #2a3040; }
+    #bulkEditModal .modal-header  { background: #1a2a4a; border-bottom: 1px solid #30507e; }
+    #bulkEditModal .modal-title   { color: #79c0ff; font-family: var(--font-head); font-weight: 900; }
+    #bulkEditModal .table         { color: #c9d1d9; }
+    #bulkEditModal .table th      { background: #1e2535; color: #8b949e; font-size: 11px; letter-spacing: .06em; }
+    #bulkEditModal .table td      { background: #151b27; border-color: #1e2535; vertical-align: middle; }
+    #bulkEditModal .bulk-pts-input {
+        width: 80px;
+        background: #0d1117;
+        border: 1px solid #58a6ff;
+        color: #e6edf3;
+        border-radius: 4px;
+        padding: 3px 6px;
+        font-family: var(--font-head);
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
     }
-    .bulk-pts-inp:focus { border-color: #58a6ff; }
-    .bulk-pts-inp.err   { border-color: #f85149 !important; }
-    .bulk-err-msg { font-size: 10px; color: #f85149; display: none; margin-top: 2px; }
-    
-    /* Toast */
+    #bulkEditModal .bulk-pts-input:focus { outline: none; border-color: #79c0ff; }
+    #bulkEditModal .err-hint { font-size: 10px; color: #f85149; margin-top: 2px; display: none; }
+
+    /* ── TOAST ── */
     #lb-toast {
-        position: fixed; bottom: 20px; right: 20px;
-        padding: 9px 16px; border-radius: 8px;
-        font-family: var(--font-head); font-size: 13px; font-weight: 700;
-        z-index: 9999; opacity: 0; transition: opacity .25s; pointer-events: none;
-        max-width: 320px;
+        position: fixed;
+        bottom: 24px; right: 24px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        font-family: var(--font-head);
+        font-size: 14px;
+        font-weight: 700;
+        z-index: 9999;
+        opacity: 0;
+        transition: opacity .3s;
+        pointer-events: none;
     }
-    #lb-toast.show  { opacity: 1; }
-    #lb-toast.ok    { background: #1a3a1a; color: #56d364; border: 1px solid #238636; }
-    #lb-toast.err   { background: #3a1a1a; color: #f85149; border: 1px solid #f85149; }
-    #lb-toast.warn  { background: #2a1a00; color: #f5c518; border: 1px solid #7a5a00; }
-    
-    /* State rows */
+    #lb-toast.show { opacity: 1; }
+    #lb-toast.ok   { background: #1a3a1a; color: #56d364; border: 1px solid #238636; }
+    #lb-toast.err  { background: #3a1a1a; color: #f85149; border: 1px solid #f85149; }
+    #lb-toast.warn { background: #3d2a00; color: #f5c518; border: 1px solid #7a5a00; }
+
+    /* ── STATE ROWS ── */
     .lb-state-row td {
-        text-align: center; padding: 50px;
-        color: #484f58; font-family: var(--font-head); font-size: 15px;
-        letter-spacing: .06em; background: var(--lb-bg) !important;
+        text-align: center;
+        padding: 50px;
+        color: #484f58;
+        font-family: var(--font-head);
+        font-size: 16px;
+        letter-spacing: .06em;
+        background: var(--lb-bg) !important;
     }
-    </style>
-    
-    <div id="lb-toast"></div>
-    <script>window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};</script>
-    
-    <script>
-    (function () {
+
+    @media (max-width: 768px) {
+        #lb-controls { flex-direction: column; align-items: flex-start; }
+        .lb-actions  { margin-left: 0; }
+    }
+</style>
+
+{{-- Bulk Edit Modal --}}
+<div class="modal fade" id="bulkEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i data-lucide="edit-3" style="width:16px;height:16px;vertical-align:-2px;margin-right:6px;"></i>
+                    Bulk Edit Scores
+                    <span id="bulkEditCount" class="badge ms-2" style="background:#58a6ff;color:#000;font-size:12px;"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:0;">
+                <div class="table-responsive" style="max-height:400px;overflow-y:auto;">
+                    <table class="table table-sm mb-0" id="bulkEditTable">
+                        <thead>
+                            <tr>
+                                <th style="width:30px;"><input type="checkbox" id="bulkSelectAll" title="Select all"></th>
+                                <th>Entity</th>
+                                <th>Activity</th>
+                                <th>Current</th>
+                                <th>New Points</th>
+                                <th>Max</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bulkEditTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="background:#0f1318;border-top:1px solid #2a3040;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="bulkSaveConfirmBtn" class="btn btn-primary fw-bold">
+                    <i data-lucide="save" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i>
+                    Save All Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="lb-toast"></div>
+
+<script>
+window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
+</script>
+
+<script>
+(function () {
     'use strict';
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       CONSTANTS & STATE
-    ═══════════════════════════════════════════════════════════════════ */
-    const IS_ADMIN   = window.USER_ROLE === 1;
-    const $  = id    => document.getElementById(id);
-    const CSRF       = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    
-    let _data        = null;   // { categories:[{name,type,id,max_score}], rows:[…] }
-    let _bulkMode    = false;
-    let _bulkList    = [];     // [{td, row, catIdx, catName, actId, pts, slug, max}]
-    
-    /* ═══════════════════════════════════════════════════════════════════
+
+    const IS_ADMIN = window.USER_ROLE === 1;
+    const $id = id => document.getElementById(id);
+
+    /* ═══════════════════════════════════════════════════════════
+       STATE
+    ═══════════════════════════════════════════════════════════ */
+    let _currentData  = null;   // last fetched {categories, rows}
+    let _bulkMode     = false;
+    let _bulkSelected = [];     // [{td, row, cat, pts, slug, maxScore, activityId}, …]
+
+    /* ═══════════════════════════════════════════════════════════
        TOAST
-    ═══════════════════════════════════════════════════════════════════ */
+    ═══════════════════════════════════════════════════════════ */
     function toast(msg, type = 'ok') {
-        const el = $('lb-toast');
+        const el = $id('lb-toast');
         el.textContent = msg;
-        el.className   = `show ${type}`;
+        el.className = 'show ' + type;
         clearTimeout(el._t);
-        el._t = setTimeout(() => el.className = '', 3000);
+        el._t = setTimeout(() => { el.className = ''; }, 2800);
     }
-    
-    /* ═══════════════════════════════════════════════════════════════════
+
+    /* ═══════════════════════════════════════════════════════════
        HELPERS
-    ═══════════════════════════════════════════════════════════════════ */
-    function esc(s) {
-        return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    ═══════════════════════════════════════════════════════════ */
+    function scorePill(pts, slug) {
+        const v = parseInt(pts) || 0;
+        if (!v) return '<span class="score-zero">—</span>';
+        return `<span class="score-pill score-${slug}">${Number(v).toLocaleString()}</span>`;
     }
-    function pill(pts, slug) {
-        return pts > 0
-            ? `<span class="score-pill score-${slug}">${Number(pts).toLocaleString()}</span>`
-            : `<span class="score-zero">—</span>`;
-    }
-    function bonusPill(pts) {
-        return pts > 0
-            ? `<span class="score-bonus-pill">+${Number(pts).toLocaleString()}</span>`
-            : `<span class="score-zero">—</span>`;
-    }
+
     function rankBadge(r) {
-        if (!r) return '';
-        const cls = r <= 3 ? `rank-${r}` : 'rank-n';
-        return `<span class="rank-medal ${cls}">${r}</span>`;
+        if (!r && r !== 0) return '';
+        if (r === 1) return `<span class="rank-medal rank-1">1</span>`;
+        if (r === 2) return `<span class="rank-medal rank-2">2</span>`;
+        if (r === 3) return `<span class="rank-medal rank-3">3</span>`;
+        return `<span class="rank-medal rank-n">${r}</span>`;
     }
-    function slugLabel(slug) {
-        return { science:'Science', technology:'Technology', engineering:'Engineering',
-                 art:'Art', math:'Math', playground:'Playground',
-                 egaming:'E-Gaming', esports:'ESports', mission:'Missions', other:'Other' }[slug] ?? slug;
+
+    function csrfToken() {
+        const m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.getAttribute('content') : '';
     }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       FETCH & RENDER
-    ═══════════════════════════════════════════════════════════════════ */
-    async function loadLeaderboard(eventId) {
-        if (!eventId) return;
-        $('lb-thead').innerHTML = '';
-        $('lb-tbody').innerHTML = `<tr class="lb-state-row"><td colspan="999">Loading…</td></tr>`;
-    
-        try {
-            const res  = await fetch(`/leaderboard-data?event_id=${eventId}`, { headers:{ Accept:'application/json' } });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            _data = data;
-    
-            if (!data.rows?.length) {
-                $('lb-tbody').innerHTML = `<tr class="lb-state-row"><td colspan="999">No data for this event.</td></tr>`;
-                return;
-            }
-            buildTable(data);
-        } catch(e) {
-            console.error(e);
-            $('lb-tbody').innerHTML = `<tr class="lb-state-row"><td colspan="999">Error loading leaderboard.</td></tr>`;
-        }
-    }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       BUILD TABLE
-    ═══════════════════════════════════════════════════════════════════ */
-    function buildTable(data) {
-        const cats     = data.categories ?? [];   // [{name,type,id,max_score}]
-        const rows     = data.rows;
-        const catNames = cats.map(c => c.name);
-        const catSlugs = cats.map(c => c.type);
-    
-        /* Banner groups */
-        const bannerGroups = [];
-        catSlugs.forEach((slug, i) => {
-            const last = bannerGroups[bannerGroups.length - 1];
-            if (last && last.slug === slug) { last.span++; }
-            else bannerGroups.push({ slug, span: 1 });
-        });
-    
-        const thead = $('lb-thead');
-        const tbody = $('lb-tbody');
-        thead.innerHTML = '';
-    
-        /* Fixed column definitions */
-        const fixedCols = [
-            { banner:'#',        col:'RANK',      cls:'fix-0', w:46 },
-            { banner:'NO',       col:'TEAM NO',   cls:'fix-1', w:50 },
-            { banner:'TEAM',     col:'TEAM NAME', cls:'fix-2', w:134 },
-            { banner:'MEMBERS',  col:'MEMBERS',   cls:'fix-3', w:130 },
-            { banner:'DIVISION', col:'DIVISION',  cls:'fix-4', w:100 },
-        ];
-    
-        /* ── ROW 1 banner ── */
-        const r1 = document.createElement('tr');
-        r1.className = 'row-banner';
-        fixedCols.forEach(fc => {
-            const th = document.createElement('th');
-            th.className = fc.cls; th.textContent = fc.banner; th.style.minWidth = fc.w + 'px';
-            r1.appendChild(th);
-        });
-        bannerGroups.forEach(g => {
-            const th = document.createElement('th');
-            th.colSpan   = g.span;
-            th.textContent = slugLabel(g.slug).toUpperCase();
-            th.className   = 'banner-' + g.slug;
-            th.style.minWidth = (g.span * 120) + 'px';
-            r1.appendChild(th);
-        });
-        // Bonus banner
-        const thBonusBanner = document.createElement('th');
-        thBonusBanner.textContent = 'BONUS';
-        thBonusBanner.className   = 'banner-bonus';
-        thBonusBanner.style.minWidth = '90px';
-        r1.appendChild(thBonusBanner);
-        // Total banners
-        [
-            { label:'TEAM PTS',     cls:'banner-total-team',   w:95 },
-            { label:'PLAYER PTS',   cls:'banner-total-player', w:95 },
-            { label:'GRAND TOTAL',  cls:'banner-total-grand',  w:100 },
-            { label:'RANK',         cls:'',                    w:60 },
-            { label:'ORG',          cls:'',                    w:120 },
-        ].forEach(m => {
-            const th = document.createElement('th');
-            th.textContent = m.label; if (m.cls) th.className = m.cls;
-            th.style.minWidth = m.w + 'px'; r1.appendChild(th);
-        });
-        thead.appendChild(r1);
-    
-        /* ── ROW 2 col labels ── */
-        const r2 = document.createElement('tr');
-        r2.className = 'row-cols';
-        fixedCols.forEach(fc => {
-            const th = document.createElement('th');
-            th.className = fc.cls; th.textContent = fc.col; th.style.minWidth = fc.w + 'px';
-            r2.appendChild(th);
-        });
-        catNames.forEach((name, i) => {
-            const th = document.createElement('th');
-            th.textContent = name;
-            th.className   = 'cat-' + catSlugs[i];
-            th.style.minWidth = '120px';
-            th.title = name;
-            r2.appendChild(th);
-        });
-        // Bonus col label
-        const thBonusCol = document.createElement('th');
-        thBonusCol.textContent = 'BONUS';
-        thBonusCol.className   = 'cat-bonus';
-        thBonusCol.style.minWidth = '90px';
-        r2.appendChild(thBonusCol);
-        [
-            { label:'TEAM PTS',    cls:'col-total-team',   w:95 },
-            { label:'PLAYER PTS',  cls:'col-total-player', w:95 },
-            { label:'GRAND TOTAL', cls:'col-total-grand',  w:100 },
-            { label:'RANK',        cls:'',                 w:60 },
-            { label:'ORGANIZATION',cls:'',                 w:120 },
-        ].forEach(m => {
-            const th = document.createElement('th');
-            th.textContent = m.label; if (m.cls) th.className = m.cls;
-            th.style.minWidth = m.w + 'px'; r2.appendChild(th);
-        });
-        thead.appendChild(r2);
-    
-        /* ── TBODY ── */
-        const frag = document.createDocumentFragment();
-        let curGroup = null;
-        const teamSeq = {};
-    
-        rows.forEach(row => {
-            const isTeam   = row.type === 'team';
-            const groupKey = row.group ?? 'Ungrouped';
-    
-            /* Group divider */
-            if (isTeam && groupKey !== curGroup) {
-                curGroup = groupKey;
-                const dTr = document.createElement('tr');
-                dTr.className = 'tr-divider';
-                const dTd = document.createElement('td');
-                dTd.colSpan = 5 + catNames.length + 6; // +1 for bonus col
-                const sub = (row.subgroup && row.subgroup !== '-') ? ' › ' + row.subgroup.toUpperCase() : '';
-                dTd.textContent = '▸  ' + groupKey.toUpperCase() + sub;
-                dTr.appendChild(dTd);
-                frag.appendChild(dTr);
-            }
-    
-            const tr = document.createElement('tr');
-            tr.className       = isTeam ? 'tr-team' : 'tr-student';
-            tr.dataset.rowType = row.type;
-            tr.dataset.rowId   = row.id;
-    
-            /* col 0: rank */
-            const td0 = document.createElement('td');
-            td0.className = 'fix-0'; td0.style.textAlign = 'center';
-            if (isTeam && row.rank) td0.innerHTML = rankBadge(row.rank);
-            tr.appendChild(td0);
-    
-            /* col 1: seq */
-            const td1 = document.createElement('td');
-            td1.className = 'fix-1'; td1.style.textAlign = 'center';
-            if (isTeam) {
-                teamSeq[groupKey] = (teamSeq[groupKey] ?? 0) + 1;
-                td1.textContent = teamSeq[groupKey];
-            }
-            tr.appendChild(td1);
-    
-            /* col 2: team name */
-            const td2 = document.createElement('td');
-            td2.className = 'fix-2';
-            td2.style.cssText = `text-align:left;padding-left:${isTeam?'10':'22'}px;${isTeam?'font-weight:700;':''}`;
-            td2.textContent = isTeam ? (row.team_name || '—') : '';
-            tr.appendChild(td2);
-    
-            /* col 3: member */
-            const td3 = document.createElement('td');
-            td3.className = 'fix-3'; td3.style.textAlign = 'left';
-            td3.textContent = isTeam ? '' : (row.student_name || '—');
-            tr.appendChild(td3);
-    
-            /* col 4: division */
-            const td4 = document.createElement('td');
-            td4.className = 'fix-4'; td4.textContent = row.division || '—';
-            tr.appendChild(td4);
-    
-            /* Activity score columns */
-            catNames.forEach((cat, i) => {
-                const td   = document.createElement('td');
-                td.className     = 'score-edit-cell';
-                const pts        = row.scores?.[cat] ?? 0;
-                const slug       = catSlugs[i];
-                const actId      = cats[i]?.id;
-                const maxScore   = cats[i]?.max_score ?? 9999;
-    
-                td.innerHTML     = pill(pts, slug);
-                td.dataset.pts   = pts;
-                td.dataset.cat   = cat;
-                td.dataset.slug  = slug;
-                td.dataset.actId = actId;
-                td.dataset.max   = maxScore;
-    
-                if (IS_ADMIN) {
-                    td.addEventListener('click', () => {
-                        if (_bulkMode) toggleBulkCell(td, row, i);
-                        else           openEditor(td, row, cat, pts, slug, actId, maxScore);
-                    });
-                } else {
-                    td.style.cursor = 'default';
-                }
-                tr.appendChild(td);
-            });
-    
-            /* Bonus column (read-only display) */
-            const tdBonus = document.createElement('td');
-            tdBonus.className = 'td-bonus-cell';
-            const totalBonus = isTeam
-                ? (row.total_bonus ?? 0)
-                : (row.total_bonus ?? 0);
-            tdBonus.innerHTML = bonusPill(totalBonus);
-            tr.appendChild(tdBonus);
-    
-            /* Team points */
-            const tdTP = document.createElement('td');
-            tdTP.className = 'td-total-team';
-            if (isTeam) tdTP.textContent = Number(row.team_points ?? 0).toLocaleString();
-            tr.appendChild(tdTP);
-    
-            /* Player points */
-            const tdPP = document.createElement('td');
-            tdPP.className = 'td-total-player';
-            tdPP.textContent = Number(isTeam ? (row.player_points ?? 0) : (row.total_points ?? 0)).toLocaleString();
-            tr.appendChild(tdPP);
-    
-            /* Grand total */
-            const tdGT = document.createElement('td');
-            tdGT.className = 'td-total-grand';
-            if (isTeam) tdGT.textContent = Number(row.grand_total ?? 0).toLocaleString();
-            tr.appendChild(tdGT);
-    
-            /* Rank end */
-            const tdRE = document.createElement('td');
-            tdRE.style.cssText = 'font-family:var(--font-head);font-weight:900;';
-            if (isTeam && row.rank) tdRE.innerHTML = rankBadge(row.rank);
-            tr.appendChild(tdRE);
-    
-            /* Org */
-            const tdOrg = document.createElement('td');
-            tdOrg.className = 'td-org';
-            tdOrg.textContent = isTeam ? (row.organization || '—') : '';
-            tr.appendChild(tdOrg);
-    
-            frag.appendChild(tr);
-        });
-    
-        tbody.innerHTML = '';
-        tbody.appendChild(frag);
-    }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       INLINE EDITOR — no full re-render, pure DOM patch
-    ═══════════════════════════════════════════════════════════════════ */
-    function openEditor(td, row, cat, currentPts, slug, actId, maxScore) {
-        if (td.querySelector('.score-edit-input')) return;
-    
-        const input     = document.createElement('input');
-        input.type      = 'number';
-        input.min       = '0';
-        input.max       = String(maxScore);
-        input.className = 'score-edit-input';
-        input.value     = currentPts || 0;
-        td.innerHTML    = '';
-        td.appendChild(input);
-        input.focus();
-        input.select();
-    
-        let done = false;
-    
-        function restore() {
-            if (done) return;
-            done = true;
-            td.innerHTML   = pill(currentPts, slug);
-            td.dataset.pts = currentPts;
-        }
-    
-        function commit() {
-            if (done) return;
-            done = true;
-            const v = parseInt(input.value, 10);
-            if (isNaN(v) || v < 0)  { restore(); return; }
-            if (v > maxScore) {
-                toast(`Max allowed is ${maxScore} for this activity`, 'warn');
-                done = false;
-                restore();
-                return;
-            }
-            // Optimistic update
-            td.innerHTML   = pill(v, slug);
-            td.dataset.pts = v;
-            patchTotalsInDOM(row, cat, v, currentPts);
-            persistScore(actId, row, v, maxScore).then(ok => {
-                if (!ok) {
-                    // rollback
-                    td.innerHTML   = pill(currentPts, slug);
-                    td.dataset.pts = currentPts;
-                    patchTotalsInDOM(row, cat, currentPts, v);
-                }
-            });
-        }
-    
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter')  { e.preventDefault(); commit(); }
-            if (e.key === 'Escape') { done = true; restore(); }
-        });
-        // blur with small delay so keydown fires first
-        input.addEventListener('blur', () => setTimeout(commit, 120));
-    }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       PERSIST SINGLE SCORE — uses activity ID (no string matching)
-    ═══════════════════════════════════════════════════════════════════ */
-    async function persistScore(actId, row, pts, maxScore) {
-        const eventId = $('selectEvent').value;
-        const payload = {
-            event_id:               parseInt(eventId),
-            challenge_activity_id:  parseInt(actId),
-            points:                 pts,
+
+    function slugToLabel(slug) {
+        const map = {
+            science: 'Science', technology: 'Technology', engineering: 'Engineering',
+            art: 'Art', math: 'Math', playground: 'Playground',
+            egaming: 'E-Gaming', esports: 'ESports', mission: 'Missions', other: 'Other',
         };
-        if (row.type === 'student') payload.student_id = row.id;
-        else                        payload.team_id    = row.id;
-    
+        return map[slug] || slug;
+    }
+
+    function esc(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       FETCH LEADERBOARD DATA
+    ═══════════════════════════════════════════════════════════ */
+    async function fetchLeaderboard(eventId) {
+        if (!eventId) return;
+
+        const thead = $id('lb-thead');
+        const tbody = $id('lb-tbody');
+        tbody.innerHTML = `<tr class="lb-state-row"><td colspan="999">Loading…</td></tr>`;
+        thead.innerHTML = '';
+
         try {
-            const res  = await fetch('/scores/update-by-id', {
-                method:  'POST',
-                headers: { 'Content-Type':'application/json', Accept:'application/json', 'X-CSRF-TOKEN': CSRF() },
-                body:    JSON.stringify(payload),
+            const res = await fetch(`/leaderboard-data?event_id=${eventId}`, {
+                headers: { 'Accept': 'application/json' }
             });
-            const json = await res.json();
-            if (json.success) { toast('Score saved ✓'); return true; }
-            toast(json.message || 'Save failed', 'err');
-            return false;
-        } catch(e) {
-            toast('Network error', 'err');
-            return false;
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            _currentData = data;
+
+            if (!data.rows || !data.rows.length) {
+                tbody.innerHTML = `<tr class="lb-state-row"><td colspan="999">No data available for this event.</td></tr>`;
+                return;
+            }
+            buildTable(data, thead, tbody);
+        } catch (err) {
+            console.error(err);
+            tbody.innerHTML = `<tr class="lb-state-row"><td colspan="999">Error loading leaderboard.</td></tr>`;
         }
     }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       PATCH TOTALS IN DOM  (no full re-render)
-    ═══════════════════════════════════════════════════════════════════ */
-    function patchTotalsInDOM(row, cat, newPts, oldPts) {
-        if (!_data) return;
-        const diff = newPts - oldPts;
-    
-        // Update in-memory
-        const dr = _data.rows.find(r => r.type === row.type && r.id === row.id);
-        if (dr?.scores) dr.scores[cat] = newPts;
-    
-        const tbody = $('lb-tbody');
-    
-        if (row.type === 'team') {
-            if (dr) {
-                dr.team_points  = (dr.team_points  ?? 0) + diff;
-                dr.grand_total  = (dr.grand_total  ?? 0) + diff;
-            }
-            const tr = tbody.querySelector(`tr[data-row-type="team"][data-row-id="${row.id}"]`);
-            if (tr) {
-                const tpEl = tr.querySelector('.td-total-team');
-                const gtEl = tr.querySelector('.td-total-grand');
-                if (tpEl && dr) tpEl.textContent = Number(dr.team_points).toLocaleString();
-                if (gtEl && dr) gtEl.textContent = Number(dr.grand_total).toLocaleString();
-            }
+
+    /* ═══════════════════════════════════════════════════════════
+       UPDATE SINGLE TEAM/STUDENT TOTALS IN DOM
+    ═══════════════════════════════════════════════════════════ */
+    function updateRowTotalsInDOM(row, cat, newPts) {
+        if (!_currentData) return;
+
+        const dataRow = _currentData.rows.find(r => r.type === row.type && r.id === row.id);
+        if (!dataRow) return;
+
+        const oldPts = dataRow.scores?.[cat] ?? 0;
+        const diff   = newPts - oldPts;
+        if (dataRow.scores) dataRow.scores[cat] = newPts;
+
+        if (row.type === 'student') {
+            dataRow.total_points = (dataRow.total_points ?? 0) + diff;
         } else {
-            if (dr) dr.total_points = (dr.total_points ?? 0) + diff;
-            const tr = tbody.querySelector(`tr[data-row-type="student"][data-row-id="${row.id}"]`);
-            if (tr) {
-                const ppEl = tr.querySelector('.td-total-player');
-                if (ppEl && dr) ppEl.textContent = Number(dr.total_points).toLocaleString();
-            }
-            // Also patch parent team
-            const teamDr = _data.rows.find(r => r.type === 'team' && r.team_name === row.team_name);
-            if (teamDr) {
-                teamDr.player_points = (teamDr.player_points ?? 0) + diff;
-                teamDr.grand_total   = (teamDr.grand_total   ?? 0) + diff;
-                const teamTr = tbody.querySelector(`tr[data-row-type="team"][data-row-id="${teamDr.id}"]`);
+            dataRow.team_points  = (dataRow.team_points  ?? 0) + diff;
+            dataRow.total_points = (dataRow.total_points ?? 0) + diff;
+            dataRow.grand_total  = (dataRow.grand_total  ?? 0) + diff;
+        }
+
+        const tbody = $id('lb-tbody');
+        const tr = tbody.querySelector(`tr[data-row-type="${row.type}"][data-row-id="${row.id}"]`);
+        if (!tr) return;
+
+        if (row.type === 'team') {
+            const tdTP = tr.querySelector('.td-total-team');
+            const tdGT = tr.querySelector('.td-total-grand');
+            if (tdTP) tdTP.textContent = Number(dataRow.team_points).toLocaleString();
+            if (tdGT) tdGT.textContent = Number(dataRow.grand_total).toLocaleString();
+        } else {
+            const tdPP = tr.querySelector('.td-total-player');
+            if (tdPP) tdPP.textContent = Number(dataRow.total_points).toLocaleString();
+
+            // Update parent team's player_points & grand_total
+            const teamDataRow = _currentData.rows.find(r => r.type === 'team' && r.team_name === dataRow.team_name);
+            if (teamDataRow) {
+                teamDataRow.player_points = (teamDataRow.player_points ?? 0) + diff;
+                teamDataRow.grand_total   = (teamDataRow.grand_total   ?? 0) + diff;
+                const teamTr = tbody.querySelector(`tr[data-row-type="team"][data-row-id="${teamDataRow.id}"]`);
                 if (teamTr) {
-                    const ppEl = teamTr.querySelector('.td-total-player');
-                    const gtEl = teamTr.querySelector('.td-total-grand');
-                    if (ppEl) ppEl.textContent = Number(teamDr.player_points).toLocaleString();
-                    if (gtEl) gtEl.textContent = Number(teamDr.grand_total).toLocaleString();
+                    const tdPP2 = teamTr.querySelector('.td-total-player');
+                    const tdGT2 = teamTr.querySelector('.td-total-grand');
+                    if (tdPP2) tdPP2.textContent = Number(teamDataRow.player_points).toLocaleString();
+                    if (tdGT2) tdGT2.textContent = Number(teamDataRow.grand_total).toLocaleString();
                 }
             }
         }
-    
+
         recomputeRanks();
     }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       RECOMPUTE RANKS (only for teams with grand_total > 0)
-    ═══════════════════════════════════════════════════════════════════ */
+
     function recomputeRanks() {
-        if (!_data) return;
-        const tbody    = $('lb-tbody');
-        const teamRows = _data.rows.filter(r => r.type === 'team');
+        if (!_currentData) return;
+        const tbody = $id('lb-tbody');
+
+        const teamRows = _currentData.rows.filter(r => r.type === 'team');
         const sorted   = [...teamRows].sort((a, b) => (b.grand_total ?? 0) - (a.grand_total ?? 0));
-    
+
         let rank = 1, prevGT = null, prevRank = 1;
-    
         sorted.forEach(row => {
             const gt = row.grand_total ?? 0;
-            let assigned = null;
-    
+            let assignedRank = null;
+
             if (gt > 0) {
                 if (prevGT !== null && gt === prevGT) {
-                    assigned = prevRank;
+                    assignedRank = prevRank;
                 } else {
-                    assigned = rank;
+                    assignedRank = rank;
                     prevRank = rank;
                 }
                 prevGT = gt;
                 rank++;
             }
-            row.rank = assigned;
-    
+            row.rank = assignedRank;
+
             const tr = tbody.querySelector(`tr[data-row-type="team"][data-row-id="${row.id}"]`);
             if (!tr) return;
-            const badge = assigned ? rankBadge(assigned) : '';
-            const td0   = tr.querySelector('.fix-0');
-            const tdRE  = tr.cells[tr.cells.length - 2]; // rank-end is 2nd to last
-            if (td0) td0.innerHTML = badge;
-            if (tdRE && tdRE.style.fontFamily.includes('Barlow')) tdRE.innerHTML = badge;
+            const td0     = tr.querySelector('.fix-0');
+            const tdRankE = tr.querySelector('.td-rank-end');
+            const badge   = assignedRank ? rankBadge(assignedRank) : '';
+            if (td0)     td0.innerHTML     = badge;
+            if (tdRankE) tdRankE.innerHTML = badge;
         });
     }
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       BULK EDIT
-    ═══════════════════════════════════════════════════════════════════ */
+
+    /* ═══════════════════════════════════════════════════════════
+       BUILD TABLE
+       Uses category id/max_score from the server response directly
+       so no async race condition with activity meta.
+    ═══════════════════════════════════════════════════════════ */
+    function buildTable(data, thead, tbody) {
+        const cats      = data.categories || [];
+        const rows      = data.rows;
+
+        // Pull arrays from server response (id & max_score are included)
+        const catNames     = cats.map(c => c.name);
+        const catSlugs     = cats.map(c => c.type);
+        const catIds       = cats.map(c => c.id);
+        const catMaxScores = cats.map(c => c.max_score || 9999);
+
+        /* Banner groups — merge consecutive same-slug columns */
+        const bannerGroups = [];
+        catSlugs.forEach((slug, i) => {
+            const last = bannerGroups[bannerGroups.length - 1];
+            if (last && last.slug === slug) {
+                last.span++;
+            } else {
+                bannerGroups.push({ slug, label: slugToLabel(slug), span: 1 });
+            }
+        });
+
+        /* ── ROW 1: Banner ── */
+        const r1 = document.createElement('tr');
+        r1.className = 'row-banner';
+        [
+            { label: '#',        cls: 'fix-0', w: 46  },
+            { label: 'NO',       cls: 'fix-1', w: 50  },
+            { label: 'TEAM',     cls: 'fix-2', w: 134 },
+            { label: 'MEMBERS',  cls: 'fix-3', w: 130 },
+            { label: 'DIVISION', cls: 'fix-4', w: 100 },
+        ].forEach(m => {
+            const th = document.createElement('th');
+            th.className = m.cls; th.textContent = m.label; th.style.minWidth = m.w + 'px';
+            r1.appendChild(th);
+        });
+        bannerGroups.forEach(g => {
+            const th = document.createElement('th');
+            th.colSpan     = g.span;
+            th.textContent = g.label.toUpperCase();
+            th.className   = 'banner-' + g.slug;
+            th.style.minWidth = (g.span * 120) + 'px';
+            r1.appendChild(th);
+        });
+        [
+            { label: 'TEAM POINTS',   cls: 'banner-total-team',   w: 100 },
+            { label: 'PLAYER POINTS', cls: 'banner-total-player', w: 100 },
+            { label: 'GRAND TOTAL',   cls: 'banner-total-grand',  w: 100 },
+            { label: 'RANK',          cls: '',                     w: 70  },
+            { label: 'ORG',           cls: '',                     w: 120 },
+        ].forEach(m => {
+            const th = document.createElement('th');
+            th.textContent = m.label;
+            if (m.cls) th.className = m.cls;
+            th.style.minWidth = m.w + 'px';
+            r1.appendChild(th);
+        });
+        thead.appendChild(r1);
+
+        /* ── ROW 2: Column labels ── */
+        const r2 = document.createElement('tr');
+        r2.className = 'row-cols';
+        [
+            { label: 'RANK',      cls: 'fix-0', w: 46  },
+            { label: 'TEAM NO',   cls: 'fix-1', w: 50  },
+            { label: 'TEAM NAME', cls: 'fix-2', w: 134 },
+            { label: 'MEMBERS',   cls: 'fix-3', w: 130 },
+            { label: 'DIVISION',  cls: 'fix-4', w: 100 },
+        ].forEach(m => {
+            const th = document.createElement('th');
+            th.className = m.cls; th.textContent = m.label; th.style.minWidth = m.w + 'px';
+            r2.appendChild(th);
+        });
+        catNames.forEach((name, i) => {
+            const th = document.createElement('th');
+            th.textContent  = name;
+            th.className    = 'cat-' + catSlugs[i];
+            th.style.minWidth = '140px';
+            th.title        = name;
+            r2.appendChild(th);
+        });
+        [
+            { label: 'TEAM PTS',    cls: 'col-total-team',   w: 100 },
+            { label: 'PLAYER PTS',  cls: 'col-total-player', w: 100 },
+            { label: 'GRAND TOTAL', cls: 'col-total-grand',  w: 100 },
+            { label: 'RANK',        cls: '',                  w: 70  },
+            { label: 'ORGANIZATION',cls: '',                  w: 120 },
+        ].forEach(m => {
+            const th = document.createElement('th');
+            th.textContent = m.label;
+            if (m.cls) th.className = m.cls;
+            th.style.minWidth = m.w + 'px';
+            r2.appendChild(th);
+        });
+        thead.appendChild(r2);
+
+        /* ── TBODY ── */
+        const frag = document.createDocumentFragment();
+        let currentGroup = null;
+        const teamSeq    = {};
+
+        rows.forEach(row => {
+            const isTeam   = row.type === 'team';
+            const groupKey = row.group || 'Ungrouped';
+
+            /* Group divider row */
+            if (isTeam && groupKey !== currentGroup) {
+                currentGroup = groupKey;
+                const divTr = document.createElement('tr');
+                divTr.className = 'tr-divider';
+                const divTd = document.createElement('td');
+                divTd.colSpan = 5 + catNames.length + 5;
+                const sub = (row.subgroup && row.subgroup !== '-') ? '  ›  ' + row.subgroup.toUpperCase() : '';
+                divTd.textContent = '▸  ' + groupKey.toUpperCase() + sub;
+                divTr.appendChild(divTd);
+                frag.appendChild(divTr);
+            }
+
+            const tr = document.createElement('tr');
+            tr.className       = isTeam ? 'tr-team' : 'tr-student';
+            tr.dataset.rowType = row.type;
+            tr.dataset.rowId   = row.id;
+
+            /* col 0: rank medal */
+            const td0 = document.createElement('td');
+            td0.className   = 'fix-0';
+            td0.style.textAlign = 'center';
+            if (isTeam && row.rank) td0.innerHTML = rankBadge(row.rank);
+            tr.appendChild(td0);
+
+            /* col 1: sequence number */
+            const td1 = document.createElement('td');
+            td1.className   = 'fix-1';
+            td1.style.textAlign = 'center';
+            if (isTeam) {
+                if (!teamSeq[groupKey]) teamSeq[groupKey] = 0;
+                teamSeq[groupKey]++;
+                td1.textContent = teamSeq[groupKey];
+            }
+            tr.appendChild(td1);
+
+            /* col 2: team name */
+            const td2 = document.createElement('td');
+            td2.className       = 'fix-2';
+            td2.style.textAlign = 'left';
+            td2.style.paddingLeft = isTeam ? '10px' : '22px';
+            td2.textContent     = isTeam ? (row.team_name || '—') : '';
+            if (isTeam) td2.style.fontWeight = '700';
+            tr.appendChild(td2);
+
+            /* col 3: member name */
+            const td3 = document.createElement('td');
+            td3.className   = 'fix-3';
+            td3.style.textAlign = 'left';
+            td3.textContent = isTeam ? '' : (row.student_name || '—');
+            tr.appendChild(td3);
+
+            /* col 4: division */
+            const td4 = document.createElement('td');
+            td4.className   = 'fix-4';
+            td4.textContent = row.division || '—';
+            tr.appendChild(td4);
+
+            /* ── Activity score columns ── */
+            catNames.forEach((cat, i) => {
+                const td   = document.createElement('td');
+                const pts  = row.scores?.[cat] ?? 0;
+                const slug = catSlugs[i];
+                const actId   = catIds[i];
+                const maxSc   = catMaxScores[i];
+
+                td.innerHTML = scorePill(pts, slug);
+
+                // Store everything needed on the element so callbacks don't
+                // need closure variables that can go stale.
+                td.dataset.cat        = cat;
+                td.dataset.pts        = pts;
+                td.dataset.slug       = slug;
+                td.dataset.activityId = actId;
+                td.dataset.maxScore   = maxSc;
+
+                if (IS_ADMIN) {
+                    td.className = 'score-edit-cell';
+                    td.addEventListener('click', function () {
+                        if (_bulkMode) {
+                            toggleBulkSelect(td, row);
+                        } else {
+                            openScoreEditor(td, row);
+                        }
+                    });
+                } else {
+                    td.className = 'score-edit-cell no-edit';
+                    td.title = 'Only admin can edit scores';
+                }
+
+                tr.appendChild(td);
+            });
+
+            /* team points */
+            const tdTP = document.createElement('td');
+            tdTP.className  = 'td-total-team';
+            if (isTeam) tdTP.textContent = Number(row.team_points ?? 0).toLocaleString();
+            tr.appendChild(tdTP);
+
+            /* player points */
+            const tdPP = document.createElement('td');
+            tdPP.className  = 'td-total-player';
+            tdPP.textContent = isTeam
+                ? Number(row.player_points ?? 0).toLocaleString()
+                : Number(row.total_points  ?? 0).toLocaleString();
+            tr.appendChild(tdPP);
+
+            /* grand total */
+            const tdGT = document.createElement('td');
+            tdGT.className  = 'td-total-grand';
+            if (isTeam) tdGT.textContent = Number(row.grand_total ?? 0).toLocaleString();
+            tr.appendChild(tdGT);
+
+            /* rank end */
+            const tdRankEnd = document.createElement('td');
+            tdRankEnd.className = 'td-rank-end';
+            if (isTeam && row.rank) tdRankEnd.innerHTML = rankBadge(row.rank);
+            tr.appendChild(tdRankEnd);
+
+            /* organization */
+            const tdOrg = document.createElement('td');
+            tdOrg.className  = 'td-org';
+            tdOrg.textContent = isTeam ? (row.organization || '—') : '';
+            tr.appendChild(tdOrg);
+
+            frag.appendChild(tr);
+        });
+
+        tbody.innerHTML = '';
+        tbody.appendChild(frag);
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       INLINE SCORE EDITOR
+    ═══════════════════════════════════════════════════════════ */
+    function openScoreEditor(td, row) {
+        // Prevent opening a second input while one is already open
+        if (td.querySelector('.score-edit-input')) return;
+
+        const cat      = td.dataset.cat;
+        const slug     = td.dataset.slug;
+        const actId    = parseInt(td.dataset.activityId);
+        const maxScore = parseInt(td.dataset.maxScore) || 9999;
+        const oldPts   = parseInt(td.dataset.pts) || 0;
+
+        const input = document.createElement('input');
+        input.type      = 'number';
+        input.min       = '0';
+        input.max       = maxScore;
+        input.className = 'score-edit-input';
+        input.value     = oldPts;
+        input.title     = `Max: ${maxScore}`;
+
+        td.innerHTML = '';
+        td.appendChild(input);
+        input.focus();
+        input.select();
+
+        let committed = false;
+
+        function commit() {
+            if (committed) return;
+            const newVal = parseInt(input.value, 10);
+
+            if (isNaN(newVal) || newVal < 0) {
+                cancel();
+                return;
+            }
+            if (newVal > maxScore) {
+                toast(`Max score is ${maxScore}`, 'warn');
+                cancel();
+                return;
+            }
+
+            committed = true;
+            // Optimistic update
+            td.innerHTML   = scorePill(newVal, slug);
+            td.dataset.pts = newVal;
+            updateRowTotalsInDOM(row, cat, newVal);
+
+            saveScore(td, row, cat, newVal, slug, oldPts, actId, maxScore);
+        }
+
+        function cancel() {
+            if (committed) return;
+            td.innerHTML   = scorePill(oldPts, slug);
+            td.dataset.pts = oldPts;
+        }
+
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+            if (e.key === 'Escape') cancel();
+        });
+        input.addEventListener('blur', () => { if (!committed) commit(); });
+    }
+
+    /* ── POST score to server ── */
+    async function saveScore(td, row, cat, newPts, slug, oldPts, activityId, maxScore) {
+        const eventId = $id('selectEvent').value;
+
+        const payload = {
+            event_id:              eventId,
+            challenge_activity_id: activityId,
+            points:                newPts,
+        };
+        if (row.type === 'student') payload.student_id = row.id;
+        else                        payload.team_id    = row.id;
+
+        try {
+            const res = await fetch('/scores/update-by-id', {
+                method:  'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept':       'application/json',
+                    'X-CSRF-TOKEN': csrfToken(),
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const json = await res.json();
+
+            if (json.success) {
+                toast('Score saved ✓', 'ok');
+                td.dataset.pts = newPts;
+            } else {
+                throw new Error(json.message || 'Save failed');
+            }
+        } catch (err) {
+            console.error(err);
+            toast('Error: ' + err.message, 'err');
+            // Rollback optimistic update
+            td.innerHTML   = scorePill(oldPts, slug);
+            td.dataset.pts = oldPts;
+            updateRowTotalsInDOM(row, cat, oldPts);
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       BULK EDIT MODE
+    ═══════════════════════════════════════════════════════════ */
     function toggleBulkMode() {
-        _bulkMode = !_bulkMode;
-        _bulkList = [];
-    
-        const btn  = $('bulkEditBtn');
-        const bar  = $('bulk-bar');
-        const tbl  = $('lb-table');
-    
+        _bulkMode     = !_bulkMode;
+        _bulkSelected = [];
+
+        const btn    = $id('bulkEditBtn');
+        const bulkBar = $id('bulk-bar');
+        const table  = $id('lb-table');
+
         if (_bulkMode) {
             btn.classList.add('active');
             btn.textContent = '✕ Exit Bulk';
-            bar.classList.add('show');
-            tbl.classList.add('bulk-active');
+            bulkBar.classList.add('visible');
+            table.classList.add('bulk-mode');
         } else {
             btn.classList.remove('active');
             btn.textContent = '⊞ Bulk Edit';
-            bar.classList.remove('show');
-            tbl.classList.remove('bulk-active');
-            document.querySelectorAll('.score-edit-cell.bulk-sel').forEach(td => td.classList.remove('bulk-sel'));
+            bulkBar.classList.remove('visible');
+            table.classList.remove('bulk-mode');
+            document.querySelectorAll('.score-edit-cell.bulk-selected')
+                .forEach(td => td.classList.remove('bulk-selected'));
         }
         updateBulkBar();
     }
-    
-    function toggleBulkCell(td, row, catIdx) {
-        const idx = _bulkList.findIndex(s => s.td === td);
+
+    function toggleBulkSelect(td, row) {
+        const idx = _bulkSelected.findIndex(s => s.td === td);
         if (idx > -1) {
-            _bulkList.splice(idx, 1);
-            td.classList.remove('bulk-sel');
+            _bulkSelected.splice(idx, 1);
+            td.classList.remove('bulk-selected');
         } else {
-            const cat      = td.dataset.cat;
-            const actId    = td.dataset.actId;
-            const pts      = parseInt(td.dataset.pts ?? 0);
-            const slug     = td.dataset.slug;
-            const max      = parseInt(td.dataset.max ?? 9999);
-            _bulkList.push({ td, row, cat, actId, pts, slug, max });
-            td.classList.add('bulk-sel');
+            _bulkSelected.push({
+                td,
+                row,
+                cat:        td.dataset.cat,
+                pts:        parseInt(td.dataset.pts) || 0,
+                slug:       td.dataset.slug,
+                maxScore:   parseInt(td.dataset.maxScore)   || 9999,
+                activityId: parseInt(td.dataset.activityId) || 0,
+            });
+            td.classList.add('bulk-selected');
         }
         updateBulkBar();
     }
-    
+
     function updateBulkBar() {
-        const el = $('bulk-count');
-        if (el) el.textContent = _bulkList.length;
+        const countEl = $id('bulk-count');
+        if (countEl) countEl.textContent = _bulkSelected.length;
     }
-    
-    function openBulkModal() {
-        if (!_bulkList.length) { toast('Select score cells first by clicking them', 'warn'); return; }
-    
-        const tbody = $('bulkEditTbody');
-        tbody.innerHTML = '';
-    
-        _bulkList.forEach((sel, i) => {
+
+    /* ── Open Bulk Edit Modal ── */
+    function openBulkEditModal() {
+        if (!_bulkSelected.length) {
+            toast('Select at least one score cell first', 'warn');
+            return;
+        }
+
+        const tbodyEl = $id('bulkEditTbody');
+        tbodyEl.innerHTML = '';
+
+        _bulkSelected.forEach((sel, i) => {
             const entityName = sel.row.type === 'team'
                 ? (sel.row.team_name    || 'Team')
                 : (sel.row.student_name || 'Player');
-            const typeColor  = sel.row.type === 'team' ? '#79c0ff' : '#56d364';
-            const typeBg     = sel.row.type === 'team' ? '#0d2d6e' : '#1a3a1a';
-    
+
+            const teamColor   = sel.row.type === 'team' ? '#1a3a6e' : '#1a3a1a';
+            const textColor   = sel.row.type === 'team' ? '#79c0ff' : '#56d364';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="width:36px;">
-                    <input type="checkbox" class="bk-chk" data-i="${i}" checked style="accent-color:#58a6ff;">
-                </td>
+                <td><input type="checkbox" class="bulk-row-check" data-idx="${i}" checked></td>
                 <td style="text-align:left;">
-                    <span style="background:${typeBg};color:${typeColor};font-size:9px;font-family:var(--font-head);font-weight:800;padding:1px 5px;border-radius:3px;letter-spacing:.06em;">${sel.row.type.toUpperCase()}</span>
-                    <span style="margin-left:6px;color:#c9d1d9;">${esc(entityName)}</span>
+                    <span class="badge" style="background:${teamColor};color:${textColor};font-size:10px;">
+                        ${sel.row.type.toUpperCase()}
+                    </span>
+                    <span style="margin-left:6px;">${esc(entityName)}</span>
                 </td>
-                <td style="text-align:left;font-size:11px;color:#8b949e;max-width:160px;overflow:hidden;text-overflow:ellipsis;" title="${esc(sel.cat)}">${esc(sel.cat)}</td>
-                <td style="text-align:center;">${pill(sel.pts, sel.slug)}</td>
-                <td style="text-align:center;">
-                    <input type="number" min="0" max="${sel.max}" value="${sel.pts}"
-                           class="bulk-pts-inp" data-i="${i}" data-max="${sel.max}">
-                    <div class="bulk-err-msg" id="bkerr-${i}">Max is ${sel.max}</div>
+                <td style="text-align:left;font-size:11px;color:#8b949e;">${esc(sel.cat)}</td>
+                <td><span class="score-pill score-${sel.slug}">${sel.pts}</span></td>
+                <td>
+                    <input type="number" min="0" max="${sel.maxScore}" value="${sel.pts}"
+                           class="bulk-pts-input" data-idx="${i}" data-max="${sel.maxScore}">
+                    <div class="err-hint" id="bulk-err-${i}">Exceeds max (${sel.maxScore})</div>
                 </td>
-                <td style="text-align:center;color:#8b949e;font-size:11px;">${sel.max}</td>
+                <td style="color:#8b949e;font-size:11px;">${sel.maxScore}</td>
             `;
-            tbody.appendChild(tr);
+            tbodyEl.appendChild(tr);
         });
-    
-        $('bulkEditCount').textContent = _bulkList.length + ' cells';
-        $('bulkValidationMsg').textContent = '';
-    
-        // Validate on input
-        tbody.querySelectorAll('.bulk-pts-inp').forEach(inp => {
-            inp.addEventListener('input', function() {
-                const max = parseInt(this.dataset.max);
-                const val = parseInt(this.value);
-                const err = $(`bkerr-${this.dataset.i}`);
-                if (isNaN(val) || val < 0 || val > max) {
-                    this.classList.add('err');
-                    if (err) err.style.display = 'block';
+
+        $id('bulkEditCount').textContent = _bulkSelected.length + ' cells';
+
+        /* Select-all checkbox */
+        const selectAll = $id('bulkSelectAll');
+        selectAll.checked  = true;
+        selectAll.onchange = function () {
+            document.querySelectorAll('.bulk-row-check').forEach(cb => {
+                cb.checked = this.checked;
+            });
+        };
+
+        /* Validate on input */
+        tbodyEl.querySelectorAll('.bulk-pts-input').forEach(input => {
+            input.addEventListener('input', function () {
+                const max   = parseInt(this.dataset.max);
+                const val   = parseInt(this.value);
+                const errEl = $id(`bulk-err-${this.dataset.idx}`);
+                if (val > max) {
+                    this.style.borderColor = '#f85149';
+                    if (errEl) errEl.style.display = 'block';
                 } else {
-                    this.classList.remove('err');
-                    if (err) err.style.display = 'none';
+                    this.style.borderColor = '#58a6ff';
+                    if (errEl) errEl.style.display = 'none';
                 }
             });
         });
-    
-        // Select all
-        $('bulkCheckAll').checked = true;
-        $('bulkCheckAll').onchange = function() {
-            tbody.querySelectorAll('.bk-chk').forEach(cb => cb.checked = this.checked);
-        };
-    
-        const modal = new bootstrap.Modal($('bulkEditModal'));
+
+        const modal = new bootstrap.Modal($id('bulkEditModal'));
         modal.show();
         if (window.lucide) lucide.createIcons();
     }
-    
-    /* ── Save bulk ── */
-    $('bulkSaveConfirmBtn').addEventListener('click', async function() {
-        const inputs = document.querySelectorAll('.bulk-pts-inp');
-        const checks = document.querySelectorAll('.bk-chk');
-        const msgEl  = $('bulkValidationMsg');
-        msgEl.textContent = '';
-    
-        // Validate all
-        let hasErr = false;
-        inputs.forEach((inp, i) => {
+
+    /* ── Save All Bulk ── */
+    $id('bulkSaveConfirmBtn').addEventListener('click', async function () {
+        const btn = this;
+        btn.disabled    = true;
+        btn.textContent = 'Saving…';
+
+        const eventId = $id('selectEvent').value;
+        const inputs  = document.querySelectorAll('#bulkEditTbody .bulk-pts-input');
+        const checks  = document.querySelectorAll('#bulkEditTbody .bulk-row-check');
+
+        let hasError = false;
+        const tasks  = [];
+
+        inputs.forEach((input, i) => {
             if (!checks[i]?.checked) return;
-            const v   = parseInt(inp.value);
-            const max = parseInt(inp.dataset.max);
-            if (isNaN(v) || v < 0 || v > max) {
-                hasErr = true;
-                inp.classList.add('err');
-                const err = $(`bkerr-${inp.dataset.i}`);
-                if (err) err.style.display = 'block';
+
+            const idx    = parseInt(input.dataset.idx);
+            const max    = parseInt(input.dataset.max);
+            const newPts = parseInt(input.value);
+
+            if (isNaN(newPts) || newPts < 0 || newPts > max) {
+                hasError = true;
+                input.style.borderColor = '#f85149';
+                return;
             }
+            tasks.push({ sel: _bulkSelected[idx], newPts });
         });
-        if (hasErr) { msgEl.textContent = 'Fix highlighted errors before saving.'; return; }
-    
-        this.disabled    = true;
-        this.textContent = 'Saving…';
-    
-        const tasks = [];
-        inputs.forEach((inp, i) => {
-            if (!checks[i]?.checked) return;
-            const idx  = parseInt(inp.dataset.i);
-            const sel  = _bulkList[idx];
-            const newPts = parseInt(inp.value);
-            if (newPts === sel.pts) return; // unchanged — skip
-            tasks.push({ sel, newPts });
-        });
-    
-        if (!tasks.length) {
-            toast('No changes to save', 'warn');
-            this.disabled    = false;
-            this.textContent = 'Save All';
+
+        if (hasError) {
+            toast('Fix validation errors before saving', 'err');
+            btn.disabled    = false;
+            btn.textContent = 'Save All Changes';
             return;
         }
-    
-        let ok = 0, fail = 0;
+
+        let successCount = 0;
+        let failCount    = 0;
+
         await Promise.all(tasks.map(async ({ sel, newPts }) => {
-            const saved = await persistScore(sel.actId, sel.row, newPts, sel.max);
-            if (saved) {
-                sel.td.innerHTML   = pill(newPts, sel.slug);
-                sel.td.dataset.pts = newPts;
-                sel.td.classList.remove('bulk-sel');
-                patchTotalsInDOM(sel.row, sel.cat, newPts, sel.pts);
-                ok++;
-            } else {
-                fail++;
+            const payload = {
+                event_id:              eventId,
+                challenge_activity_id: sel.activityId,
+                points:                newPts,
+            };
+            if (sel.row.type === 'student') payload.student_id = sel.row.id;
+            else                            payload.team_id    = sel.row.id;
+
+            try {
+                const res = await fetch('/scores/update-by-id', {
+                    method:  'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                    body: JSON.stringify(payload),
+                });
+                const json = await res.json();
+
+                if (json.success) {
+                    sel.td.innerHTML   = scorePill(newPts, sel.slug);
+                    sel.td.dataset.pts = newPts;
+                    sel.td.classList.remove('bulk-selected');
+                    updateRowTotalsInDOM(sel.row, sel.cat, newPts);
+                    successCount++;
+                } else {
+                    throw new Error(json.message);
+                }
+            } catch (e) {
+                console.error(e);
+                failCount++;
             }
         }));
-    
-        bootstrap.Modal.getInstance($('bulkEditModal'))?.hide();
-        _bulkList = [];
+
+        bootstrap.Modal.getInstance($id('bulkEditModal'))?.hide();
+        _bulkSelected = [];
         updateBulkBar();
-        toast(fail === 0 ? `✓ ${ok} score(s) saved` : `${ok} saved, ${fail} failed`, fail ? 'err' : 'ok');
-    
-        this.disabled    = false;
-        this.textContent = 'Save All';
+
+        if (failCount === 0) {
+            toast(`✓ ${successCount} score(s) saved`, 'ok');
+        } else {
+            toast(`${successCount} saved, ${failCount} failed`, 'err');
+        }
+
+        btn.disabled    = false;
+        btn.textContent = 'Save All Changes';
     });
-    
-    /* ═══════════════════════════════════════════════════════════════════
+
+    /* ═══════════════════════════════════════════════════════════
        EVENT DROPDOWN INIT
-    ═══════════════════════════════════════════════════════════════════ */
-    fetch('/leaderboard-events', { headers:{ Accept:'application/json' } })
+    ═══════════════════════════════════════════════════════════ */
+    fetch('/leaderboard-events', { headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(events => {
-            const sel = $('selectEvent');
+            const sel = $id('selectEvent');
             events.forEach(ev => {
                 const o = document.createElement('option');
-                o.value = ev.id; o.textContent = ev.name;
+                o.value = ev.id;
+                o.textContent = ev.name;
                 sel.appendChild(o);
             });
-            if (events.length) { sel.value = events[0].id; loadLeaderboard(events[0].id); }
-        });
-    
-    $('selectEvent').addEventListener('change', e => {
-        // Exit bulk mode on event change
+            if (events.length) {
+                sel.value = events[0].id;
+                fetchLeaderboard(events[0].id);
+            }
+        })
+        .catch(console.error);
+
+    $id('selectEvent').addEventListener('change', function () {
+        // Reset bulk mode on event change
         if (_bulkMode) toggleBulkMode();
-        loadLeaderboard(e.target.value);
+        _bulkSelected = [];
+        updateBulkBar();
+        fetchLeaderboard(this.value);
     });
-    
-    $('exportLeaderboard').addEventListener('click', () => {
-        const id = $('selectEvent').value;
-        if (!id) { alert('Select an event first'); return; }
+
+    $id('exportLeaderboard').addEventListener('click', () => {
+        const id = $id('selectEvent').value;
+        if (!id) { alert('Please select an event first!'); return; }
         window.location.href = `/leaderboard-export?event_id=${id}`;
     });
-    
-    $('bulkEditBtn').addEventListener('click', toggleBulkMode);
-    $('openBulkModalBtn').addEventListener('click', openBulkModal);
-    $('bonusBtn').addEventListener('click', () => {
-        new bootstrap.Modal($('bonusModal')).show();
-        if (window.lucide) lucide.createIcons();
-    });
-    
-    /* ═══════════════════════════════════════════════════════════════════
-       ADD SCORE MODAL LOGIC
-    ═══════════════════════════════════════════════════════════════════ */
-    document.addEventListener('DOMContentLoaded', () => {
-    
-        /* helpers */
-        const showEl = id => $(id)?.classList.remove('d-none');
-        const hideEl = id => $(id)?.classList.add('d-none');
-        function setAlert(id, msg) {
-            const el = $(id);
-            if (!el) return;
-            if (msg) { el.textContent = msg; el.classList.remove('d-none'); }
-            else     { el.textContent = '';  el.classList.add('d-none'); }
-        }
-    
-        let currentEvent = '';
-    
-        /* Reset chain from a given step */
-        function scReset(from) {
-            const chain = ['org','group','subgroup','type','team','student','activity','points'];
-            const map = {
-                org:      { div:'sc_organizationDiv', sel:'sc_organizationSelect' },
-                group:    { div:'sc_groupDiv',         sel:'sc_groupSelect' },
-                subgroup: { div:'sc_subgroupDiv',      sel:'sc_subgroupSelect' },
-                type:     { div:'sc_typeDiv',          sel:'sc_entityType' },
-                team:     { div:'sc_teamDiv',          sel:'sc_teamSelect' },
-                student:  { div:'sc_studentDiv',       sel:'sc_studentSelect' },
-                activity: { div:'sc_activityDiv',      sel:'sc_activitySelect' },
-                points:   { div:'sc_pointsDiv',        sel:null },
-            };
-            chain.slice(chain.indexOf(from)).forEach(k => {
-                hideEl(map[k].div);
-                const sel = $(map[k].sel);
-                if (sel) { if (sel.tagName === 'SELECT') sel.innerHTML = ''; else sel.value = ''; }
-            });
-            $('sc_submitBtn').disabled = true;
-            $('sc_maxHint').textContent = '';
-            setAlert('sc_alert', '');
-        }
-    
-        /* EVENT */
-        $('sc_eventSelect').addEventListener('change', function () {
-            currentEvent = this.value;
-            scReset('org');
-            if (!this.value) return;
-            showEl('sc_organizationDiv');
-            loadOpts(`/events/${currentEvent}/organizations`, 'sc_organizationSelect', 'Select Organization', 'id', 'name');
-        });
-    
-        /* ORGANIZATION */
-        $('sc_organizationSelect').addEventListener('change', function () {
-            scReset('group');
-            if (!this.value) return;
-            showEl('sc_groupDiv');
-            loadOpts(`/organizations/${this.value}/groups`, 'sc_groupSelect', 'Select Group', 'id', 'group_name');
-        });
-    
-        /* GROUP */
-        $('sc_groupSelect').addEventListener('change', function () {
-            scReset('subgroup');
-            if (!this.value) return;
-            fetch(`/groups/${this.value}/subgroups`).then(r=>r.json()).then(data => {
-                if (data.length) {
-                    showEl('sc_subgroupDiv');
-                    loadOpts(null, 'sc_subgroupSelect', 'Select Sub Group', 'id', 'name', data);
-                } else {
-                    showEl('sc_typeDiv');
-                }
-            });
-        });
-    
-        /* SUBGROUP */
-        $('sc_subgroupSelect').addEventListener('change', function () {
-            scReset('type');
-            if (this.value) showEl('sc_typeDiv');
-        });
-    
-        /* TYPE */
-        $('sc_entityType').addEventListener('change', function () {
-            scReset('team');
-            if (!this.value) return;
-            showEl('sc_teamDiv');
-    
-            const params = new URLSearchParams({
-                group_id:     $('sc_groupSelect').value,
-                sub_group_id: $('sc_subgroupSelect').value ?? '',
-            });
-            loadOpts(`/teams?${params}`, 'sc_teamSelect', 'Select Team', 'id', 'name');
-        });
-    
-        /* TEAM */
-        $('sc_teamSelect').addEventListener('change', function () {
-            scReset('student');
-            if (!this.value) return;
-    
-            if ($('sc_entityType').value === 'student') {
-                showEl('sc_studentDiv');
-                loadOpts(`/api/teams/${this.value}/students`, 'sc_studentSelect', 'Select Player', 'id', 'name');
-            } else {
-                loadActivities();
-            }
-        });
-    
-        /* STUDENT */
-        $('sc_studentSelect').addEventListener('change', function () {
-            if (!this.value) return;
-            loadActivities();
-        });
-    
-        function loadActivities() {
-            showEl('sc_activityDiv');
-            hideEl('sc_pointsDiv');
-            $('sc_submitBtn').disabled = true;
-    
-            fetch(`/api/events/${currentEvent}/activities`).then(r=>r.json()).then(acts => {
-                const sel = $('sc_activitySelect');
-                sel.innerHTML = '<option value="">-- Select Activity --</option>';
-                acts.forEach(a => {
-                    let name = a.badge_name || a.brain_type || a.esports_type || a.egaming_type || a.name || 'Playground';
-                    name = name.replace(/_/g,' ').replace(/\b\w/g, l=>l.toUpperCase());
-                    let desc = '';
-                    const t  = (a.activity_type||'').toLowerCase();
-                    if (t==='brain'      && a.brain_description)       desc = a.brain_description;
-                    else if (t==='playground' && a.playground_description) desc = a.playground_description;
-                    else if (t==='esports'    && a.esports_description)    desc = a.esports_description;
-                    else if (t==='egaming'    && a.egaming_description)    desc = a.egaming_description;
-                    const full = desc ? `${name} – ${desc}` : name;
-                    sel.innerHTML += `<option value="${a.id}" data-max="${a.max_score}">${full}</option>`;
-                });
-            });
-        }
-    
-        /* ACTIVITY */
-        $('sc_activitySelect').addEventListener('change', function () {
-            hideEl('sc_pointsDiv');
-            $('sc_submitBtn').disabled = true;
-            if (!this.value) return;
-    
-            const max = this.options[this.selectedIndex]?.dataset.max ?? '';
-            $('sc_maxHint').textContent = max ? `(Max: ${max})` : '';
-            showEl('sc_pointsDiv');
-            $('sc_pointsInput').value = '';
-    
-            // Load existing
-            const params = new URLSearchParams({
-                event_id:              currentEvent,
-                challenge_activity_id: this.value,
-                student_id: $('sc_entityType').value === 'student' ? $('sc_studentSelect').value : '',
-                team_id:    $('sc_entityType').value === 'team'    ? $('sc_teamSelect').value    : '',
-            });
-            fetch(`/scores/existing?${params}`).then(r=>r.json()).then(d => {
-                if (d.points !== null) {
-                    $('sc_pointsInput').value  = d.points;
-                    $('sc_submitBtn').disabled = false;
-                }
-            });
-        });
-    
-        /* POINTS input */
-        $('sc_pointsInput').addEventListener('input', function () {
-            $('sc_submitBtn').disabled = !this.value || parseInt(this.value) < 0;
-        });
-    
-        /* FORM SUBMIT */
-        $('sc_scoreForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            setAlert('sc_alert', '');
-            const fd = new FormData();
-            fd.append('event_id',              currentEvent);
-            fd.append('challenge_activity_id', $('sc_activitySelect').value);
-            if ($('sc_entityType').value === 'student') fd.append('student_id', $('sc_studentSelect').value);
-            else fd.append('team_id', $('sc_teamSelect').value);
-            fd.append('points', $('sc_pointsInput').value);
-    
-            fetch("{{ route('scores.store') }}", {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF(), Accept: 'application/json' },
-                body: fd,
-            })
-            .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.message||'Failed'); return d; })
-            .then(d => {
-                if (d.success) {
-                    if (typeof toastr !== 'undefined') toastr.success(d.message);
-                    else toast(d.message);
-                    bootstrap.Modal.getInstance($('scoreModal'))?.hide();
-                    const ev = $('selectEvent').value;
-                    if (ev) loadLeaderboard(ev);
-                } else {
-                    setAlert('sc_alert', d.message || 'Failed');
-                }
-            })
-            .catch(err => setAlert('sc_alert', err.message));
-        });
-    
-        /* ─── Utility: load select options ─── */
-        function loadOpts(url, selId, placeholder, valKey, labelKey, preloaded = null) {
-            const sel = $(selId);
-            sel.innerHTML = `<option value="">-- ${placeholder} --</option>`;
-            const process = data => data.forEach(item => {
-                sel.innerHTML += `<option value="${item[valKey]}">${item[labelKey]}</option>`;
-            });
-            if (preloaded) { process(preloaded); return; }
-            fetch(url).then(r=>r.json()).then(process).catch(() => {
-                sel.innerHTML = `<option value="">Error loading</option>`;
-            });
-        }
-    
-        /* ═══════════════════════════════════════
-           BONUS MODAL LOGIC
-        ═══════════════════════════════════════ */
-        let bonusEventId = '';
-    
-        function bonusReset(from) {
-            const chain = ['org','group','subgroup','team','player','points','summary'];
-            const map = {
-                org:      'bonus_orgDiv',
-                group:    'bonus_groupDiv',
-                subgroup: 'bonus_subgroupDiv',
-                team:     'bonus_teamDiv',
-                player:   'bonus_playerDiv',
-                points:   'bonus_pointsDiv',
-                summary:  'bonus_summaryDiv',
-            };
-            chain.slice(chain.indexOf(from)).forEach(k => hideEl(map[k]));
-            ['bonus_orgSelect','bonus_groupSelect','bonus_subgroupSelect','bonus_teamSelect','bonus_playerSelect'].forEach(id => {
-                const el = $(id);
-                if (el) el.innerHTML = '';
-            });
-            $('bonus_pointsInput').value = '';
-            $('bonus_submitBtn').disabled = true;
-            setAlert('bonus_alert', '');
-        }
-    
-        $('bonus_eventSelect').addEventListener('change', function () {
-            bonusEventId = this.value;
-            $('bonus_targetType').value = '';
-            bonusReset('org');
-        });
-    
-        $('bonus_targetType').addEventListener('change', function () {
-            bonusReset('org');
-            if (!this.value || !bonusEventId) return;
-    
-            showEl('bonus_orgDiv');
-            loadOpts(`/events/${bonusEventId}/organizations`, 'bonus_orgSelect', 'Select Organization', 'id', 'name');
-    
-            const type = this.value;
-            const orgSel = $('bonus_orgSelect');
-            // Reset previous handler
-            orgSel.onchange = null;
-    
-            orgSel.onchange = function() {
-                bonusReset('group');
-                if (!this.value) return;
-                if (type === 'organization') { showEl('bonus_pointsDiv'); updateBonusSummary(); return; }
-    
-                showEl('bonus_groupDiv');
-                loadOpts(`/organizations/${this.value}/groups`, 'bonus_groupSelect', 'Select Group', 'id', 'group_name');
-    
-                $('bonus_groupSelect').onchange = function() {
-                    bonusReset('subgroup');
-                    if (!this.value) return;
-                    if (type === 'group') { showEl('bonus_pointsDiv'); updateBonusSummary(); return; }
-    
-                    fetch(`/groups/${this.value}/subgroups`).then(r=>r.json()).then(subs => {
-                        if (subs.length) {
-                            showEl('bonus_subgroupDiv');
-                            loadOpts(null, 'bonus_subgroupSelect', 'Select Sub Group', 'id', 'name', subs);
-                            $('bonus_subgroupSelect').onchange = function() {
-                                bonusReset('team');
-                                if (!this.value) return;
-                                if (type === 'subgroup') { showEl('bonus_pointsDiv'); updateBonusSummary(); return; }
-                                loadBonusTeams();
-                            };
-                        } else {
-                            loadBonusTeams();
-                        }
-                    });
-                };
-            };
-    
-            function loadBonusTeams() {
-                const params = new URLSearchParams({
-                    group_id:     $('bonus_groupSelect').value,
-                    sub_group_id: $('bonus_subgroupSelect').value ?? '',
-                });
-                showEl('bonus_teamDiv');
-                loadOpts(`/teams?${params}`, 'bonus_teamSelect', 'Select Team', 'id', 'name');
-                $('bonus_teamSelect').onchange = function() {
-                    bonusReset('player');
-                    if (!this.value) return;
-                    if (type === 'team') { showEl('bonus_pointsDiv'); updateBonusSummary(); return; }
-                    // player
-                    showEl('bonus_playerDiv');
-                    loadOpts(`/api/teams/${this.value}/students`, 'bonus_playerSelect', 'Select Player', 'id', 'name');
-                    $('bonus_playerSelect').onchange = function() {
-                        if (!this.value) return;
-                        showEl('bonus_pointsDiv');
-                        updateBonusSummary();
-                    };
-                };
-            }
-        });
-    
-        $('bonus_pointsInput').addEventListener('input', function () {
-            const v = parseInt(this.value);
-            $('bonus_submitBtn').disabled = !v || v <= 0;
-            if (v > 0) updateBonusSummary();
-            else hideEl('bonus_summaryDiv');
-        });
-    
-        function updateBonusSummary() {
-            const type    = $('bonus_targetType').value;
-            const pts     = parseInt($('bonus_pointsInput').value);
-            const orgName = $('bonus_orgSelect').options[$('bonus_orgSelect').selectedIndex]?.text ?? '';
-            const grpName = $('bonus_groupSelect').options[$('bonus_groupSelect').selectedIndex]?.text ?? '';
-            const subName = $('bonus_subgroupSelect').options[$('bonus_subgroupSelect').selectedIndex]?.text ?? '';
-            const tmName  = $('bonus_teamSelect').options[$('bonus_teamSelect').selectedIndex]?.text ?? '';
-            const plName  = $('bonus_playerSelect').options[$('bonus_playerSelect').selectedIndex]?.text ?? '';
-    
-            const scopeMap = {
-                organization: `Organization: ${orgName}`,
-                group:        `Group: ${grpName}`,
-                subgroup:     `Sub Group: ${subName}`,
-                team:         `Team: ${tmName}`,
-                player:       `Player: ${plName}`,
-            };
-            const scope = scopeMap[type] ?? '';
-            const ptsStr = pts > 0 ? pts : '?';
-    
-            showEl('bonus_summaryDiv');
-            $('bonus_summaryText').textContent = `⚡ +${ptsStr} bonus points → ${scope}`;
-        }
-    
-        $('bonusForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            setAlert('bonus_alert', '');
-            const type = $('bonus_targetType').value;
-            const pts  = parseInt($('bonus_pointsInput').value);
-    
-            if (!bonusEventId)  { setAlert('bonus_alert', 'Please select an event.'); return; }
-            if (!type)          { setAlert('bonus_alert', 'Please select a scope.'); return; }
-            if (!pts || pts<=0) { setAlert('bonus_alert', 'Bonus points must be at least 1.'); return; }
-    
-            const payload = { event_id: bonusEventId, target_type: type, bonus_points: pts };
-            if (['organization','group','subgroup','team','player'].includes(type))
-                payload.organization_id = $('bonus_orgSelect').value;
-            if (['group','subgroup','team','player'].includes(type))
-                payload.group_id = $('bonus_groupSelect').value;
-            if (['subgroup','team','player'].includes(type))
-                payload.sub_group_id = $('bonus_subgroupSelect').value;
-            if (['team','player'].includes(type))
-                payload.team_id = $('bonus_teamSelect').value;
-            if (type === 'player')
-                payload.student_id = $('bonus_playerSelect').value;
-    
-            const btn = $('bonus_submitBtn');
-            btn.disabled    = true;
-            btn.textContent = 'Saving…';
-    
-            fetch("{{ route('scores.bonus') }}", {
-                method:  'POST',
-                headers: { 'Content-Type':'application/json', Accept:'application/json', 'X-CSRF-TOKEN': CSRF() },
-                body:    JSON.stringify(payload),
-            })
-            .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.message||'Failed'); return d; })
-            .then(d => {
-                if (d.success) {
-                    if (typeof toastr!=='undefined') toastr.success(d.message);
-                    else toast(d.message);
-                    bootstrap.Modal.getInstance($('bonusModal'))?.hide();
-                    const ev = $('selectEvent').value;
-                    if (ev) loadLeaderboard(ev);
-                } else {
-                    setAlert('bonus_alert', d.message || 'Failed to assign bonus.');
-                }
-            })
-            .catch(err => setAlert('bonus_alert', err.message))
-            .finally(() => { btn.disabled = false; btn.textContent = 'Assign Bonus'; });
-        });
-    
-    }); // end DOMContentLoaded
-    
-    })();
-    </script>
+
+    $id('bulkEditBtn').addEventListener('click', toggleBulkMode);
+    $id('openBulkModalBtn').addEventListener('click', openBulkEditModal);
+
+
+
+})();
+</script>

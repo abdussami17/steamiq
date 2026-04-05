@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Validator;
 
 class EventController extends Controller
 {
+
+
+    
     public function index()
     {
       

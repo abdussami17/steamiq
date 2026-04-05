@@ -148,6 +148,7 @@
                                     <a href="#" data-bs-target="#createEventModal" data-bs-toggle="modal">Create Event</a>
                                     <a href="#" data-bs-target="#addStudentModal" data-bs-toggle="modal">Add Player</a>
                                     <a href="#" data-bs-target="#addCardModal" data-bs-toggle="modal">Create Cards</a>
+                                    <a href="#" data-bs-target="#assignCardModal" data-bs-toggle="modal">Assign Card</a>
                                 </div>
                             </div>
     

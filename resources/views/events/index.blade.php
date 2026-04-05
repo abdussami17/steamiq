@@ -725,6 +725,8 @@ document.getElementById('groupSearch').addEventListener('input', function(){
 
 
 @push('modals')
+
+
     {{-- Teams Modals --}}
     @include('teams.modals.create-team')
     @include('teams.modals.view-team')

@@ -196,15 +196,26 @@ if (d.type === 'esports') {
             max_score: act.max_score, point_structure: act.point_structure,
         };
     
-        Object.entries(fieldMap).forEach(([key, val]) => {
-            if (val == null) return;
-            const el = div.querySelector(`[name="activities[${i}][${key}]"]`);
-            if (el) {
-                el.value = val;
-                if (key === 'egaming_type' && val) el.dispatchEvent(new Event('change'));
-                if (key === 'egaming_mode' && val) el.dispatchEvent(new Event('change'));
-            }
+        setTimeout(() => {
+    Object.entries(fieldMap).forEach(([key, val]) => {
+        console.log("Prefill:", key, val)
+        if (val == null) return;
+
+        const elements = div.querySelectorAll(`[name="activities[${i}][${key}]"]`);
+
+        elements.forEach(el => {
+            el.value = val;
         });
+
+        // trigger change for dependent fields
+        if (key === 'egaming_type') {
+            elements.forEach(el => el.dispatchEvent(new Event('change')));
+        }
+        if (key === 'egaming_mode') {
+            elements.forEach(el => el.dispatchEvent(new Event('change')));
+        }
+    });
+}, 100);
     
         updateEditRowLabel(div);
     }
@@ -395,7 +406,16 @@ if (d.type === 'esports') {
         })
         .then(r => r.json())
         .then(res => {
-            if (res.success) { alert(res.message); location.reload(); }
+            if (res.success) {
+
+const status = document.getElementById('editStatus').value;
+
+if (status === 'closed') {
+    openWinnerModal(eventId);
+} else {
+    location.reload();
+}
+}
             else             { alert(res.message || 'Failed to update event.'); }
         })
         .catch(err => console.error(err));

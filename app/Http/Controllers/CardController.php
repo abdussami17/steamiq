@@ -67,13 +67,12 @@ class CardController extends Controller
         return back()->with('success', 'Card deleted successfully.');
     }
 
-
-    public function assignCard(Request $request)
+public function assignCard(Request $request)
 {
     // Validate input
     $request->validate([
-        'assignable_type' => 'required',
-        'assignable_id'   => 'required',
+        'assignable_type' => 'required|in:organization,group,team,student',
+        'assignable_id'   => 'required|exists:' . $this->getTableName($request->assignable_type) . ',id',
         'card_id'         => 'required|exists:cards,id',
     ]);
 
@@ -89,11 +88,23 @@ class CardController extends Controller
 
     // Create assignment
     CardAssignment::create([
-        'assignable_id'   => $request->assignable_id,
+        'assignable_id'   => $request->assignable_id,   
         'assignable_type' => $request->assignable_type,
         'card_id'         => $request->card_id,
     ]);
 
-    return redirect()->back()->with('success', 'Card assigned to team successfully!');
+    return redirect()->back()->with('success', 'Card assigned successfully!');
+}
+
+private function getTableName($type)
+{
+    $map = [
+        'organization' => 'organizations',
+        'group' => 'groups',
+        'team' => 'teams',
+        'student' => 'students',
+    ];
+    
+    return $map[$type] ?? $type;
 }
 }
