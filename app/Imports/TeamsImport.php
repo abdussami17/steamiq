@@ -39,17 +39,17 @@ class TeamsImport implements ToCollection, WithHeadingRow
                 $row->toArray()
             );
 
-            $teamName     = $data['team_name'] ?? '';
-            $orgName      = $data['organization'] ?? '';
-            $groupName    = $data['group'] ?? '';
-            $subName      = $data['subgroup'] ?? '';
-            $division     = $data['division'] ?? '';
-            $studentName  = $data['student_name'] ?? '';
+            $teamName     = $data['team_name']     ?? '';
+            $orgName      = $data['organization']  ?? '';
+            $groupName    = $data['group']          ?? '';
+            $subName      = $data['subgroup']       ?? '';
+            $division     = $data['division']       ?? '';
+            $studentName  = $data['student_name']  ?? '';
             $studentEmail = $data['student_email'] ?? '';
 
             $rowErrors = [];
 
-            // Required validation
+            // ── Required field validation ──────────────────────────────
             if (!$teamName)  $rowErrors[] = 'team_name is required.';
             if (!$orgName)   $rowErrors[] = 'organization is required.';
             if (!$groupName) $rowErrors[] = 'group is required.';
@@ -58,98 +58,105 @@ class TeamsImport implements ToCollection, WithHeadingRow
             $division = ucfirst(strtolower($division));
 
             if (!in_array($division, ['Junior', 'Primary'])) {
-                $rowErrors[] = "division must be Junior or Primary.";
-            }
-            // Students parse
-            $studentNames  = array_values(array_filter(array_map('trim', explode(',', $studentName))));
-            $studentEmails = array_values(array_filter(array_map('trim', explode(',', $studentEmail))));
-
-            if ($studentNames && !$studentEmails) {
-                $rowErrors[] = 'student_email required with student_name.';
+                $rowErrors[] = 'division must be Junior or Primary.';
             }
 
-            if ($studentNames && $studentEmails) {
-                if (count($studentNames) !== count($studentEmails)) {
-                    $rowErrors[] = 'student_name and email count mismatch.';
-                } else {
-                    foreach ($studentEmails as $email) {
-                        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                            $rowErrors[] = "Invalid email: {$email}";
-                        }
+            // ── Parse student names & emails ───────────────────────────
+            // Names: split by comma, filter empty strings
+            $studentNames = array_values(
+                array_filter(
+                    array_map('trim', explode(',', (string) $studentName)),
+                    fn($v) => $v !== ''
+                )
+            );
+
+            // Emails: split by comma, keep empties so indexes stay aligned,
+            // but trim each value so "  " becomes ""
+            $rawEmails = array_map('trim', explode(',', (string) $studentEmail));
+
+            // If the entire email cell was blank, rawEmails will be ['']
+            // which we treat as no emails at all
+            $emailCellEmpty = ($studentEmail === '' || $studentEmail === null);
+
+            // ── Student / email cross-validation ──────────────────────
+            if ($studentNames) {
+
+                // Validate any emails that were actually supplied
+                foreach ($rawEmails as $idx => $email) {
+                    if ($email === '') continue; // blank slot is allowed
+                    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $rowErrors[] = "Invalid email at position " . ($idx + 1) . ": {$email}";
                     }
                 }
+
+            } elseif (!$emailCellEmpty) {
+                // Emails given but no names
+                $rowErrors[] = 'student_name is required when student_email is provided.';
             }
 
-            if (!$studentNames && $studentEmails) {
-                $rowErrors[] = 'student_name required when email provided.';
-            }
-
-            // ❗ FIXED: properly closed block
+            // ── Fail row early if validation errors ───────────────────
             if ($rowErrors) {
                 Log::warning('ROW VALIDATION FAILED', [
-                    'row' => $rowNumber,
-                    'data' => $data,
-                    'errors' => $rowErrors
+                    'row'    => $rowNumber,
+                    'data'   => $data,
+                    'errors' => $rowErrors,
                 ]);
 
                 $this->failed[] = [
-                    'row' => $rowNumber,
+                    'row'       => $rowNumber,
                     'team_name' => $teamName,
-                    'errors' => $rowErrors,
+                    'errors'    => $rowErrors,
                 ];
                 continue;
             }
 
-            // Organization
-            $organization = Organization::whereRaw('LOWER(name)=?', [strtolower($orgName)])->first();
+            // ── Organization lookup ────────────────────────────────────
+            $organization = Organization::whereRaw('LOWER(name) = ?', [strtolower($orgName)])->first();
             if (!$organization) {
-
                 Log::warning('ORG NOT FOUND', compact('rowNumber', 'orgName'));
-
                 $this->failed[] = [
-                    'row' => $rowNumber,
+                    'row'       => $rowNumber,
                     'team_name' => $teamName,
-                    'errors' => ["Organization '{$orgName}' not found"]
+                    'errors'    => ["Organization '{$orgName}' not found."],
                 ];
                 continue;
             }
 
-            // Group
+            // ── Group lookup ───────────────────────────────────────────
             $group = Group::where('organization_id', $organization->id)
-                ->whereRaw('LOWER(group_name)=?', [strtolower($groupName)])
+                ->whereRaw('LOWER(group_name) = ?', [strtolower($groupName)])
                 ->first();
 
             if (!$group) {
-
                 Log::warning('GROUP NOT FOUND', compact('rowNumber', 'groupName'));
-
                 $this->failed[] = [
-                    'row' => $rowNumber,
+                    'row'       => $rowNumber,
                     'team_name' => $teamName,
-                    'errors' => ["Group '{$groupName}' not found"]
+                    'errors'    => ["Group '{$groupName}' not found."],
                 ];
                 continue;
             }
 
-            // Subgroup
+            // ── Subgroup lookup (optional) ─────────────────────────────
             $subGroupId = null;
             if ($subName) {
                 $sub = SubGroup::where('group_id', $group->id)
-                    ->whereRaw('LOWER(name)=?', [strtolower($subName)])
+                    ->whereRaw('LOWER(name) = ?', [strtolower($subName)])
                     ->first();
 
                 if (!$sub) {
                     $this->failed[] = [
-                        'row' => $rowNumber,
+                        'row'       => $rowNumber,
                         'team_name' => $teamName,
-                        'errors' => ["Subgroup '{$subName}' not found"]
+                        'errors'    => ["Subgroup '{$subName}' not found."],
                     ];
                     continue;
                 }
                 $subGroupId = $sub->id;
             }
 
-            $teamKey = strtolower($teamName);
+            // ── Team upsert inside a transaction ──────────────────────
+            $teamKey = strtolower(trim($teamName));
 
             DB::beginTransaction();
 
@@ -162,73 +169,88 @@ class TeamsImport implements ToCollection, WithHeadingRow
                         ->first();
 
                     if ($existing) {
-                        $team = $existing;
+                        $team  = $existing;
                         $isNew = false;
                         $this->teamsExisting++;
                     } else {
                         $team = Team::create([
-                            'name' => $teamName,
-                            'group_id' => $group->id,
+                            'name'         => $teamName,
+                            'group_id'     => $group->id,
                             'sub_group_id' => $subGroupId,
-                            'division' => $division,
+                            'division'     => $division,
                         ]);
                         $isNew = true;
                         $this->teamsCreated++;
                     }
 
                     $teamRegistry[$teamKey] = [
-                        'team' => $team,
-                        'meta' => compact('orgName', 'groupName', 'division'),
-                        'result_index' => count($this->imported)
+                        'team'         => $team,
+                        'meta'         => compact('orgName', 'groupName', 'division'),
+                        'result_index' => count($this->imported),
                     ];
 
                     $this->imported[] = [
-                        'team_name' => $teamName,
-                        'division' => $division,
-                        'group' => $groupName,
+                        'team_name'      => $teamName,
+                        'division'       => $division,
+                        'group'          => $groupName,
                         'students_added' => 0,
-                        'is_new' => $isNew
+                        'is_new'         => $isNew,
                     ];
+
                 } else {
 
+                    // Same team name appeared before — make sure metadata matches
                     $meta = $teamRegistry[$teamKey]['meta'];
 
                     if (
-                        strtolower($meta['orgName']) !== strtolower($orgName) ||
+                        strtolower($meta['orgName'])   !== strtolower($orgName)   ||
                         strtolower($meta['groupName']) !== strtolower($groupName) ||
-                        strtolower($meta['division']) !== strtolower($division)
+                        strtolower($meta['division'])  !== strtolower($division)
                     ) {
                         DB::rollBack();
 
                         $this->failed[] = [
-                            'row' => $rowNumber,
+                            'row'       => $rowNumber,
                             'team_name' => $teamName,
-                            'errors' => ['Conflict with previous rows']
+                            'errors'    => ['Conflict: team already seen with different organization/group/division.'],
                         ];
                         continue;
                     }
                 }
 
-                $team = $teamRegistry[$teamKey]['team'];
-                $indexResult = $teamRegistry[$teamKey]['result_index'];
+                $team        = $teamRegistry[$teamKey]['team'];
+                $resultIndex = $teamRegistry[$teamKey]['result_index'];
 
+                // ── Insert students ────────────────────────────────────
                 foreach ($studentNames as $i => $name) {
 
-                    $email = strtolower($studentEmails[$i]);
+                    // Email at same index — or null if not supplied
+                    $email = (!$emailCellEmpty && isset($rawEmails[$i]) && $rawEmails[$i] !== '')
+                        ? strtolower($rawEmails[$i])
+                        : null;
 
-                    $exists = Student::where('team_id', $team->id)
-                        ->whereRaw('LOWER(email)=?', [$email])
-                        ->exists();
+                    // Duplicate check:
+                    //   • if email present  → match by email within team
+                    //   • if email absent   → match by name  within team
+                    if ($email !== null) {
+                        $exists = Student::where('team_id', $team->id)
+                            ->whereRaw('LOWER(email) = ?', [$email])
+                            ->exists();
+                    } else {
+                        $exists = Student::where('team_id', $team->id)
+                            ->whereRaw('LOWER(name) = ?', [strtolower($name)])
+                            ->exists();
+                    }
 
                     if (!$exists) {
                         Student::create([
                             'team_id' => $team->id,
-                            'name' => $name,
-                            'email' => $email
+                            'name'    => $name,
+                            'email'   => $email,   // null when not provided
                         ]);
 
                         $this->studentsAdded++;
-                        $this->imported[$indexResult]['students_added']++;
+                        $this->imported[$resultIndex]['students_added']++;
                     }
                 }
 
@@ -239,14 +261,14 @@ class TeamsImport implements ToCollection, WithHeadingRow
                 DB::rollBack();
 
                 Log::error('ROW ERROR', [
-                    'row' => $rowNumber,
-                    'error' => $e->getMessage()
+                    'row'   => $rowNumber,
+                    'error' => $e->getMessage(),
                 ]);
 
                 $this->failed[] = [
-                    'row' => $rowNumber,
+                    'row'       => $rowNumber,
                     'team_name' => $teamName,
-                    'errors' => [$e->getMessage()]
+                    'errors'    => [$e->getMessage()],
                 ];
             }
         }
@@ -256,14 +278,14 @@ class TeamsImport implements ToCollection, WithHeadingRow
     {
         return [
             'summary' => [
-                'total_rows' => $this->totalRows,
-                'teams_created' => $this->teamsCreated,
+                'total_rows'     => $this->totalRows,
+                'teams_created'  => $this->teamsCreated,
                 'teams_existing' => $this->teamsExisting,
                 'students_added' => $this->studentsAdded,
-                'failed_rows' => count($this->failed),
+                'failed_rows'    => count($this->failed),
             ],
             'imported' => $this->imported,
-            'failed' => $this->failed,
+            'failed'   => $this->failed,
         ];
     }
 }

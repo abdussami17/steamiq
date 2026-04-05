@@ -111,8 +111,10 @@
                     </a>
     
                     @auth
-                        {{-- Admin role check --}}
-                        @if(Auth::user()->role == 1)
+                        @php $user = auth()->user(); @endphp
+    
+                        {{-- Admin: full access --}}
+                        @role('admin')
                             <a href="{{ route('events.index') }}"
                                class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
                                 Events
@@ -120,22 +122,22 @@
     
                             <!-- Boards Dropdown -->
                             <div class="nav-item dropdown">
-                                <button class="nav-link-custom dropdown-toggle">
-                                    The Boards
-                                </button>
+                                <button class="nav-link-custom dropdown-toggle">The Boards</button>
                                 <div class="dropdown-menu">
                                     <a href="{{ route('leaderboard.index') }}">Leaderboards</a>
                                     <a href="{{ route('scoreboard.index') }}">Scoreboards</a>
                                     <a href="#">Tournament Bracket</a>
-                                    <a href="{{ route('scoring.index') }}">Scoring</a>
                                 </div>
                             </div>
     
+                            <a href="{{ route('scoring.index') }}"
+                               class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
+                                Scoring
+                            </a>
+    
                             <!-- Q-Action Dropdown -->
                             <div class="nav-item dropdown">
-                                <button class="nav-link-custom dropdown-toggle">
-                                    Q-Action
-                                </button>
+                                <button class="nav-link-custom dropdown-toggle">Q-Action</button>
                                 <div class="dropdown-menu">
                                     <a href="#" data-bs-target="#createEventModal" data-bs-toggle="modal">Create Event</a>
                                     <a href="#" data-bs-target="#addStudentModal" data-bs-toggle="modal">Add Player</a>
@@ -147,7 +149,30 @@
                                class="nav-link-custom {{ request()->routeIs('settings.index') ? 'active' : '' }}">
                                 Settings
                             </a>
-                        @endif
+                        @else
+                            {{-- Role-assigned users (non-admin) --}}
+                            @if($user->roles->count() > 0)
+                                <a href="{{ route('events.index') }}"
+                                   class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
+                                    Events
+                                </a>
+    
+                                <!-- Boards Dropdown -->
+                                <div class="nav-item dropdown">
+                                    <button class="nav-link-custom dropdown-toggle">The Boards</button>
+                                    <div class="dropdown-menu">
+                                        <a href="{{ route('leaderboard.index') }}">Leaderboards</a>
+                                        <a href="{{ route('scoreboard.index') }}">Scoreboards</a>
+                                        <a href="#">Tournament Bracket</a>
+                                    </div>
+                                </div>
+    
+                                <a href="{{ route('scoring.index') }}"
+                                   class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
+                                    Scoring
+                                </a>
+                            @endif
+                        @endrole
     
                         {{-- Logout for all logged-in users --}}
                         <a href="{{ route('logout') }}" class="nav-link-custom filled"
@@ -163,7 +188,6 @@
                         {{-- Login for guests --}}
                         <a href="{{ route('login') }}" class="nav-link-custom">Login</a>
                     @endauth
-    
                 </nav>
             </div>
         </div>

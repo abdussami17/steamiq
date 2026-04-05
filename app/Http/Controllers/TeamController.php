@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\SubGroup;
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -112,16 +113,12 @@ public function getTeams($groupId)
                 'cards.card' // ensure card details are loaded
             ])->get();
     
-          
-    
             // =============================
             // 2) Get total points per team (SCORES TABLE ONLY)
             // =============================
             $pointsMap = Score::selectRaw('team_id, SUM(points) as total_points')
                 ->groupBy('team_id')
                 ->pluck('total_points', 'team_id');
-    
-            
     
             // =============================
             // 3) Count students per team
@@ -130,36 +127,25 @@ public function getTeams($groupId)
                 ->groupBy('team_id')
                 ->pluck('total', 'team_id');
     
-   
-    
             // =============================
             // 4) Build rows with total points adjusted for negative points
             // =============================
             $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
     
-                // Fetch assigned cards for this team
                 $assignedCards = $team->cards ?? collect();
     
-                // Calculate total negative points from assigned cards
                 $negativePoints = $assignedCards->sum(function($assignment) {
                     return $assignment->card->negative_points ?? 0;
                 });
     
-             
-    
-                // Determine total_points logic
                 $basePoints = $pointsMap[$team->id] ?? 0;
     
                 if ($assignedCards->isEmpty()) {
-                    // No card assigned
                     $totalPoints = $basePoints;
                 } else {
-                    // Cards assigned
                     $totalPoints = $negativePoints == 0 ? 0 : $basePoints - $negativePoints;
                     $totalPoints = max(0, $totalPoints); // avoid negative total
                 }
-    
-               
     
                 return [
                     'id' => $team->id,
@@ -191,9 +177,15 @@ public function getTeams($groupId)
                 return $row;
             });
     
-        
+            // =============================
+            // 7) Send user permissions once
+            // =============================
+            $userPermissions = Auth::user()->getAllPermissions()->pluck('name')->toArray();
     
-            return response()->json($rows);
+            return response()->json([
+                'teams' => $rows,
+                'permissions' => $userPermissions
+            ]);
     
         } catch (\Throwable $e) {
             \Log::error('Teams Data Error', [
@@ -201,7 +193,10 @@ public function getTeams($groupId)
                 'trace' => $e->getTraceAsString()
             ]);
     
-            return response()->json([]);
+            return response()->json([
+                'teams' => [],
+                'permissions' => []
+            ]);
         }
     }
     public function export(Request $request)

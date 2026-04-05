@@ -181,12 +181,32 @@ class ScoreController extends Controller
     
         return response()->json($teams);
     }
-    // Fetch activities for an event
     public function getEventActivities(Event $event)
     {
-        // fetch all relevant fields
         $activities = $event->activities()
-            ->select('id', 'name', 'brain_type', 'esports_type', 'egaming_type', 'badge_name')
+            ->select([
+                'id',
+                'event_id',
+                'name',
+                'max_score',
+                'activity_or_mission',
+                'activity_type',
+                'badge_name',
+                'brain_type',
+                'brain_description',
+                'point_structure',
+                'esports_type',
+                'esports_players',
+                'esports_structure',
+                'esports_description',
+                'egaming_type',
+                'egaming_mode',
+                'egaming_structure',
+                'egaming_description',
+                'playground_description',
+                'created_at',
+                'updated_at'
+            ])
             ->orderBy('id')
             ->get();
     

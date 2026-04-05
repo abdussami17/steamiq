@@ -20,6 +20,9 @@ use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TournamentController;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\UserController;
 
 // =============================================================================
 // GUEST ROUTES (Public Access)
@@ -41,16 +44,27 @@ Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])->name('l
 // AUTHENTICATED ROUTES
 // =============================================================================
 Route::middleware('auth')->group(function () {
-
     // -------------------------------------------------------------------------
     // Authentication & Dashboard
     // -------------------------------------------------------------------------
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-  
+
     // =========================================================================
     // ADMIN ROUTES
     // =========================================================================
     Route::middleware('admin')->group(function () {
+        // Roles
+        Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+        Route::put('/roles/{id}', [RoleController::class, 'update'])->name('roles.update');
+
+        // Permissions
+        Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+        Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+
+        // Users
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
 
         // ---------------------------------------------------------------------
         // Student / Player Management
@@ -74,8 +88,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/teams-export', [TeamController::class, 'export'])->name('teams.export');
         Route::post('/teams-import', [TeamController::class, 'import'])->name('teams.import');
         Route::post('/teams/bulk-delete', [TeamController::class, 'bulkDelete'])->name('teams.bulkDelete');
-        Route::get( '/teams/import/template', [App\Http\Controllers\TeamController::class, 'importTemplate'])->name('teams.import.template');
-        Route::post('/teams/import',          [App\Http\Controllers\TeamController::class, 'import']         )->name('teams.import');
+        Route::get('/teams/import/template', [App\Http\Controllers\TeamController::class, 'importTemplate'])->name('teams.import.template');
+        Route::post('/teams/import', [App\Http\Controllers\TeamController::class, 'import'])->name('teams.import');
         // ---------------------------------------------------------------------
         // Event Management
         // ---------------------------------------------------------------------
@@ -113,16 +127,18 @@ Route::middleware('auth')->group(function () {
         // ---------------------------------------------------------------------
         // Score Management
         // ---------------------------------------------------------------------
-        Route::prefix('scores')->name('scores.')->group(function () {
-            Route::post('/', [ScoreController::class, 'store'])->name('store');
-        });
-        Route::get('/scoring',[ScoreController::class,'index'])->name('scoring.index');
+        Route::prefix('scores')
+            ->name('scores.')
+            ->group(function () {
+                Route::post('/', [ScoreController::class, 'store'])->name('store');
+            });
+        Route::get('/scoring', [ScoreController::class, 'index'])->name('scoring.index');
         Route::post('/scores/create', [ScoreController::class, 'store'])->name('scores.store');
         Route::get('/scores/existing', [ScoreController::class, 'getExistingScore'])->name('scores.existing');
         Route::post('/scores/fetch', [App\Http\Controllers\ScoreController::class, 'fetchScores']);
         Route::post('/scores/update', [App\Http\Controllers\ScoreController::class, 'updateScore']);
         Route::post('/scores/bulk-update', [App\Http\Controllers\ScoreController::class, 'bulkUpdate']);
-        
+
         // ---------------------------------------------------------------------
         // Card Management
         // ---------------------------------------------------------------------
@@ -136,12 +152,14 @@ Route::middleware('auth')->group(function () {
         // ---------------------------------------------------------------------
         // API Routes (AJAX Dropdowns)
         // ---------------------------------------------------------------------
-        Route::prefix('api')->name('api.')->group(function () {
-            Route::get('/events/{event}/students', [ScoreController::class, 'getEventStudents'])->name('events.students');
-            Route::get('/events/{event}/teams', [ScoreController::class, 'getEventTeams'])->name('events.teams');
-            Route::get('/events/{event}/activities', [ScoreController::class, 'getEventActivities'])->name('events.activities');
-            Route::get('/steam-categories', [ScoreController::class, 'getSteamCategories'])->name('steam.categories');
-        });
+        Route::prefix('api')
+            ->name('api.')
+            ->group(function () {
+                Route::get('/events/{event}/students', [ScoreController::class, 'getEventStudents'])->name('events.students');
+                Route::get('/events/{event}/teams', [ScoreController::class, 'getEventTeams'])->name('events.teams');
+                Route::get('/events/{event}/activities', [ScoreController::class, 'getEventActivities'])->name('events.activities');
+                Route::get('/steam-categories', [ScoreController::class, 'getSteamCategories'])->name('steam.categories');
+            });
 
         // ---------------------------------------------------------------------
         // Match Management
@@ -196,31 +214,28 @@ Route::middleware('auth')->group(function () {
         Route::get('/students', [ScoreController::class, 'getFilteredStudents']);
         Route::get('/teams', [ScoreController::class, 'getFilteredTeams']);
 
-
         // ---------------------------------------------------------------------
         // Scoreboard Routes
-        // 
-        Route::get('/scoreboard',      [ScoreboardController::class, 'index'])->name('scoreboard.index');
+        //
+        Route::get('/scoreboard', [ScoreboardController::class, 'index'])->name('scoreboard.index');
         Route::get('/scoreboard/data', [ScoreboardController::class, 'getData'])->name('scoreboard.data');
-         
 
         // ---------------------------------------------------------------------
         // Settings Routes
-        // 
+        //
 
-        Route::get('/settings',[SettingController::class,'index'])->name('settings.index');
-        Route::post('/profile/update', [SettingController::class, 'updateProfile'])
-        ->name('profile.update');
-Route::get('/settings/activities/fetch', [SettingController::class, 'fetchChallengeActivities'])->name('settings.activities.fetch');
+        Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::post('/profile/update', [SettingController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/settings/activities/fetch', [SettingController::class, 'fetchChallengeActivities'])->name('settings.activities.fetch');
 
         // ---------------------------------------------------------------------
         // Leaderboard Routes
         // ---------------------------------------------------------------------
-        
+
         Route::get('/event/{event}/students-leaderboard', [StudentController::class, 'leaderboard']);
         Route::post('/score/update-inline', [StudentController::class, 'updateScoreInline']);
-        Route::get('/leaderboard',[LeaderboardController::class,'index'])->name('leaderboard.index');
-        
+        Route::get('/leaderboard', [LeaderboardController::class, 'index'])->name('leaderboard.index');
+
         // ---------------------------------------------------------------------
         // Leaderboard Export
         // ---------------------------------------------------------------------

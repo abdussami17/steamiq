@@ -8,6 +8,7 @@ use App\Models\SteamCategory;
 use App\Models\Student;
 use App\Models\Team;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -106,13 +107,28 @@ class StudentController extends Controller
     
                 $totalPoints = 0;
                 $activityName = '';
-    
+
                 foreach ($student->scores as $score) {
                     $points = (int) $score->points;
                     $totalPoints += $points;
-    
+                
                     if (!$activityName && $score->challengeActivity) {
-                        $activityName = $score->challengeActivity->display_name;
+                        // 1️⃣ Format name: replace underscores and capitalize words
+                        $formattedName = str_replace('_', ' ', $score->challengeActivity->display_name);
+                        $formattedName = ucwords($formattedName);
+                
+                        // 2️⃣ Append correct description based on activity_type
+                        $description = '';
+                        $type = strtolower($score->challengeActivity->activity_type);
+                
+                        if ($type === 'brain') {
+                            $description = $score->challengeActivity->brain_description ?? '';
+                        } elseif (in_array($type, ['playground', 'esports', 'egaming'])) {
+                            $description = $score->challengeActivity->egaming_description ?? '';
+                        }
+                
+                        // Combine name + dash + description (if description exists)
+                        $activityName = $description ? "{$formattedName} - {$description}" : $formattedName;
                     }
                 }
     
@@ -134,13 +150,25 @@ class StudentController extends Controller
                 $rows[$i] = $r;
             }
     
+            // ===============================
+            // Fetch logged-in user permissions
+            // ===============================
+            $userPermissions = Auth::user()->getAllPermissions()->pluck('name')->toArray();
+    
             return response()->json([
-                'rows' => $rows
+                'rows' => $rows,
+                'permissions' => $userPermissions
             ]);
     
         } catch (\Throwable $e) {
+            \Log::error('Leaderboard Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+    
             return response()->json([
-                'rows' => []
+                'rows' => [],
+                'permissions' => []
             ], 500);
         }
     }
@@ -164,4 +192,33 @@ class StudentController extends Controller
 
     return response()->json(['success' => true]);
 }
+
+
+// Delete player
+public function destroy($id)
+{
+    // Check permission
+    if (!Auth::user()->can('delete_player')) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized'
+        ], 403);
+    }
+
+    $player = Student::find($id);
+    if (!$player) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Player not found'
+        ], 404);
+    }
+
+    $player->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Player deleted successfully'
+    ]);
+}
+
 }

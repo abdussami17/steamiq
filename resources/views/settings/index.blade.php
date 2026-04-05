@@ -20,6 +20,9 @@
 
 
             <button class="tab active" onclick="switchTab('users', event)">Users</button>
+            <button class="tab" onclick="switchTab('roles', event)">Roles</button>
+            <button class="tab" onclick="switchTab('permissions', event)">Permission</button>
+
             <button class="tab" onclick="switchTab('activities', event)">Activities</button>
             <button class="tab" onclick="switchTab('cards', event)">Cards</button>
             <button class="tab" onclick="switchTab('profile', event)">Profile</button>
@@ -28,7 +31,9 @@
 
             <div id="users-tab" class="tab-content show active">
                 <div class="spreadsheet-container mt-4">
-
+                    <div class="spreadsheet-toolbar">
+                        <input type="text" id="userSearch" class="form-input" placeholder="Search User..." style="width:300px;">
+                        </div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -38,10 +43,11 @@
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Created At</th>
+                                <th></th>
 
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="userTableBody">
                             @forelse ($users as $us)
                                 <tr>
                                     <td>{{ $us->id ?? 'N/A' }}</td>
@@ -49,11 +55,30 @@
                                     <td>{{ $us->username ?? 'N/A' }}</td>
                                     <td>{{ $us->email ?? 'N/A' }}</td>
                                     <td>
-                                        {{ isset($us->role) ? ($us->role == 1 ? 'Admin' : 'User') : 'N/A' }}
-                                    </td>
+                                      @if($us->roles->count() > 0)
+                                          {{ $us->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ') }}
+                                      @else
+                                          N/A
+                                      @endif
+                                  </td>
                                     <td>
                                         {{ $us->created_at ? \Carbon\Carbon::parse($us->created_at)->format('M d, Y') : 'N/A' }}
                                     </td>
+                                    <td>
+                                      @if(!$us->hasRole('admin'))
+                                      @push('modals')
+                            @include('settings.modals.edit-user')
+                              
+                            @endpush
+                                          <!-- Edit Button triggers modal -->
+                                          <button type="button" class="btn btn-icon btn-edit" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $us->id }}">
+                                              <i data-lucide="pencil"></i>
+                                          </button>
+
+                                      @else
+                                          <span class="text-muted">Admin</span>
+                                      @endif
+                                  </td>
 
                                 </tr>
                             @empty
@@ -61,9 +86,26 @@
                                     <td colspan="7" class="text-center">No users currently</td>
                                 </tr>
                             @endforelse
+                            
                         </tbody>
                     </table>
-
+                    @push('scripts')
+                    <script>
+                         document.addEventListener('DOMContentLoaded', () => {
+                     // Simple search by Team Name
+             document.getElementById('userSearch').addEventListener('input', function(){
+                 const filter = this.value.toLowerCase();
+                 const rows = document.querySelectorAll('#userTableBody tr');
+                 rows.forEach(row => {
+                     const cell = row.cells[1]; // Team Name column
+                     if (!cell) { row.style.display = 'none'; return; }
+                     const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
+                     row.style.display = name.includes(filter) ? '' : 'none';
+                 });
+             });
+                 })
+                    </script>
+                @endpush
 
 
                 </div>
@@ -107,6 +149,105 @@
                     </table>
                 </div>
             </div>
+
+            <div class="tab-content" id="permissions-tab">
+                <div class="spreadsheet-container mt-4">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermissionModal"><i
+                                data-lucide="plus"></i>Add Permission</button>
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($permissions as $perms)
+                                <tr>
+                                    <td>{{ $perms->id }}</td>
+                                    <td>{{ $perms->label }}</td>
+                                    <td>
+                                      <form action="{{ route('permissions.destroy', $perms->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this permission?');">
+                                          @csrf
+                                          @method('DELETE')
+                                          <button type="submit" class="btn btn-icon btn-delete"><i data-lucide="trash"></i></button>
+                                      </form>
+                                  </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="2">No data</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                @push('modals')
+                    @include('settings.modals.create-permission')
+                @endpush
+            </div>
+
+            <div class="tab-content" id="roles-tab">
+              <div class="spreadsheet-container mt-4">
+                  <div class="spreadsheet-toolbar">
+                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal"><i
+                              data-lucide="plus"></i>Add Role</button>
+                  </div>
+
+                  <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($roles as $role)
+                            <tr>
+                                <td>{{ $role->id }}</td>
+                                <td>{{ $role->name }}</td>
+                                <td>
+                                    @if($role->name === 'admin')
+                                        <span class="text-success fw-bold">ALL Permissions</span>
+                                    @elseif($role->permissions->count())
+                                        {{ $role->permissions->pluck('label')->join(', ') }}
+                                    @else
+                                        <span class="text-muted">No permissions</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($role->name !== 'admin')
+                                        <button class="btn btn-icon btn-edit" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ $role->id }}"><i data-lucide="pencil"></i></button>
+                                    @else
+                                        <span class="text-muted">Not editable</span>
+                                    @endif
+                                </td>
+                            </tr>
+                
+                            <!-- Edit Role Modal -->
+                            @if($role->name !== 'admin')
+                           @push('modals')
+                             @include('settings.modals.edit-roles')
+                           @endpush
+                            @endif
+                        @empty
+                            <tr>
+                                <td colspan="4">No data found</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+              </div>
+              @push('modals')
+                  @include('settings.modals.create-roles')
+              @endpush
+          </div>
             <div id="cards-tab" class="tab-content">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
@@ -168,140 +309,178 @@
             </div>
             <div id="profile-tab" class="tab-content">
                 <div class="spreadsheet-container mt-4">
-              
-                  <div class="sems-profile-wrapper">
-                    <div class="sems-profile-card">
-              
-                      {{-- Hero Banner --}}
-                      <div class="sems-profile-hero-banner">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                          <div class="sems-profile-avatar-ring" id="semsProfileAvatarInitials">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}{{ strtoupper(substr(strstr(auth()->user()->name, ' '), 1, 1)) }}
-                          </div>
-                          <div>
-                            <p class="sems-profile-hero-name" id="semsProfileHeroName">{{ auth()->user()->name }}</p>
-                          
-                          </div>
-                          <div class="ms-auto">
-                            <div class="sems-profile-badge-pill">
-                              <span class="sems-profile-badge-dot"></span>
-                              Active
+
+                    <div class="sems-profile-wrapper">
+                        <div class="sems-profile-card">
+
+                            {{-- Hero Banner --}}
+                            <div class="sems-profile-hero-banner">
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="sems-profile-avatar-ring" id="semsProfileAvatarInitials">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}{{ strtoupper(substr(strstr(auth()->user()->name, ' '), 1, 1)) }}
+                                    </div>
+                                    <div>
+                                        <p class="sems-profile-hero-name" id="semsProfileHeroName">
+                                            {{ auth()->user()->name }}</p>
+
+                                    </div>
+                                    <div class="ms-auto">
+                                        <div class="sems-profile-badge-pill">
+                                            <span class="sems-profile-badge-dot"></span>
+                                            Active
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+
+                                    <div class="sems-profile-stat-tile">
+                                        <p class="sems-profile-stat-label">Member Since</p>
+                                        <p class="sems-profile-stat-value">{{ auth()->user()->created_at->year }}</p>
+                                    </div>
+                                    <div class="sems-profile-stat-tile">
+                                        <p class="sems-profile-stat-label">Role</p>
+                                        <p class="sems-profile-stat-value">{{ ucfirst(auth()->user()->role ?? 'Admin') }}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                          </div>
+
+                            <form id="profile-update-form">
+                                @csrf
+
+                                {{-- Account Details --}}
+                                <div class="sems-profile-body-section">
+                                    <div class="sems-profile-section-header">
+                                        <div class="sems-profile-section-icon">
+                                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                                <circle cx="8" cy="5" r="3" stroke="currentColor"
+                                                    stroke-width="1.2" />
+                                                <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor"
+                                                    stroke-width="1.2" stroke-linecap="round" />
+                                            </svg>
+                                        </div>
+                                        <span class="sems-profile-section-title">Account details</span>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="sems-profile-label" for="semsNameInput">Full name</label>
+                                            <input class="sems-profile-input form-control" id="semsNameInput"
+                                                name="name" type="text" value="{{ auth()->user()->name }}"
+                                                placeholder="Your full name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="sems-profile-label" for="semsUsernameInput">Username</label>
+                                            <div class="sems-profile-input-wrap">
+                                                <input class="sems-profile-input form-control" id="semsUsernameInput"
+                                                    name="username" type="text"
+                                                    value="{{ auth()->user()->username }}" placeholder="username"
+                                                    style="padding-left:28px;">
+                                                <span class="sems-profile-at-prefix">@</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="sems-profile-divider">
+
+                                {{-- Password Section --}}
+                                <div class="sems-profile-body-section">
+                                    <div class="sems-profile-section-header">
+                                        <div class="sems-profile-section-icon">
+                                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                                                <rect x="2" y="7" width="12" height="8" rx="1.5"
+                                                    stroke="currentColor" stroke-width="1.2" />
+                                                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.2"
+                                                    stroke-linecap="round" />
+                                            </svg>
+                                        </div>
+                                        <span class="sems-profile-section-title">Change password</span>
+                                        <span class="sems-profile-optional-tag ms-auto">Optional</span>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="sems-profile-label">Current password</label>
+                                        <div class="sems-profile-input-wrap">
+                                            <input class="sems-profile-input form-control" id="profile-current-password"
+                                                name="current_password" type="password"
+                                                placeholder="Enter current password">
+                                            <button type="button" class="sems-profile-eye-btn toggle-pass"
+                                                data-target="profile-current-password"
+                                                data-sems-target="profile-current-password">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                                    <ellipse cx="8" cy="8" rx="6" ry="4"
+                                                        stroke="currentColor" stroke-width="1.2" />
+                                                    <circle cx="8" cy="8" r="1.8" fill="currentColor" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="sems-profile-label">New password</label>
+                                            <div class="sems-profile-input-wrap">
+                                                <input class="sems-profile-input form-control" id="profile-password-input"
+                                                    name="password" type="password" placeholder="Min. 6 characters">
+                                                <button type="button" class="sems-profile-eye-btn toggle-pass"
+                                                    data-target="profile-password-input"
+                                                    data-sems-target="profile-password-input">
+                                                    <svg width="16" height="16" viewBox="0 0 16 16"
+                                                        fill="none">
+                                                        <ellipse cx="8" cy="8" rx="6"
+                                                            ry="4" stroke="currentColor" stroke-width="1.2" />
+                                                        <circle cx="8" cy="8" r="1.8"
+                                                            fill="currentColor" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="sems-profile-strength-track">
+                                                <div class="sems-profile-strength-fill" id="semsStrengthFill"></div>
+                                            </div>
+                                            <p class="sems-profile-strength-label" id="semsStrengthLabel"></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="sems-profile-label">Confirm password</label>
+                                            <div class="sems-profile-input-wrap">
+                                                <input class="sems-profile-input form-control"
+                                                    id="profile-password-confirm-input" name="password_confirmation"
+                                                    type="password" placeholder="Repeat new password">
+                                                <button type="button" class="sems-profile-eye-btn toggle-pass"
+                                                    data-target="profile-password-confirm-input"
+                                                    data-sems-target="profile-password-confirm-input">
+                                                    <svg width="16" height="16" viewBox="0 0 16 16"
+                                                        fill="none">
+                                                        <ellipse cx="8" cy="8" rx="6"
+                                                            ry="4" stroke="currentColor" stroke-width="1.2" />
+                                                        <circle cx="8" cy="8" r="1.8"
+                                                            fill="currentColor" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <p class="sems-profile-strength-label" id="semsConfirmMatchLabel"></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="profile-update-message" class="px-4"></div>
+
+                                <div class="sems-profile-actions-row">
+                                    <button type="button" class="sems-profile-cancel-btn"
+                                        id="semsResetBtn">Reset</button>
+                                    <button type="submit" class="sems-profile-submit-btn">Save changes</button>
+                                </div>
+
+                            </form>
                         </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                         
-                          <div class="sems-profile-stat-tile">
-                            <p class="sems-profile-stat-label">Member Since</p>
-                            <p class="sems-profile-stat-value">{{ auth()->user()->created_at->year }}</p>
-                          </div>
-                          <div class="sems-profile-stat-tile">
-                            <p class="sems-profile-stat-label">Role</p>
-                            <p class="sems-profile-stat-value">{{ ucfirst(auth()->user()->role ?? 'Admin') }}</p>
-                          </div>
-                        </div>
-                      </div>
-              
-                      <form id="profile-update-form">
-                        @csrf
-              
-                        {{-- Account Details --}}
-                        <div class="sems-profile-body-section">
-                          <div class="sems-profile-section-header">
-                            <div class="sems-profile-section-icon">
-                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                            </div>
-                            <span class="sems-profile-section-title">Account details</span>
-                          </div>
-              
-                          <div class="row g-3">
-                            <div class="col-md-6">
-                              <label class="sems-profile-label" for="semsNameInput">Full name</label>
-                              <input class="sems-profile-input form-control" id="semsNameInput" name="name"
-                                type="text" value="{{ auth()->user()->name }}" placeholder="Your full name">
-                            </div>
-                            <div class="col-md-6">
-                              <label class="sems-profile-label" for="semsUsernameInput">Username</label>
-                              <div class="sems-profile-input-wrap">
-                                <input class="sems-profile-input form-control" id="semsUsernameInput" name="username"
-                                  type="text" value="{{ auth()->user()->username }}" placeholder="username"
-                                  style="padding-left:28px;">
-                                <span class="sems-profile-at-prefix">@</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-              
-                        <hr class="sems-profile-divider">
-              
-                        {{-- Password Section --}}
-                        <div class="sems-profile-body-section">
-                          <div class="sems-profile-section-header">
-                            <div class="sems-profile-section-icon">
-                              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                            </div>
-                            <span class="sems-profile-section-title">Change password</span>
-                            <span class="sems-profile-optional-tag ms-auto">Optional</span>
-                          </div>
-              
-                          <div class="mb-3">
-                            <label class="sems-profile-label">Current password</label>
-                            <div class="sems-profile-input-wrap">
-                              <input class="sems-profile-input form-control" id="profile-current-password"
-                                name="current_password" type="password" placeholder="Enter current password">
-                              <button type="button" class="sems-profile-eye-btn toggle-pass"
-                                data-target="profile-current-password" data-sems-target="profile-current-password">
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/></svg>
-                              </button>
-                            </div>
-                          </div>
-              
-                          <div class="row g-3">
-                            <div class="col-md-6">
-                              <label class="sems-profile-label">New password</label>
-                              <div class="sems-profile-input-wrap">
-                                <input class="sems-profile-input form-control" id="profile-password-input"
-                                  name="password" type="password" placeholder="Min. 6 characters">
-                                <button type="button" class="sems-profile-eye-btn toggle-pass"
-                                  data-target="profile-password-input" data-sems-target="profile-password-input">
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/></svg>
-                                </button>
-                              </div>
-                              <div class="sems-profile-strength-track"><div class="sems-profile-strength-fill" id="semsStrengthFill"></div></div>
-                              <p class="sems-profile-strength-label" id="semsStrengthLabel"></p>
-                            </div>
-                            <div class="col-md-6">
-                              <label class="sems-profile-label">Confirm password</label>
-                              <div class="sems-profile-input-wrap">
-                                <input class="sems-profile-input form-control" id="profile-password-confirm-input"
-                                  name="password_confirmation" type="password" placeholder="Repeat new password">
-                                <button type="button" class="sems-profile-eye-btn toggle-pass"
-                                  data-target="profile-password-confirm-input" data-sems-target="profile-password-confirm-input">
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/></svg>
-                                </button>
-                              </div>
-                              <p class="sems-profile-strength-label" id="semsConfirmMatchLabel"></p>
-                            </div>
-                          </div>
-                        </div>
-              
-                        <div id="profile-update-message" class="px-4"></div>
-              
-                        <div class="sems-profile-actions-row">
-                          <button type="button" class="sems-profile-cancel-btn" id="semsResetBtn">Reset</button>
-                          <button type="submit" class="sems-profile-submit-btn">Save changes</button>
-                        </div>
-              
-                      </form>
                     </div>
-                  </div>
-              
+
                 </div>
-              </div>
-         @push('scripts')
-             @include('settings.scripts.profile-script')
-             @include('settings.scripts.activity-script')
-         @endpush
+            </div>
+            @push('scripts')
+                @include('settings.scripts.profile-script')
+                @include('settings.scripts.activity-script')
+            @endpush
 
 
 

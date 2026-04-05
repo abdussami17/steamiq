@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\PermissionSeeder;
 use Database\Seeders\SteamCategorySeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -20,6 +21,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SteamCategorySeeder::class,
             UserSeeder::class,
+            PermissionSeeder::class,
+            RoleSeeder::class,
         ]);
     }
 }

@@ -239,23 +239,47 @@
     
         // PLAYER/TEAM → ACTIVITY
         [sc_studentSelect, sc_teamSelect].forEach(select => {
-            select.addEventListener('change', function () {
-    
-                if (!this.value) return;
-    
-                sc_activityDiv.classList.remove('d-none');
-                
-                fetch(`/api/events/${currentEvent}/activities`)
-                    .then(r => r.json())
-                    .then(data => {
-                        sc_activitySelect.innerHTML = '<option>-- Select Activity --</option>';
-                        data.forEach(a => {
-                            let name = a.badge_name || a.brain_type || a.esports_type || a.egaming_type || a.name || 'Playground';
-                            sc_activitySelect.innerHTML += `<option value="${a.id}">${name}</option>`;
-                        });
-                    });
+    select.addEventListener('change', function () {
+
+        if (!this.value) return;
+
+        sc_activityDiv.classList.remove('d-none');
+
+        fetch(`/api/events/${currentEvent}/activities`)
+            .then(r => r.json())
+            .then(data => {
+                sc_activitySelect.innerHTML = '<option>-- Select Activity --</option>';
+
+                data.forEach(a => {
+                    // 1️⃣ Get base name based on your priority
+                    let name = a.badge_name || a.brain_type || a.esports_type || a.egaming_type || a.name || 'Playground';
+
+                    // 2️⃣ Format name: replace underscores with spaces & capitalize words
+                    name = name.replace(/_/g, ' ')
+                               .replace(/\b\w/g, l => l.toUpperCase());
+
+                               let description = '';
+                    let type = (a.activity_type || '').toLowerCase();
+
+                    if (type === 'brain' && a.brain_description) {
+                        description = a.brain_description;
+                    } else if (type === 'playground' && a.playground_description) {
+                        description = a.playground_description;
+                    } else if (type === 'esports' && a.esports_description) {
+                        description = a.esports_description;
+                    } else if (type === 'egaming' && a.egaming_description) {
+                        description = a.egaming_description;
+                    }
+
+
+                    // 4️⃣ Combine name + dash + description
+                    let fullName = description ? `${name} - ${description}` : name;
+
+                    sc_activitySelect.innerHTML += `<option value="${a.id}">${fullName}</option>`;
+                });
             });
-        });
+    });
+});
     
         sc_activitySelect.addEventListener('change', function () {
 

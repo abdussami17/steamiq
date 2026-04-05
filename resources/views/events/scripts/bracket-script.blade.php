@@ -188,7 +188,7 @@
             const actEl = document.getElementById('bm-activities');
             actEl.innerHTML = `
                 <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#22d3ee;margin-bottom:12px;">
-                    C.A.M.P Activities &amp; Missions
+                    C.A.M. Activities &amp; Missions
                 </div>
                 <div class="bm-act-grid">${cards}</div>
                 <hr style="border-color:#1e2d45;margin:20px 0 0;">`;

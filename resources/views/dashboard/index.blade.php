@@ -53,7 +53,7 @@
                     <span class="icon">
                         <i data-lucide="target"></i>
                     </span>
-                    C.A.M Performance Pillars
+                    C.A.M. Performance Pillars
                 </h2>
             </div>
 
@@ -155,7 +155,7 @@
 
         @include('leaderboard.public-leaderboard-script')
         @auth
-            @if (auth()->user()->isAdmin())
+           @role('admin')
                 <section class="section">
                     <div class="section-header d-flex justify-content-between align-items-center">
                         <h2 class="section-title">
@@ -212,8 +212,8 @@
                         </div>
                     </div>
                 </section>
-              
-            @endif
+              @endrole
+         
         @endauth
 
 

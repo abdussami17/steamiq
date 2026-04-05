@@ -48,7 +48,7 @@
                                         <tr><td><code>subgroup</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Leave blank if none</td></tr>
                                         <tr><td><code>division</code></td><td><span class="badge bg-danger">Required</span></td><td><code>Junior</code> or <code>Primary</code></td></tr>
                                         <tr><td><code>student_name</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Single name <em>or</em> comma-separated: <code>Ali Hassan, Sara Khan</code></td></tr>
-                                        <tr><td><code>student_email</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Required if student_name given. Comma-separated in same order: <code>ali@ex.com, sara@ex.com</code></td></tr>
+                                        <tr><td><code>student_email</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Optional. Comma-separated in same order as names: <code>ali@ex.com, sara@ex.com</code></td></tr>
                                     </tbody>
                                 </table>
                             </div>

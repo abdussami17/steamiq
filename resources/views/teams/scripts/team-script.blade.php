@@ -6,12 +6,19 @@
         return val;
     }
 
-    function getRankColor(rank) {
-        if (rank === 1) return '#FFD700';
-        if (rank === 2) return '#C0C0C0';
-        if (rank === 3) return '#CD7F32';
-        return '#000';
+    function renderRank(rank) {
+    if (!rank) return '';
+
+    // For top 3, use image icons from public/assets
+    if (rank >= 1 && rank <= 3) {
+        return `<img src="/assets/position-${rank}-icon.png" 
+                     alt="Rank ${rank}" 
+                     style="width:34px;height:34px" />`;
+    } else {
+        // For ranks 4+, fallback to number badge
+        return `<span class="rank-medal rank-n">${rank}</span>`;
     }
+}
 
     // Fetch and populate teams table
     async function fetchTeams() {
@@ -29,7 +36,9 @@
             });
             if (!res.ok) throw new Error('Server error');
 
-            const teams = await res.json();
+            const data = await res.json();
+const teams = data.teams || [];
+const userPermissions = data.permissions || [];
 
             if (!Array.isArray(teams) || teams.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="11">N/A</td></tr>`;
@@ -45,7 +54,7 @@
                 const members = safe(team.members_count ?? 0);
                 const points = safe(team.total_points ?? 0);
                 const rank = safe(team.rank ?? 0);
-                const rankColor = getRankColor(Number(rank));
+
                 const img = team.profile ?
                     `/storage/${team.profile}` :
                     `/assets/avatar-default.png`;
@@ -77,18 +86,18 @@ rows += `
     <td class="text-uppercase">${pod}</td>
     <td>${members}</td>
     <td style="color: #000; font-weight:700;">${points}</td>
-    <td style="color:${rankColor}; font-weight:700;font-size:22px">${rank}</td>
+    <td style="color:#000; font-weight:700;font-size:22px;text-align:center">${renderRank(rank)}</td>
     <td>
         <div style="display:flex;gap:0.25rem;">
             <button class="btn btn-icon btn-view" onclick="viewTeamDetails('${id}')">
                 <i data-lucide="eye"></i>
             </button>
-            <button class="btn btn-icon btn-edit" onclick="openEditTeamModal('${id}')">
-                <i data-lucide="edit-2"></i>
-            </button>
-            <button class="btn btn-icon btn-delete" onclick="confirmDelete('team','${id}','${name}')">
-                <i data-lucide="trash-2"></i>
-            </button>
+            ${userPermissions.includes('edit_team')  ? `<button class="btn btn-icon btn-edit" onclick="openEditTeamModal('${id}')">
+            <i data-lucide="edit-2"></i>
+        </button>` : ''}
+        ${userPermissions.includes('delete_team') ? `<button class="btn btn-icon btn-delete" onclick="confirmDelete('team','${id}','${name}')">
+            <i data-lucide="trash-2"></i>
+        </button>` : ''}
         </div>
     </td>
 </tr>`;
@@ -219,4 +228,19 @@ new bootstrap.Modal(
                 modalBody.innerHTML = 'Failed to load team details.';
             });
     }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Simple search by Team Name
+document.getElementById('teamSearch').addEventListener('input', function(){
+    const filter = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#teamsTableBody tr');
+    rows.forEach(row => {
+        const cell = row.cells[3]; // Team Name column
+        if (!cell) { row.style.display = 'none'; return; }
+        const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
+        row.style.display = name.includes(filter) ? '' : 'none';
+    });
+});
+    })
 </script>

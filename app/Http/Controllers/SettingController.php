@@ -8,6 +8,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class SettingController extends Controller
 {
@@ -15,7 +17,9 @@ class SettingController extends Controller
     {
         $users = User::all();
         $cards = Card::all();
-        return view('settings.index', compact('users','cards'));
+        $permissions = Permission::all();
+        $roles = Role::all();
+        return view('settings.index', compact('users','cards','permissions','roles'));
     }
 
 
