@@ -34,12 +34,14 @@ Route::middleware('guest')->group(function () {
 });
 
 // Dashboard accessible to everyone
+Route::get('/scoreboard', [ScoreboardController::class, 'index'])->name('scoreboard.index');
+Route::get('/scoreboard/data', [ScoreboardController::class, 'getData'])->name('scoreboard.data');
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
 Route::get('/leaderboard/top-teams', [LeaderboardController::class, 'fetchTopThreeTeams'])->name('leaderboard.fetchTopThreeTeams');
 Route::get('/leaderboard/top-players', [LeaderboardController::class, 'fetchTopThreePlayers'])->name('leaderboard.fetchTopThreePlayers');
 Route::post('/scores/update-by-name', [ScoreController::class, 'updateScoreByName'])->name('scores.updateByName');
-Route::get('/leaderboard-events', [LeaderboardController::class, 'events'])->name('leaderboard.events');
-Route::get('/leaderboard-data', [LeaderboardController::class, 'data'])->name('leaderboard.data');
+Route::get('/leaderboard-event', [LeaderboardController::class, 'events'])->name('leaderboard.events');
+Route::get('/leaderboard-datas', [LeaderboardController::class, 'data'])->name('leaderboard.data');
 // =============================================================================
 // AUTHENTICATED ROUTES
 // =============================================================================
@@ -53,6 +55,19 @@ Route::middleware('auth')->group(function () {
     // ADMIN ROUTES
     // =========================================================================
     Route::middleware('admin')->group(function () {
+        // Score routes
+Route::post('/scores/update-by-id',  [ScoreController::class, 'updateById'])->name('scores.updateById');
+Route::post('/scores/bonus',         [ScoreController::class, 'bonus'])->name('scores.bonus');
+
+// Team students for modal
+Route::get('/api/teams/{team}/students', [ScoreController::class, 'getTeamStudents'])->name('api.teams.students');
+
+// Team students (for modal player dropdown)
+Route::get('/api/teams/{team}/students', [ScoreController::class, 'getTeamStudents'])->name('api.teams.students');
+
+// Bonus points
+Route::post('/scores/bonus', [ScoreController::class, 'bonus'])->name('scores.bonus');
+
         // Roles
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
         Route::put('/roles/{id}', [RoleController::class, 'update'])->name('roles.update');
@@ -138,7 +153,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/scores/fetch', [App\Http\Controllers\ScoreController::class, 'fetchScores']);
         Route::post('/scores/update', [App\Http\Controllers\ScoreController::class, 'updateScore']);
         Route::post('/scores/bulk-update', [App\Http\Controllers\ScoreController::class, 'bulkUpdate']);
-
+        Route::get('/leaderboard-events', [ScoreController::class, 'events'])->name('scores.events');
+        Route::get('/leaderboard-data', [ScoreController::class, 'data'])->name('scores.data');
         // ---------------------------------------------------------------------
         // Card Management
         // ---------------------------------------------------------------------
@@ -217,8 +233,7 @@ Route::middleware('auth')->group(function () {
         // ---------------------------------------------------------------------
         // Scoreboard Routes
         //
-        Route::get('/scoreboard', [ScoreboardController::class, 'index'])->name('scoreboard.index');
-        Route::get('/scoreboard/data', [ScoreboardController::class, 'getData'])->name('scoreboard.data');
+    
 
         // ---------------------------------------------------------------------
         // Settings Routes

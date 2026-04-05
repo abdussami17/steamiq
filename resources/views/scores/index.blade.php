@@ -1,84 +1,83 @@
 @extends('layouts.app')
 @section('title', 'Scoring - SteamIQ')
 
-
 @section('content')
-    <div class="container">
+<div class="container-fluid px-3">
 
-
-        <!-- Settings -->
-        <section class="section">
-            <div class="section-header">
-                <h2 class="section-title">
-                    <span class="icon">
-                        <i data-lucide="award"></i>
-                    </span>
-                    Scoring
-                </h2>
-            </div>
-
-
-
-       <!-- Scores Tab -->
- 
-        <div class="spreadsheet-container">
-            <div class="spreadsheet-toolbar" id="scoreToolbar">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                    <i data-lucide="plus"></i> Add Score
+    <section class="section">
+        <div class="section-header d-flex align-items-center gap-2 flex-wrap mb-2">
+            <h2 class="section-title mb-0">
+                <span class="icon"><i data-lucide="award"></i></span>
+                Scoring
+            </h2>
+            <div class="ms-auto d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#scoreModal">
+                    <i data-lucide="plus" style="width:13px;height:13px;vertical-align:-1px;"></i> Add Score
                 </button>
-
-                <button class="btn btn-secondary" onclick="fetchScores()">
-                    <i data-lucide="refresh-cw"></i> Refresh
+                <button class="btn btn-sm btn-warning fw-bold" id="bonusBtn">
+                    <i data-lucide="zap" style="width:13px;height:13px;vertical-align:-1px;"></i> Bonus
                 </button>
             </div>
+        </div>
 
-            <select id="eventSelect" class="form-select mb-3">
-                <option value="">Select Event</option>
-                @foreach ($events as $event)
-                    <option value="{{ $event->id }}">{{ $event->name }}</option>
-                @endforeach
-            </select>
+        <div id="lb-wrapper">
+            {{-- Controls --}}
+            <div id="lb-controls">
+                <label for="selectEvent">Event</label>
+                <select id="selectEvent">
+                    <option value="" hidden>-- Select Event --</option>
+                </select>
 
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead id="scoreHead">
-                        <tr>
-                            <th style="width: 100px">Type</th>
-                            <th style="width: 150px">Name</th>
-                            <th style="width: 150px">Activity</th>
-                            <th style="width: 100px">Total</th>
-                            <th style="width: 80px">Rank</th>
-                        </tr>
-                    </thead>
-                    <tbody id="scoreBody">
-                        <tr>
-                            <td colspan="5">Select event to load scores...</td>
-                        </tr>
+                <div class="lb-legend">
+                    <span class="lb-legend-dot"><span style="background:var(--cat-science-bg)"></span>Science</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-tech-bg)"></span>Technology</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-eng-bg)"></span>Engineering</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-art-bg)"></span>Art</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-math-bg)"></span>Math</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-playground-bg)"></span>Playground</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-egaming-bg)"></span>EGaming</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-esports-bg)"></span>Esports</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-mission-bg)"></span>Mission</span>
+                    <span class="lb-legend-dot"><span style="background:var(--cat-bonus-bg)"></span>Bonus</span>
+                </div>
+
+                <div class="lb-actions">
+                    <button id="bulkEditBtn" class="lb-btn lb-btn-bulk">⊞ Bulk Edit</button>
+                    <button id="openBulkModalBtn" class="lb-btn lb-btn-bulk-go" style="display:none;">✎ Edit Selected</button>
+                    <button id="exportLeaderboard" class="lb-btn lb-btn-export">↓ Export</button>
+                </div>
+            </div>
+
+            {{-- Bulk bar --}}
+            <div id="bulk-bar">
+                <span style="font-weight:900;color:#f5c518;font-size:12px;letter-spacing:.08em;">BULK EDIT MODE</span>
+                <span style="color:#2a3040;">|</span>
+                <span><span id="bulk-count" style="font-weight:900;color:#f5c518;font-size:16px;">0</span> selected</span>
+                <span id="bulk-hint" style="color:#484f58;font-size:11px;">Click score cells to select/deselect</span>
+                <button class="lb-btn lb-btn-bulk-go ms-auto" style="padding:5px 12px;font-size:12px;"
+                        onclick="document.getElementById('openBulkModalBtn').click()">
+                    Open Edit Panel →
+                </button>
+            </div>
+
+            {{-- Table --}}
+            <div id="lb-scroll">
+                <table id="lb-table">
+                    <thead id="lb-thead"></thead>
+                    <tbody id="lb-tbody">
+                        <tr class="lb-state-row"><td colspan="999">Select an event to load the leaderboard.</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
-  
-
-            
-
-
-
-
-        </section>
-
-
-    </div>
-
+    </section>
+</div>
 
 @push('modals')
-   {{-- Scores Modals --}}
-   @include('scores.modals.create-scores')
-   @include('scores.modals.edit-score')  
+    @include('scores.modals.create-scores')
 @endpush
+
 @push('scripts')
-        {{-- Score Scripts --}}
-        @include('scores.scripts.score-script')
+    @include('scores.scripts.score-script')
 @endpush
-       
 @endsection

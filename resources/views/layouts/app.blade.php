@@ -109,6 +109,12 @@
                        class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
                         Dashboard
                     </a>
+                    @guest
+                    <a href="{{ route('scoreboard.index') }}"
+                    class="nav-link-custom {{ request()->routeIs('scoreboard.index') ? 'active' : '' }}">
+                     Scoreboard
+                 </a>
+                    @endguest
     
                     @auth
                         @php $user = auth()->user(); @endphp

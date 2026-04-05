@@ -428,7 +428,7 @@
         thead.innerHTML = '';
 
         try {
-            const res = await fetch(`/leaderboard-data?event_id=${eventId}`, {
+            const res = await fetch(`/leaderboard-datas?event_id=${eventId}`, {
                 headers: { 'Accept': 'application/json' }
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -831,7 +831,7 @@
     }
 
     /* ── Event dropdown initialization ── */
-    fetch('/leaderboard-events')
+    fetch('/leaderboard-event')
         .then(r => r.json())
         .then(events => {
             const sel = $id('selectEvent');
