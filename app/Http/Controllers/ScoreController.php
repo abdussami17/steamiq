@@ -661,6 +661,9 @@ class ScoreController extends Controller
 
             $playerPoints += $studentTotal;
             $playerBonus += $studentBonusT;
+            
+            
+            $playerBonus += $studentBonusAssignment;
 
             $studentRows[] = [
                 'type' => 'student',
