@@ -21,6 +21,7 @@
         --cat-esports-bg:     #00bcd4;   --cat-esports-text:     #000000;
         --cat-mission-bg:     #ff6f00;   --cat-mission-text:     #ffffff;
         --cat-other-bg:       #34495e;   --cat-other-text:       #c9d1d9;
+        --cat-bonus-bg:       #b8860b;   --cat-bonus-text:       #ffffff;
 
         --total-team-bg:      #0d2d6e;   --total-team-text:    #79c0ff;
         --total-player-bg:    #1a3a1a;   --total-player-text:  #56d364;
@@ -129,12 +130,6 @@
     }
     .lb-btn-bulk-go:hover { background: #1e5a46; }
 
-    .lb-btn-export {
-        background: #238636;
-        color: #fff;
-    }
-    .lb-btn-export:hover { background: #2ea043; }
-
     /* ── BULK BAR ── */
     #bulk-bar {
         display: none;
@@ -194,6 +189,7 @@
     #lb-table thead tr.row-banner th.banner-esports     { background: var(--cat-esports-bg);     color: var(--cat-esports-text); }
     #lb-table thead tr.row-banner th.banner-mission     { background: var(--cat-mission-bg);     color: var(--cat-mission-text); }
     #lb-table thead tr.row-banner th.banner-other       { background: var(--cat-other-bg);       color: var(--cat-other-text); }
+    #lb-table thead tr.row-banner th.banner-bonus       { background: var(--cat-bonus-bg);       color: var(--cat-bonus-text); }
     #lb-table thead tr.row-banner th.banner-total-team   { background: var(--total-team-bg);   color: var(--total-team-text); }
     #lb-table thead tr.row-banner th.banner-total-player { background: var(--total-player-bg); color: var(--total-player-text); }
     #lb-table thead tr.row-banner th.banner-total-grand  { background: var(--total-grand-bg);  color: var(--total-grand-text); }
@@ -226,6 +222,7 @@
     #lb-table thead tr.row-cols th.cat-esports     { border-top: 3px solid var(--cat-esports-bg); }
     #lb-table thead tr.row-cols th.cat-mission     { border-top: 3px solid var(--cat-mission-bg); }
     #lb-table thead tr.row-cols th.cat-other       { border-top: 3px solid var(--cat-other-bg); }
+    #lb-table thead tr.row-cols th.cat-bonus       { border-top: 3px solid var(--cat-bonus-bg); color: #f5c518; }
     #lb-table thead tr.row-cols th.col-total-team   { border-top: 3px solid var(--total-team-text);   color: var(--total-team-text); }
     #lb-table thead tr.row-cols th.col-total-player { border-top: 3px solid var(--total-player-text); color: var(--total-player-text); }
     #lb-table thead tr.row-cols th.col-total-grand  { border-top: 3px solid var(--total-grand-text);  color: var(--total-grand-text); }
@@ -311,12 +308,25 @@
     .score-esports     { background: var(--cat-esports-bg);     color: var(--cat-esports-text); }
     .score-mission     { background: var(--cat-mission-bg);     color: var(--cat-mission-text); }
     .score-other       { background: var(--cat-other-bg);       color: var(--cat-other-text); }
+    .score-bonus       { background: var(--cat-bonus-bg);       color: var(--cat-bonus-text); }
     .score-zero { color: #3a4454; font-size: 13px; }
 
     /* ── TOTAL CELLS ── */
     td.td-total-team   { background: var(--total-team-bg)   !important; color: var(--total-team-text)   !important; font-family: var(--font-head) !important; font-weight: 800 !important; font-size: 15px !important; }
     td.td-total-player { background: var(--total-player-bg) !important; color: var(--total-player-text) !important; font-family: var(--font-head) !important; font-weight: 700 !important; font-size: 13px !important; }
     td.td-total-grand  { background: var(--total-grand-bg)  !important; color: var(--total-grand-text)  !important; font-family: var(--font-head) !important; font-weight: 900 !important; font-size: 16px !important; }
+
+    /* ── BONUS CELL ── */
+    td.td-bonus {
+        background: #2a1e00 !important;
+        color: #f5c518 !important;
+        font-family: var(--font-head) !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+    }
+    td.td-bonus-zero {
+        color: #3a4454 !important;
+    }
 
     /* ── RANK MEDALS ── */
     .rank-medal {
@@ -515,6 +525,12 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
         return `<span class="score-pill score-${slug}">${Number(v).toLocaleString()}</span>`;
     }
 
+    function bonusPill(pts) {
+        const v = parseInt(pts) || 0;
+        if (!v) return '<span class="score-zero">—</span>';
+        return `<span class="score-pill score-bonus">+${Number(v).toLocaleString()}</span>`;
+    }
+
     function rankBadge(r) {
         if (!r && r !== 0) return '';
         if (r === 1) return `<span class="rank-medal rank-1">1</span>`;
@@ -532,7 +548,8 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
         const map = {
             science: 'Science', technology: 'Technology', engineering: 'Engineering',
             art: 'Art', math: 'Math', playground: 'Playground',
-            egaming: 'E-Gaming', esports: 'ESports', mission: 'Missions', other: 'Other',
+            egaming: 'E-Gaming', esports: 'ESports', mission: 'Missions',
+            bonus: 'Bonus', other: 'Other',
         };
         return map[slug] || slug;
     }
@@ -662,18 +679,18 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
 
     /* ═══════════════════════════════════════════════════════════
        BUILD TABLE
-       Uses category id/max_score from the server response directly
-       so no async race condition with activity meta.
     ═══════════════════════════════════════════════════════════ */
     function buildTable(data, thead, tbody) {
         const cats      = data.categories || [];
         const rows      = data.rows;
 
-        // Pull arrays from server response (id & max_score are included)
         const catNames     = cats.map(c => c.name);
         const catSlugs     = cats.map(c => c.type);
         const catIds       = cats.map(c => c.id);
         const catMaxScores = cats.map(c => c.max_score || 9999);
+
+        // Check if any row has a non-zero bonus_assignment
+        const hasBonusData = rows.some(r => (r.bonus_assignment ?? 0) > 0);
 
         /* Banner groups — merge consecutive same-slug columns */
         const bannerGroups = [];
@@ -685,6 +702,9 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
                 bannerGroups.push({ slug, label: slugToLabel(slug), span: 1 });
             }
         });
+
+        // Total fixed columns count: 5 meta + catNames.length + (bonus col if present) + 4 totals
+        const totalCols = 5 + catNames.length + (hasBonusData ? 1 : 0) + 5;
 
         /* ── ROW 1: Banner ── */
         const r1 = document.createElement('tr');
@@ -708,6 +728,14 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
             th.style.minWidth = (g.span * 120) + 'px';
             r1.appendChild(th);
         });
+        // Bonus banner (only if bonus data exists)
+        if (hasBonusData) {
+            const thBonus = document.createElement('th');
+            thBonus.textContent = 'BONUS';
+            thBonus.className   = 'banner-bonus';
+            thBonus.style.minWidth = '100px';
+            r1.appendChild(thBonus);
+        }
         [
             { label: 'TEAM POINTS',   cls: 'banner-total-team',   w: 100 },
             { label: 'PLAYER POINTS', cls: 'banner-total-player', w: 100 },
@@ -745,6 +773,14 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
             th.title        = name;
             r2.appendChild(th);
         });
+        // Bonus column label
+        if (hasBonusData) {
+            const thBonus = document.createElement('th');
+            thBonus.textContent  = 'BONUS';
+            thBonus.className    = 'cat-bonus';
+            thBonus.style.minWidth = '100px';
+            r2.appendChild(thBonus);
+        }
         [
             { label: 'TEAM PTS',    cls: 'col-total-team',   w: 100 },
             { label: 'PLAYER PTS',  cls: 'col-total-player', w: 100 },
@@ -775,7 +811,7 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
                 const divTr = document.createElement('tr');
                 divTr.className = 'tr-divider';
                 const divTd = document.createElement('td');
-                divTd.colSpan = 5 + catNames.length + 5;
+                divTd.colSpan = totalCols;
                 const sub = (row.subgroup && row.subgroup !== '-') ? '  ›  ' + row.subgroup.toUpperCase() : '';
                 divTd.textContent = '▸  ' + groupKey.toUpperCase() + sub;
                 divTr.appendChild(divTd);
@@ -837,8 +873,6 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
 
                 td.innerHTML = scorePill(pts, slug);
 
-                // Store everything needed on the element so callbacks don't
-                // need closure variables that can go stale.
                 td.dataset.cat        = cat;
                 td.dataset.pts        = pts;
                 td.dataset.slug       = slug;
@@ -861,6 +895,20 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
 
                 tr.appendChild(td);
             });
+
+            /* ── Bonus column (read-only, yellow) ── */
+            if (hasBonusData) {
+                const tdBon = document.createElement('td');
+                const bonusVal = parseInt(row.bonus_assignment) || 0;
+                if (bonusVal > 0) {
+                    tdBon.className = 'td-bonus';
+                    tdBon.innerHTML = bonusPill(bonusVal);
+                } else {
+                    tdBon.className = 'td-bonus-zero';
+                    tdBon.innerHTML = '<span class="score-zero">—</span>';
+                }
+                tr.appendChild(tdBon);
+            }
 
             /* team points */
             const tdTP = document.createElement('td');
@@ -905,7 +953,6 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
        INLINE SCORE EDITOR
     ═══════════════════════════════════════════════════════════ */
     function openScoreEditor(td, row) {
-        // Prevent opening a second input while one is already open
         if (td.querySelector('.score-edit-input')) return;
 
         const cat      = td.dataset.cat;
@@ -944,7 +991,6 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
             }
 
             committed = true;
-            // Optimistic update
             td.innerHTML   = scorePill(newVal, slug);
             td.dataset.pts = newVal;
             updateRowTotalsInDOM(row, cat, newVal);
@@ -999,7 +1045,6 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
         } catch (err) {
             console.error(err);
             toast('Error: ' + err.message, 'err');
-            // Rollback optimistic update
             td.innerHTML   = scorePill(oldPts, slug);
             td.dataset.pts = oldPts;
             updateRowTotalsInDOM(row, cat, oldPts);
@@ -1013,9 +1058,9 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
         _bulkMode     = !_bulkMode;
         _bulkSelected = [];
 
-        const btn    = $id('bulkEditBtn');
+        const btn     = $id('bulkEditBtn');
         const bulkBar = $id('bulk-bar');
-        const table  = $id('lb-table');
+        const table   = $id('lb-table');
 
         if (_bulkMode) {
             btn.classList.add('active');
@@ -1073,8 +1118,8 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
                 ? (sel.row.team_name    || 'Team')
                 : (sel.row.student_name || 'Player');
 
-            const teamColor   = sel.row.type === 'team' ? '#1a3a6e' : '#1a3a1a';
-            const textColor   = sel.row.type === 'team' ? '#79c0ff' : '#56d364';
+            const teamColor = sel.row.type === 'team' ? '#1a3a6e' : '#1a3a1a';
+            const textColor = sel.row.type === 'team' ? '#79c0ff' : '#56d364';
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -1099,7 +1144,6 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
 
         $id('bulkEditCount').textContent = _bulkSelected.length + ' cells';
 
-        /* Select-all checkbox */
         const selectAll = $id('bulkSelectAll');
         selectAll.checked  = true;
         selectAll.onchange = function () {
@@ -1108,7 +1152,6 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
             });
         };
 
-        /* Validate on input */
         tbodyEl.querySelectorAll('.bulk-pts-input').forEach(input => {
             input.addEventListener('input', function () {
                 const max   = parseInt(this.dataset.max);
@@ -1238,23 +1281,14 @@ window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
         .catch(console.error);
 
     $id('selectEvent').addEventListener('change', function () {
-        // Reset bulk mode on event change
         if (_bulkMode) toggleBulkMode();
         _bulkSelected = [];
         updateBulkBar();
         fetchLeaderboard(this.value);
     });
 
-    $id('exportLeaderboard').addEventListener('click', () => {
-        const id = $id('selectEvent').value;
-        if (!id) { alert('Please select an event first!'); return; }
-        window.location.href = `/leaderboard-export?event_id=${id}`;
-    });
-
     $id('bulkEditBtn').addEventListener('click', toggleBulkMode);
     $id('openBulkModalBtn').addEventListener('click', openBulkEditModal);
-
-
 
 })();
 </script>

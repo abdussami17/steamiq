@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BonusAssignment;
 use App\Models\ChallengeActivity;
 use App\Models\Event;
 use App\Models\Group;
@@ -225,183 +226,125 @@ class ScoreController extends Controller
         }
     }
 
-
-
-
-
     /* =========================================================
        DROPDOWN HELPERS
     ========================================================= */
-   /**
+    /**
      * Get organizations for an event
      */
     public function getEventOrganizations(Event $event)
     {
-        return response()->json(
-            $event->organizations()
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get()
-        );
+        return response()->json($event->organizations()->select('id', 'name')->orderBy('name')->get());
     }
- 
+
     /**
      * Get groups for an organization
      */
     public function getOrganizationGroups($id)
     {
-        return response()->json(
-            Group::where('organization_id', $id)
-                ->select('id', 'group_name')
-                ->orderBy('group_name')
-                ->get()
-        );
+        return response()->json(Group::where('organization_id', $id)->select('id', 'group_name')->orderBy('group_name')->get());
     }
- 
+
     /**
      * Get subgroups for a group
      */
     public function getGroupSubgroups($id)
     {
-        return response()->json(
-            SubGroup::where('group_id', $id)
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get()
-        );
+        return response()->json(SubGroup::where('group_id', $id)->select('id', 'name')->orderBy('name')->get());
     }
- 
+
     /**
      * Get filtered students by group/subgroup
-     * Used when "Player" is selected in "Assign To" dropdown
      */
     public function getFilteredStudents(Request $request)
     {
         $query = Student::query()->select('id', 'name', 'team_id');
- 
+
         if ($request->group_id) {
-            $query->whereHas('team', function($q) use ($request) {
+            $query->whereHas('team', function ($q) use ($request) {
                 $q->where('group_id', $request->group_id);
             });
         }
-        
+
         if ($request->sub_group_id) {
-            $query->whereHas('team', function($q) use ($request) {
+            $query->whereHas('team', function ($q) use ($request) {
                 $q->where('sub_group_id', $request->sub_group_id);
             });
         }
- 
-        return response()->json(
-            $query->orderBy('name')->get()
-        );
+
+        return response()->json($query->orderBy('name')->get());
     }
- 
+
     /**
      * Get filtered teams by group/subgroup
-     * Used when "Team" is selected in "Assign To" dropdown
      */
     public function getFilteredTeams(Request $request)
     {
         $query = Team::query()->select('id', 'name');
-        
+
         if ($request->group_id) {
             $query->where('group_id', $request->group_id);
         }
-        
+
         if ($request->sub_group_id) {
             $query->where('sub_group_id', $request->sub_group_id);
         }
-        
-        return response()->json(
-            $query->orderBy('name')->get()
-        );
+
+        return response()->json($query->orderBy('name')->get());
     }
- 
+
     /**
      * Get students for a specific team
-     * Alternative method if you need to fetch students by team directly
      */
     public function getTeamStudents($teamId)
     {
-        return response()->json(
-            Student::where('team_id', $teamId)
-                ->select('id', 'name')
-                ->orderBy('name')
-                ->get()
-        );
+        return response()->json(Student::where('team_id', $teamId)->select('id', 'name')->orderBy('name')->get());
     }
- 
+
     /**
      * Get all activities for an event
-     * Used to populate the Activity dropdown
      */
     public function getEventActivities(Event $event)
     {
         return response()->json(
-            $event->activities()
-                ->select([
-                    'id', 
-                    'event_id', 
-                    'name', 
-                    'max_score', 
-                    'activity_or_mission', 
-                    'activity_type', 
-                    'badge_name', 
-                    'brain_type', 
-                    'brain_description', 
-                    'point_structure', 
-                    'esports_type', 
-                    'esports_players', 
-                    'esports_structure', 
-                    'esports_description', 
-                    'egaming_type', 
-                    'egaming_mode', 
-                    'egaming_structure', 
-                    'egaming_description', 
-                    'playground_description', 
-                    'created_at', 
-                    'updated_at'
-                ])
+            $event
+                ->activities()
+                ->select(['id', 'event_id', 'name', 'max_score', 'activity_or_mission', 'activity_type', 'badge_name', 'brain_type', 'brain_description', 'point_structure', 'esports_type', 'esports_players', 'esports_structure', 'esports_description', 'egaming_type', 'egaming_mode', 'egaming_structure', 'egaming_description', 'playground_description', 'created_at', 'updated_at'])
                 ->orderBy('id')
-                ->get()
+                ->get(),
         );
     }
- 
+
     /**
      * Get existing score for a student/team + activity combination
-     * Pre-fills the points field if a score already exists
      */
     public function getExistingScore(Request $request)
     {
-        $query = Score::where('event_id', $request->event_id)
-            ->where('challenge_activity_id', $request->challenge_activity_id);
- 
+        $query = Score::where('event_id', $request->event_id)->where('challenge_activity_id', $request->challenge_activity_id);
+
         if ($request->student_id) {
             $query->where('student_id', $request->student_id)->whereNull('team_id');
         }
-        
+
         if ($request->team_id) {
             $query->where('team_id', $request->team_id)->whereNull('student_id');
         }
- 
+
         $score = $query->first();
-        
+
         return response()->json([
-            'points' => $score ? $score->points : null
+            'points' => $score ? $score->points : null,
         ]);
     }
- 
+
     /**
      * Get Steam categories
      */
     public function getSteamCategories()
     {
-        return response()->json(
-            SteamCategory::select('id', 'name')
-                ->orderBy('id')
-                ->get()
-        );
+        return response()->json(SteamCategory::select('id', 'name')->orderBy('id')->get());
     }
+
     /* =========================================================
        LEADERBOARD EVENTS LIST
     ========================================================= */
@@ -423,6 +366,37 @@ class ScoreController extends Controller
         try {
             $event = Event::with(['organizations.groups.teams.scores.challengeActivity', 'organizations.groups.teams.students.scores.challengeActivity', 'organizations.groups.subgroups.teams.scores.challengeActivity', 'organizations.groups.subgroups.teams.students.scores.challengeActivity'])->findOrFail($eventId);
 
+            // Pre-load all BonusAssignment records for teams and students in this event
+            // keyed by "Team_{id}" or "Student_{id}" for fast lookup
+            $allTeamIds = [];
+            $allStudentIds = [];
+
+            foreach ($event->organizations as $org) {
+                foreach ($org->groups as $group) {
+                    $allTeams = $group->teams->merge($group->subgroups->flatMap(fn($sg) => $sg->teams));
+                    foreach ($allTeams as $team) {
+                        $allTeamIds[] = $team->id;
+                        foreach ($team->students as $student) {
+                            $allStudentIds[] = $student->id;
+                        }
+                    }
+                }
+            }
+            $teamBonusMap = BonusAssignment::where('assignable_type', 'team')
+            ->whereIn('assignable_id', $allTeamIds)
+            ->selectRaw('assignable_id, SUM(points) as total')
+            ->groupBy('assignable_id')
+            ->pluck('total', 'assignable_id')
+            ->toArray();
+        
+        $studentBonusMap = BonusAssignment::where('assignable_type', 'student')
+            ->whereIn('assignable_id', $allStudentIds)
+            ->selectRaw('assignable_id, SUM(points) as total')
+            ->groupBy('assignable_id')
+            ->pluck('total', 'assignable_id')
+            ->toArray();
+
+            
             // Build activity map: display_name => ['slug'=>..., 'id'=>..., 'max_score'=>...]
             $activityMap = [];
 
@@ -456,11 +430,11 @@ class ScoreController extends Controller
                         if ($team->sub_group_id) {
                             continue;
                         }
-                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categoryNames);
+                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categoryNames, $teamBonusMap, $studentBonusMap);
                     }
                     foreach ($group->subgroups as $subgroup) {
                         foreach ($subgroup->teams as $team) {
-                            $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categoryNames);
+                            $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categoryNames, $teamBonusMap, $studentBonusMap);
                         }
                     }
                 }
@@ -476,7 +450,7 @@ class ScoreController extends Controller
             foreach ($sorted as $block) {
                 $gt = $block['team']['grand_total'];
                 if ($gt <= 0) {
-                    $rankMap[$block['team']['id']] = null; // no rank for zero
+                    $rankMap[$block['team']['id']] = null;
                     continue;
                 }
                 if ($prevGT !== null && $gt === $prevGT) {
@@ -531,9 +505,39 @@ class ScoreController extends Controller
     /* =========================================================
        PRIVATE HELPERS
     ========================================================= */
+
+    /**
+     * Clean an activity name: remove underscores and title-case it.
+     * Append description if available: "Name - Description"
+     */
+    private function buildDisplayName(ChallengeActivity $activity): string
+    {
+        // Pick the best raw name (mirrors the JS reference logic)
+        $raw = $activity->badge_name ?? ($activity->brain_type ?? ($activity->esports_type ?? ($activity->egaming_type ?? ($activity->name ?? 'Playground'))));
+
+        // Clean underscores + title-case
+        $name = ucwords(str_replace('_', ' ', $raw));
+
+        // Pick description based on activity type
+        $type = strtolower($activity->activity_type ?? '');
+        if ($type === 'brain') {
+            $desc = $activity->brain_description ?? '';
+        } elseif ($type === 'egaming') {
+            $desc = $activity->egaming_description ?? '';
+        } elseif ($type === 'esports') {
+            $desc = $activity->esports_description ?? '';
+        } elseif ($type === 'playground') {
+            $desc = $activity->playground_description ?? '';
+        } else {
+            $desc = '';
+        }
+
+        return $desc ? $name . ' - ' . $desc : $name;
+    }
+
     private function registerActivity(array &$map, ChallengeActivity $activity): void
     {
-        $dn = $activity->display_name;
+        $dn = $this->buildDisplayName($activity);
         if (empty($dn) || array_key_exists($dn, $map)) {
             return;
         }
@@ -582,7 +586,7 @@ class ScoreController extends Controller
         return 'other';
     }
 
-    private function buildBlock($event, $org, $group, $subgroup, $team, array $categoryNames): array
+    private function buildBlock($event, $org, $group, $subgroup, $team, array $categoryNames, array $teamBonusMap, array $studentBonusMap): array
     {
         // Team-level scores (student_id IS NULL)
         $teamLookup = [];
@@ -592,7 +596,7 @@ class ScoreController extends Controller
             if ($score->student_id !== null || !$score->challengeActivity) {
                 continue;
             }
-            $name = $score->challengeActivity->display_name;
+            $name = $this->buildDisplayName($score->challengeActivity);
             if (!$name) {
                 continue;
             }
@@ -606,13 +610,16 @@ class ScoreController extends Controller
         $teamBonusTot = 0;
 
         foreach ($categoryNames as $cat) {
-            $pts = $teamLookup[($name = $cat)] ?? 0;
+            $pts = $teamLookup[$cat] ?? 0;
             $bonus = $bonusLookup[$cat] ?? 0;
             $teamScores[$cat] = $pts;
             $teamBonus[$cat] = $bonus;
             $teamPoints += $pts;
             $teamBonusTot += $bonus;
         }
+
+        // BonusAssignment bonus for the team (from bonus_assignments table)
+        $teamBonusAssignment = (int) ($teamBonusMap[$team->id] ?? 0);
 
         // Student rows
         $studentRows = [];
@@ -627,7 +634,7 @@ class ScoreController extends Controller
                 if (!$score->challengeActivity) {
                     continue;
                 }
-                $name = $score->challengeActivity->display_name;
+                $name = $this->buildDisplayName($score->challengeActivity);
                 if (!$name) {
                     continue;
                 }
@@ -649,6 +656,9 @@ class ScoreController extends Controller
                 $studentBonusT += $bonus;
             }
 
+            // BonusAssignment bonus for this student
+            $studentBonusAssignment = (int) ($studentBonusMap[$student->id] ?? 0);
+
             $playerPoints += $studentTotal;
             $playerBonus += $studentBonusT;
 
@@ -665,12 +675,13 @@ class ScoreController extends Controller
                 'scores' => $studentScores,
                 'bonus' => $studentBonus,
                 'total_bonus' => $studentBonusT,
-                'total_points' => $studentTotal + $studentBonusT,
+                'bonus_assignment' => $studentBonusAssignment,
+                'total_points' => $studentTotal + $studentBonusT + $studentBonusAssignment,
                 'rank' => null,
             ];
         }
 
-        $grandTotal = $teamPoints + $teamBonusTot + $playerPoints + $playerBonus;
+        $grandTotal = $teamPoints + $teamBonusTot + $playerPoints + $playerBonus + $teamBonusAssignment;
 
         return [
             'team' => [
@@ -690,6 +701,7 @@ class ScoreController extends Controller
                 'player_points' => $playerPoints,
                 'player_bonus' => $playerBonus,
                 'total_bonus' => $teamBonusTot + $playerBonus,
+                'bonus_assignment' => $teamBonusAssignment,
                 'grand_total' => $grandTotal,
                 'rank' => null,
             ],

@@ -38,12 +38,12 @@
                     <span class="lb-legend-dot"><span style="background:var(--cat-egaming-bg)"></span>EGaming</span>
                     <span class="lb-legend-dot"><span style="background:var(--cat-esports-bg)"></span>Esports</span>
                     <span class="lb-legend-dot"><span style="background:var(--cat-mission-bg)"></span>Mission</span>
+                    <span class="lb-legend-dot"><span style="background:#b8860b"></span>Bonus</span>
                 </div>
 
                 <div class="lb-actions">
                     <button id="bulkEditBtn" class="lb-btn lb-btn-bulk">⊞ Bulk Edit</button>
                     <button id="openBulkModalBtn" class="lb-btn lb-btn-bulk-go" style="display:none;">✎ Edit Selected</button>
-                    <button id="exportLeaderboard" class="lb-btn lb-btn-export">↓ Export</button>
                 </div>
             </div>
 
