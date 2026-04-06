@@ -25,6 +25,8 @@
 
             <button class="tab" onclick="switchTab('activities', event)">Activities</button>
             <button class="tab" onclick="switchTab('cards', event)">Cards</button>
+            <button class="tab" onclick="switchTab('cards-history', event)">Cards History</button>
+
             <button class="tab" onclick="switchTab('profile', event)">Profile</button>
 
 
@@ -304,6 +306,75 @@
                         @include('card.create')
                         @include('card.edit')
                     @endpush
+
+                </div>
+            </div>
+            <div id="cards-history-tab" class="tab-content">
+                <div class="spreadsheet-container mt-4">
+                    <div class="spreadsheet-toolbar">
+                    
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Card</th>
+                                    <th>Assigned To</th>
+                                    <th>Entity Name</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                    
+                            <tbody>
+                                @forelse($logs as $log)
+                    
+                                    @php
+                                        $entityName = '-';
+                    
+                                        if ($log->assignable_type === 'student') {
+                                            $entity = \App\Models\Student::find($log->assignable_id);
+                                            $entityName = $entity->name ?? '-';
+                                        }
+                    
+                                        elseif ($log->assignable_type === 'team') {
+                                            $entity = \App\Models\Team::find($log->assignable_id);
+                                            $entityName = $entity->name ?? '-';
+                                        }
+                    
+                                        elseif ($log->assignable_type === 'group') {
+                                            $entity = \App\Models\Group::find($log->assignable_id);
+                                            $entityName = $entity->group_name ?? '-';
+                                        }
+                    
+                                        elseif ($log->assignable_type === 'organization') {
+                                            $entity = \App\Models\Organization::find($log->assignable_id);
+                                            $entityName = $entity->name ?? '-';
+                                        }
+                                    @endphp
+                    
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ $log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info') }}">
+                                                {{ strtoupper($log->card->type) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ ucfirst($log->assignable_type) }}</td>
+                                        <td>{{ $entityName }}</td>
+                                        <td>{{ $log->created_at->format('d M Y H:i') }}</td>
+                                    </tr>
+                    
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center">No logs found</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+               
 
                 </div>
             </div>

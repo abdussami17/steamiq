@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Card;
+use App\Models\CardAssignment;
 use App\Models\ChallengeActivity;
 use App\Models\User;
 use Carbon\Carbon;
@@ -19,7 +20,11 @@ class SettingController extends Controller
         $cards = Card::all();
         $permissions = Permission::all();
         $roles = Role::all();
-        return view('settings.index', compact('users','cards','permissions','roles'));
+        $logs = CardAssignment::with('card')
+        ->latest()
+        ->get();
+
+        return view('settings.index', compact('users','cards','permissions','roles','logs'));
     }
 
 
