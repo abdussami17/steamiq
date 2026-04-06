@@ -164,3 +164,57 @@
         </div>
     </div>
 </div>
+
+{{-- ══════════════════════════════════════════════════════════════════════════
+     WINNER SELECTION MODAL
+     Shown automatically when an event is saved with status = "closed"
+══════════════════════════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="winnerModal" tabindex="-1" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#fef9c3,#fde68a); border-bottom:2px solid #f59e0b;">
+                <h5 class="modal-title" style="color:#92400e; font-weight:700;">
+                    🏆 Select Event Winner
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        onclick="location.reload()"></button>
+            </div>
+
+            <div class="modal-body">
+                <p class="text-muted mb-3" style="font-size:0.9rem;">
+                    The event has been marked as <strong>Closed</strong>.
+                    Choose the winning team from the list below.
+                </p>
+
+                {{-- Search filter --}}
+                <input type="text" id="winnerTeamSearch" class="form-input mb-3"
+                       placeholder="Search team…" oninput="filterWinnerTeams(this.value)">
+
+                {{-- Loading state --}}
+                <div id="winnerTeamsLoading" class="text-center py-4" style="display:none;">
+                    <div class="spinner-border text-warning" role="status"></div>
+                    <p class="mt-2 text-muted">Loading teams…</p>
+                </div>
+
+                {{-- Team list --}}
+                <div id="winnerTeamsList" style="max-height:380px; overflow-y:auto; display:none;">
+                    {{-- populated by JS --}}
+                </div>
+
+                <div id="winnerTeamsEmpty" class="text-center text-muted py-3" style="display:none;">
+                    No teams found for this event.
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        onclick="location.reload()">Skip &amp; Close</button>
+                <button type="button" class="btn btn-primary" id="saveWinnerBtn"
+                        onclick="saveEventWinner()" disabled>
+                    Save Winner
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

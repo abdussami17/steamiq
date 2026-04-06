@@ -109,7 +109,7 @@
             else if (type === 'student') {
                 // For Student: First show Teams, then Students
                 firstLevelLabel.textContent = 'Select Team';
-                secondLevelLabel.textContent = 'Select Student';
+                secondLevelLabel.textContent = 'Select Player';
                 
                 firstLevelContainer.style.display = 'block';
                 await loadTeamsIntoFirstLevel();
@@ -124,13 +124,13 @@
                     }
                     
                     secondLevelContainer.style.display = 'block';
-                    secondLevelDropdown.innerHTML = '<option value="">-- Loading Students --</option>';
+                    secondLevelDropdown.innerHTML = '<option value="">-- Loading Players --</option>';
                     
                     try {
                         const res = await fetch('/api/students/by-team/' + teamId);
                         const students = await res.json();
                         
-                        let options = '<option value="">-- Choose Student --</option>';
+                        let options = '<option value="">-- Choose Player --</option>';
                         students.forEach(student => {
                             options += `<option value="${student.id}">${student.name}</option>`;
                         });
@@ -141,7 +141,7 @@
                             finalAssignableId.value = this.value;
                         };
                     } catch(err) {
-                        secondLevelDropdown.innerHTML = '<option value="">-- Error Loading Students --</option>';
+                        secondLevelDropdown.innerHTML = '<option value="">-- Error Loading Players --</option>';
                         console.error('Error:', err);
                     }
                 };

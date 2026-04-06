@@ -105,12 +105,12 @@ public function getTeams($groupId)
     {
         try {
             // =============================
-            // 1) Load teams + subgroup + card assignments
+            // 1) Load teams + subgroup  assignments
             // =============================
             $teams = Team::with([
                 'subgroup.group',
                 'group',
-                'cards.card' // ensure card details are loaded
+                
             ])->get();
     
             // =============================
@@ -132,20 +132,13 @@ public function getTeams($groupId)
             // =============================
             $rows = $teams->map(function ($team) use ($pointsMap, $membersMap) {
     
-                $assignedCards = $team->cards ?? collect();
-    
-                $negativePoints = $assignedCards->sum(function($assignment) {
-                    return $assignment->card->negative_points ?? 0;
-                });
+
     
                 $basePoints = $pointsMap[$team->id] ?? 0;
     
-                if ($assignedCards->isEmpty()) {
+
                     $totalPoints = $basePoints;
-                } else {
-                    $totalPoints = $negativePoints == 0 ? 0 : $basePoints - $negativePoints;
-                    $totalPoints = max(0, $totalPoints); // avoid negative total
-                }
+
     
                 return [
                     'id' => $team->id,

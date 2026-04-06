@@ -91,7 +91,7 @@ class StudentController extends Controller
             $students = Student::with([
                 'team.subgroup.group.organization',
                 'scores.challengeActivity',
-                'cards'
+                
             ])
             ->whereHas('team.group.organization', function ($q) use ($eventId, $organizationId) {
                 $q->where('event_id', $eventId);
@@ -132,8 +132,8 @@ class StudentController extends Controller
                     }
                 }
     
-                $totalNegative = optional($student->cards)->sum('negative_points') ?? 0;
-                $totalPoints = max(0, $totalPoints - $totalNegative);
+                
+              
     
                 $rows[] = [
                     'id' => $student->id,

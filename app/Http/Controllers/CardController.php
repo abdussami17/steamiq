@@ -6,6 +6,13 @@ use App\Models\Card;
 use App\Models\CardAssignment;
 use Illuminate\Http\Request;
 
+use App\Models\Score;
+use App\Models\Team;
+use App\Models\Student;
+use App\Models\Group;
+use Illuminate\Support\Facades\DB;
+
+
 class CardController extends Controller
 {
     public function index()
@@ -67,35 +74,105 @@ class CardController extends Controller
         return back()->with('success', 'Card deleted successfully.');
     }
 
-public function assignCard(Request $request)
-{
-    // Validate input
-    $request->validate([
-        'assignable_type' => 'required|in:organization,group,team,student',
-        'assignable_id'   => 'required|exists:' . $this->getTableName($request->assignable_type) . ',id',
-        'card_id'         => 'required|exists:cards,id',
-    ]);
-
-    // Check if already assigned
-    $exists = CardAssignment::where('assignable_id', $request->assignable_id)
-        ->where('assignable_type', $request->assignable_type)
-        ->where('card_id', $request->card_id)
-        ->exists();
-
-    if ($exists) {
-        return redirect()->back()->with('error', 'This card is already assigned to the selected entity!');
+    public function assignCard(Request $request)
+    {
+        $request->validate([
+            'assignable_type' => 'required|in:organization,group,team,student',
+            'assignable_id'   => 'required|exists:' . $this->getTableName($request->assignable_type) . ',id',
+            'card_id'         => 'required|exists:cards,id',
+        ]);
+    
+        $card = Card::findOrFail($request->card_id);
+    
+        $exists = CardAssignment::where('assignable_id', $request->assignable_id)
+            ->where('assignable_type', $request->assignable_type)
+            ->where('card_id', $request->card_id)
+            ->exists();
+    
+        if ($exists) {
+            return back()->with('error', 'This card is already assigned to the selected entity!');
+        }
+    
+        DB::transaction(function () use ($request, $card) {
+    
+            // Create assignment
+            CardAssignment::create([
+                'assignable_id'   => $request->assignable_id,
+                'assignable_type' => $request->assignable_type,
+                'card_id'         => $request->card_id,
+            ]);
+    
+            // Apply score effect
+            $this->applyCardEffect($card, $request->assignable_type, $request->assignable_id);
+        });
+    
+        return back()->with('success', 'Card assigned successfully!');
     }
-
-    // Create assignment
-    CardAssignment::create([
-        'assignable_id'   => $request->assignable_id,   
-        'assignable_type' => $request->assignable_type,
-        'card_id'         => $request->card_id,
-    ]);
-
-    return redirect()->back()->with('success', 'Card assigned successfully!');
-}
-
+    private function applyCardEffect($card, $type, $id)
+    {
+        $points = $card->type === 'red' ? 0 : -abs($card->negative_points);
+    
+        // Resolve affected IDs
+        $teamIds = [];
+        $studentIds = [];
+    
+        if ($type === 'organization') {
+    
+            $teamIds = Team::whereIn('group_id', function ($q) use ($id) {
+                $q->select('id')->from('groups')->where('organization_id', $id);
+            })->pluck('id')->toArray();
+    
+            $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id')->toArray();
+        }
+    
+        elseif ($type === 'group') {
+    
+            $teamIds = Team::where('group_id', $id)->pluck('id')->toArray();
+            $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id')->toArray();
+        }
+    
+        elseif ($type === 'team') {
+    
+            $teamIds = [$id];
+            $studentIds = Student::where('team_id', $id)->pluck('id')->toArray();
+        }
+    
+        elseif ($type === 'student') {
+    
+            $studentIds = [$id];
+        }
+    
+        // ✅ APPLY EFFECT
+    
+        if ($card->type === 'red') {
+    
+            // set ALL related scores to 0
+            if (!empty($teamIds)) {
+                Score::whereIn('team_id', $teamIds)->update(['points' => 0]);
+            }
+    
+            if (!empty($studentIds)) {
+                Score::whereIn('student_id', $studentIds)->update(['points' => 0]);
+            }
+    
+        } else {
+    
+            // deduct points
+            if (!empty($teamIds)) {
+                Score::whereIn('team_id', $teamIds)
+                    ->update([
+                        'points' => DB::raw("GREATEST(points + ($points), 0)")
+                    ]);
+            }
+    
+            if (!empty($studentIds)) {
+                Score::whereIn('student_id', $studentIds)
+                    ->update([
+                        'points' => DB::raw("GREATEST(points + ($points), 0)")
+                    ]);
+            }
+        }
+    }
 private function getTableName($type)
 {
     $map = [

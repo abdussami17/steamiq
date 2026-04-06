@@ -225,103 +225,183 @@ class ScoreController extends Controller
         }
     }
 
-    /* =========================================================
-       GET EXISTING SCORE
-    ========================================================= */
-    public function getExistingScore(Request $request)
-    {
-        $query = Score::where('event_id', $request->event_id)->where('challenge_activity_id', $request->challenge_activity_id);
 
-        if ($request->student_id) {
-            $query->where('student_id', $request->student_id);
-        }
-        if ($request->team_id) {
-            $query->where('team_id', $request->team_id);
-        }
 
-        $score = $query->first();
-        return response()->json(['points' => $score ? $score->points : null]);
-    }
 
-    /* =========================================================
-       GET TEAM STUDENTS  (for modal player dropdown)
-    ========================================================= */
-    public function getTeamStudents($teamId)
-    {
-        $students = Student::where('team_id', $teamId)->select('id', 'name')->orderBy('name')->get();
-        return response()->json($students);
-    }
 
     /* =========================================================
        DROPDOWN HELPERS
     ========================================================= */
+   /**
+     * Get organizations for an event
+     */
     public function getEventOrganizations(Event $event)
     {
-        return response()->json($event->organizations()->select('id', 'name')->get());
+        return response()->json(
+            $event->organizations()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get()
+        );
     }
-
+ 
+    /**
+     * Get groups for an organization
+     */
     public function getOrganizationGroups($id)
     {
-        return response()->json(Group::where('organization_id', $id)->select('id', 'group_name')->get());
+        return response()->json(
+            Group::where('organization_id', $id)
+                ->select('id', 'group_name')
+                ->orderBy('group_name')
+                ->get()
+        );
     }
-
+ 
+    /**
+     * Get subgroups for a group
+     */
     public function getGroupSubgroups($id)
     {
-        return response()->json(SubGroup::where('group_id', $id)->select('id', 'name')->get());
+        return response()->json(
+            SubGroup::where('group_id', $id)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get()
+        );
     }
-    public function getStudentsByTeam($teamId)
-    {
-        $students = Student::where('team_id', $teamId)
-            ->select('id', 'name')
-            ->get();
-    
-        return response()->json($students);
-    }
+ 
+    /**
+     * Get filtered students by group/subgroup
+     * Used when "Player" is selected in "Assign To" dropdown
+     */
     public function getFilteredStudents(Request $request)
     {
-        $query = Student::query()->with('team:id,name'); // only fetch needed columns
-
+        $query = Student::query()->select('id', 'name', 'team_id');
+ 
         if ($request->group_id) {
-            $query->whereHas('team', fn($q) => $q->where('group_id', $request->group_id));
+            $query->whereHas('team', function($q) use ($request) {
+                $q->where('group_id', $request->group_id);
+            });
         }
-
+        
         if ($request->sub_group_id) {
-            $query->whereHas('team', fn($q) => $q->where('sub_group_id', $request->sub_group_id));
+            $query->whereHas('team', function($q) use ($request) {
+                $q->where('sub_group_id', $request->sub_group_id);
+            });
         }
-
-        $students = $query->select('id', 'name', 'team_id')->get();
-
-        return response()->json($students);
+ 
+        return response()->json(
+            $query->orderBy('name')->get()
+        );
     }
-
+ 
+    /**
+     * Get filtered teams by group/subgroup
+     * Used when "Team" is selected in "Assign To" dropdown
+     */
     public function getFilteredTeams(Request $request)
     {
-        $query = Team::query();
+        $query = Team::query()->select('id', 'name');
+        
         if ($request->group_id) {
             $query->where('group_id', $request->group_id);
         }
+        
         if ($request->sub_group_id) {
             $query->where('sub_group_id', $request->sub_group_id);
         }
-        return response()->json($query->select('id', 'name')->get());
+        
+        return response()->json(
+            $query->orderBy('name')->get()
+        );
     }
-
+ 
+    /**
+     * Get students for a specific team
+     * Alternative method if you need to fetch students by team directly
+     */
+    public function getTeamStudents($teamId)
+    {
+        return response()->json(
+            Student::where('team_id', $teamId)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get()
+        );
+    }
+ 
+    /**
+     * Get all activities for an event
+     * Used to populate the Activity dropdown
+     */
     public function getEventActivities(Event $event)
     {
         return response()->json(
-            $event
-                ->activities()
-                ->select(['id', 'event_id', 'name', 'max_score', 'activity_or_mission', 'activity_type', 'badge_name', 'brain_type', 'brain_description', 'point_structure', 'esports_type', 'esports_players', 'esports_structure', 'esports_description', 'egaming_type', 'egaming_mode', 'egaming_structure', 'egaming_description', 'playground_description', 'created_at', 'updated_at'])
+            $event->activities()
+                ->select([
+                    'id', 
+                    'event_id', 
+                    'name', 
+                    'max_score', 
+                    'activity_or_mission', 
+                    'activity_type', 
+                    'badge_name', 
+                    'brain_type', 
+                    'brain_description', 
+                    'point_structure', 
+                    'esports_type', 
+                    'esports_players', 
+                    'esports_structure', 
+                    'esports_description', 
+                    'egaming_type', 
+                    'egaming_mode', 
+                    'egaming_structure', 
+                    'egaming_description', 
+                    'playground_description', 
+                    'created_at', 
+                    'updated_at'
+                ])
                 ->orderBy('id')
-                ->get(),
+                ->get()
         );
     }
-
+ 
+    /**
+     * Get existing score for a student/team + activity combination
+     * Pre-fills the points field if a score already exists
+     */
+    public function getExistingScore(Request $request)
+    {
+        $query = Score::where('event_id', $request->event_id)
+            ->where('challenge_activity_id', $request->challenge_activity_id);
+ 
+        if ($request->student_id) {
+            $query->where('student_id', $request->student_id)->whereNull('team_id');
+        }
+        
+        if ($request->team_id) {
+            $query->where('team_id', $request->team_id)->whereNull('student_id');
+        }
+ 
+        $score = $query->first();
+        
+        return response()->json([
+            'points' => $score ? $score->points : null
+        ]);
+    }
+ 
+    /**
+     * Get Steam categories
+     */
     public function getSteamCategories()
     {
-        return response()->json(SteamCategory::select('id', 'name')->orderBy('id')->get());
+        return response()->json(
+            SteamCategory::select('id', 'name')
+                ->orderBy('id')
+                ->get()
+        );
     }
-
     /* =========================================================
        LEADERBOARD EVENTS LIST
     ========================================================= */

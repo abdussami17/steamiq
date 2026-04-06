@@ -205,6 +205,10 @@
 
         @stack('modals')
         @include('card.create')
+        @include('card.assign-card-modal',[
+            'cards' => \App\Models\Card::all()
+        ])
+        @include('card.assign-script')
         @include('events.modals.create-event', [
             'steamCategories' => \App\Models\SteamCategory::all()
         ])

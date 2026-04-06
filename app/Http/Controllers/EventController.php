@@ -356,7 +356,48 @@ public function show(Event $event)
 
 
 
+public function getWinnerTeams(Event $event): JsonResponse
+{
+    $event->load([
+        'organizations.groups.teams',
+        'organizations.groups.subgroups.teams',
+    ]);
 
+    $teams = $event->organizations->flatMap->groups->flatMap(function ($group) {
+        $direct   = $group->teams->map(fn($t) => [
+            'id'           => $t->id,
+            'name'         => $t->name,
+            'group_name'   => $group->name,
+            'subgroup_name'=> null,
+            'org_name'     => $group->organization->name ?? null,
+        ]);
+        $fromSubs = $group->subgroups->flatMap(fn($sub) =>
+            $sub->teams->map(fn($t) => [
+                'id'           => $t->id,
+                'name'         => $t->name,
+                'group_name'   => $group->name,
+                'subgroup_name'=> $sub->name,
+                'org_name'     => $group->organization->name ?? null,
+            ])
+        );
+        return $direct->concat($fromSubs);
+    })->unique('id')->values();
+
+    return response()->json(['success' => true, 'teams' => $teams, 'current_winner' => $event->winner_team_id]);
+}
+
+public function setWinner(Request $request, Event $event): JsonResponse
+{
+    $request->validate(['winner_team_id' => 'required|exists:teams,id']);
+
+    try {
+        $event->update(['winner_team_id' => $request->winner_team_id]);
+        return response()->json(['success' => true, 'message' => 'Winner saved successfully.']);
+    } catch (\Throwable $e) {
+        \Log::error('Set winner error: ' . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'Failed to save winner.'], 500);
+    }
+}
 
 
 
@@ -365,16 +406,41 @@ public function show(Event $event)
 
 public function bracket(Event $event): JsonResponse
 {
-    $event->load('tournamentSetting', 'activities');
+    $event->load([
+        'tournamentSetting',
+        'activities',
+        'organizations.groups.teams',
+        'organizations.groups.subgroups.teams',
+    ]);
+
     $ts       = $event->tournamentSetting;
     $numTeams = (int) ($ts->number_of_teams ?? 0);
     $type     = $ts->tournament_type ?? 'single_elimination';
 
-    $teams  = collect(range(1, max($numTeams, 2)))->map(fn($n) => ['seed' => $n, 'name' => 'TBD']);
-    $rounds = match($type) {
-        'round_robin'        => $this->buildRoundRobin($teams),
-        'double_elimination' => $this->buildDoubleElimination($teams),
-        default              => $this->buildSingleElimination($teams),
+    // ── Collect real teams from event hierarchy ──────────────────────────
+    $realTeams = $event->organizations->flatMap->groups->flatMap(function ($group) {
+        $direct   = $group->teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name]);
+        $fromSubs = $group->subgroups->flatMap(
+            fn($sub) => $sub->teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name])
+        );
+        return $direct->concat($fromSubs);
+    })->unique('id')->values();
+
+    // ── Build seeded slots: real teams first, fill with TBD up to numTeams ──
+    $slots = $realTeams->map(fn($t, $i) => ['seed' => $i + 1, 'name' => $t['name'], 'id' => $t['id']])
+        ->values()->toArray();
+
+    $fill = max($numTeams, count($slots), 2);
+    while (count($slots) < $fill) {
+        $slots[] = ['seed' => count($slots) + 1, 'name' => 'TBD', 'id' => null];
+    }
+
+    $teamCollection = collect($slots);
+
+    $rounds = match ($type) {
+        'round_robin'        => $this->buildRoundRobin($teamCollection),
+        'double_elimination' => $this->buildDoubleElimination($teamCollection),
+        default              => $this->buildSingleElimination($teamCollection),
     };
 
     return response()->json([
@@ -384,6 +450,7 @@ public function bracket(Event $event): JsonResponse
         'activities' => $event->activities,
         'type'       => $type,
         'rounds'     => $rounds,
+        'teams'      => $realTeams->values(),   // flat list for the UI team list
     ]);
 }
 
@@ -391,7 +458,11 @@ private function buildSingleElimination(\Illuminate\Support\Collection $teams): 
 {
     $slots = $teams->toArray();
     $size  = max(2, (int) pow(2, ceil(log(max(count($slots), 2), 2))));
-    while (count($slots) < $size) $slots[] = ['seed' => null, 'name' => 'BYE'];
+
+    // pad with BYE slots
+    while (count($slots) < $size) {
+        $slots[] = ['seed' => null, 'name' => 'BYE', 'id' => null];
+    }
 
     $rounds  = [];
     $current = array_chunk($slots, 2);
@@ -399,7 +470,7 @@ private function buildSingleElimination(\Illuminate\Support\Collection $teams): 
 
     while (count($current) >= 1) {
         $rounds[] = [
-            'name'    => match(true) {
+            'name'    => match (true) {
                 count($current) === 1 => 'Final',
                 count($current) === 2 => 'Semi-Finals',
                 count($current) === 4 => 'Quarter-Finals',
@@ -408,10 +479,13 @@ private function buildSingleElimination(\Illuminate\Support\Collection $teams): 
             'bracket' => 'Winners',
             'matches' => $current,
         ];
+
         if (count($current) <= 1) break;
-        $current = array_chunk(array_fill(0, (int)(count($current) / 2), [['seed' => null, 'name' => 'TBD'], ['seed' => null, 'name' => 'TBD']]), 1);
-        $current = array_map(fn($m) => $m[0], $current);
-        $current = array_chunk($current, 2);
+
+        // next round: TBD winners
+        $nextCount = (int) (count($current) / 2);
+        $nextSlots = array_fill(0, $nextCount * 2, ['seed' => null, 'name' => 'TBD', 'id' => null]);
+        $current   = array_chunk($nextSlots, 2);
         $num++;
     }
 
@@ -422,9 +496,11 @@ private function buildRoundRobin(\Illuminate\Support\Collection $teams): array
 {
     $slots   = $teams->toArray();
     $matches = [];
-    for ($i = 0; $i < count($slots); $i++)
-        for ($j = $i + 1; $j < count($slots); $j++)
+    for ($i = 0; $i < count($slots); $i++) {
+        for ($j = $i + 1; $j < count($slots); $j++) {
             $matches[] = [$slots[$i], $slots[$j]];
+        }
+    }
 
     return [['name' => 'Round Robin', 'bracket' => 'Round Robin', 'matches' => $matches]];
 }
@@ -432,8 +508,12 @@ private function buildRoundRobin(\Illuminate\Support\Collection $teams): array
 private function buildDoubleElimination(\Illuminate\Support\Collection $teams): array
 {
     $winners = $this->buildSingleElimination($teams);
-    $losers  = [['name' => 'Losers Round 1', 'bracket' => 'Losers', 'matches' => $winners[0]['matches'] ?? []]];
-    $grand   = [['name' => 'Grand Final',    'bracket' => 'Grand Final', 'matches' => [[['seed' => null, 'name' => 'TBD'], ['seed' => null, 'name' => 'TBD']]]]];
+
+    $losers = [['name' => 'Losers Round 1', 'bracket' => 'Losers', 'matches' => $winners[0]['matches'] ?? []]];
+    $grand  = [['name' => 'Grand Final',    'bracket' => 'Grand Final', 'matches' => [[
+        ['seed' => null, 'name' => 'TBD', 'id' => null],
+        ['seed' => null, 'name' => 'TBD', 'id' => null],
+    ]]]];
 
     return array_merge(
         array_map(fn($r) => array_merge($r, ['bracket' => 'Winners']), $winners),

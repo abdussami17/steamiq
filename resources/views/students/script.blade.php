@@ -46,7 +46,7 @@
                      style="width:34px;height:34px" />`;
     } else {
         // For ranks 4+, fallback to number badge
-        return `<span class="rank-medal rank-n">${rank}</span>`;
+        return `<span style="font-size:22px;font-weight:800">${rank}</span>`;
     }
 }
         // ✅ Load Data

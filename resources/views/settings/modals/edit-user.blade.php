@@ -28,6 +28,7 @@
                     <div class="mb-3">
                         <label class="form-label">Role</label>
                         <select name="role" class="form-input">
+                            <option value="">--Select Role--</option>
                             @foreach($roles as $role)
                                 @if($role->name !== 'admin')
                                     <option value="{{ $role->name }}" {{ $us->hasRole($role->name) ? 'selected' : '' }}>

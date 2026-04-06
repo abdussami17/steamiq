@@ -14,6 +14,9 @@
                 <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#scoreModal">
                     <i data-lucide="plus" style="width:13px;height:13px;vertical-align:-1px;"></i> Add Score
                 </button>
+                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#assignBonusModal">
+                    <i data-lucide="plus"></i> Bonus
+                </button>
             </div>
         </div>
 
@@ -71,6 +74,7 @@
 
 @push('modals')
     @include('scores.modals.create-scores')
+    @include('bonus.modals.assign-bonus')
 @endpush
 
 @push('scripts')

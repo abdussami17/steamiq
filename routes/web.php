@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\LeaderboardExport;
+use App\Http\Controllers\AssignBonusController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CardAssignApiController;
 use App\Http\Controllers\CardController;
@@ -59,7 +60,8 @@ Route::middleware('auth')->group(function () {
     // ADMIN ROUTES
     // =========================================================================
     Route::middleware('admin')->group(function () {
-
+        Route::post('/assign-bonus', [AssignBonusController::class, 'store'])
+        ->name('bonus.assign.store');
         // ---------------------------------------------------------------------
         // Score Management (Scoring page)
         // ---------------------------------------------------------------------
@@ -102,12 +104,25 @@ Route::middleware('auth')->group(function () {
         // ---------------------------------------------------------------------
         // Hierarchy dropdowns (used by modals)
         // ---------------------------------------------------------------------
-        Route::get('/events/{event}/organizations', [ScoreController::class, 'getEventOrganizations']);
-        Route::get('/organizations/{id}/groups',    [ScoreController::class, 'getOrganizationGroups']);
-        Route::get('/groups/{id}/subgroups',        [ScoreController::class, 'getGroupSubgroups']);
-        Route::get('/students', [ScoreController::class, 'getFilteredStudents']);
-        Route::get('/teams',    [ScoreController::class, 'getFilteredTeams']);
-        Route::get('/team/{team}/students', [ScoreController::class, 'getStudentsByTeam']);
+ // Event → Organizations
+ Route::get('/events/{event}/organizations', [ScoreController::class, 'getEventOrganizations']);
+        
+ // Organization → Groups
+ Route::get('/organizations/{id}/groups', [ScoreController::class, 'getOrganizationGroups']);
+ 
+ // Group → SubGroups
+ Route::get('/groups/{id}/subgroups', [ScoreController::class, 'getGroupSubgroups']);
+ 
+ // Get filtered students (by group/subgroup)
+ // Query params: ?group_id=X&sub_group_id=Y
+ Route::get('/students', [ScoreController::class, 'getFilteredStudents']);
+ 
+ // Get filtered teams (by group/subgroup)
+ // Query params: ?group_id=X&sub_group_id=Y
+ Route::get('/teams', [ScoreController::class, 'getFilteredTeams']);
+ 
+ // Get students for a specific team
+ Route::get('/team/{team}/students', [ScoreController::class, 'getTeamStudents']);
 
         // ---------------------------------------------------------------------
         // Users
@@ -177,6 +192,9 @@ Route::middleware('auth')->group(function () {
             $teams = \App\Models\Team::where('event_id', $event->id)->get(['id', 'team_name']);
             return response()->json(['teams' => $teams]);
         })->name('events.teams');
+        // Add these alongside your existing event routes
+Route::get('/events/{event}/winner-teams', [EventController::class, 'getWinnerTeams']);
+Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']);
 
         // ---------------------------------------------------------------------
         // Tournament Management

@@ -14,7 +14,7 @@
                 <div class="modal-body">
 
                     <!-- ================= BASIC INFO ================= -->
-                    <div class="row g-4">
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Event Name</label>
                             <input name="name" class="form-input" required>
@@ -27,19 +27,12 @@
                                 <option value="xr">STEAM XR Sports</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Location</label>
                             <input type="text" name="location" class="form-input" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Start Date</label>
-                            <input type="date" name="start_date" class="form-input">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">End Date</label>
-                            <input type="date" name="end_date" class="form-input">
-                        </div>
-                        <div class="col-md-4">
+                        
+                        <div class="col-md-6">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select">
                                 <option value="">--Select Status--</option>
@@ -47,6 +40,14 @@
                                 <option value="live">Live</option>
                                 <option value="closed">Closed</option>
                             </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-input">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-input">
                         </div>
                     </div>
                     <hr>
