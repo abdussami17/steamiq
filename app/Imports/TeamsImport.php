@@ -44,8 +44,8 @@ class TeamsImport implements ToCollection, WithHeadingRow
             $groupName    = $data['group']          ?? '';
             $subName      = $data['subgroup']       ?? '';
             $division     = $data['division']       ?? '';
-            $studentName  = $data['student_name']  ?? '';
-            $studentEmail = $data['student_email'] ?? '';
+            $studentName  = $data['player_name']  ?? '';
+            $studentEmail = $data['player_email'] ?? '';
 
             $rowErrors = [];
 
@@ -91,7 +91,7 @@ class TeamsImport implements ToCollection, WithHeadingRow
 
             } elseif (!$emailCellEmpty) {
                 // Emails given but no names
-                $rowErrors[] = 'student_name is required when student_email is provided.';
+                $rowErrors[] = 'player_name is required when player_email is provided.';
             }
 
             // ── Fail row early if validation errors ───────────────────

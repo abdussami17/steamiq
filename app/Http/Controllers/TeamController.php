@@ -383,31 +383,37 @@ public function import(Request $request)
 
         \Maatwebsite\Excel\Facades\Excel::import($importer, $request->file('file'));
 
-        // ✅ FULL RESULT LOG
-        \Log::info('IMPORT RESULT', $importer->result());
+        $result = $importer->result();
 
-        // ❗ Failed rows separate log (easy debugging)
-        \Log::warning('FAILED ROWS', [
-            'failed' => $importer->failed
-        ]);
+        $result['failed'] = collect($result['failed'] ?? [])->map(function ($row) {
+            return [
+                'row' => $row['row'] ?? null,
+                'team_name' => $row['team_name'] ?? null,
+                'errors' => array_values(array_filter(
+                    is_array($row['errors'] ?? null)
+                        ? $row['errors']
+                        : [($row['errors'] ?? $row['error'] ?? 'Unknown error.')]
+                ))
+            ];
+        })->toArray();
 
-        return response()->json($importer->result());
+        return response()->json($result);
 
     } catch (\Throwable $e) {
 
-        // ❌ GLOBAL ERROR LOG
-        \Log::error('IMPORT FAILED COMPLETELY', [
-            'message' => $e->getMessage(),
-            'trace'   => $e->getTraceAsString(),
-        ]);
-
         return response()->json([
             'error' => true,
-            'message' => $e->getMessage()
+            'message' => $e->getMessage(),
+            'failed' => [
+                [
+                    'row' => null,
+                    'team_name' => null,
+                    'errors' => [$e->getMessage()]
+                ]
+            ]
         ], 500);
     }
 }
-
 
 // ── 2.  GET /teams/import/template  ─────────────────────────────
 /**
@@ -428,8 +434,8 @@ public function importTemplate()
         'group',
         'subgroup',
         'division',
-        'student_name',
-        'student_email',
+        'player_name',
+        'player_email',
     ];
 
     foreach ($headers as $col => $heading) {
@@ -475,8 +481,8 @@ public function importTemplate()
         ['group',          'Yes',       'Must match an existing group name within that organization.'],
         ['subgroup',       'No',        'Leave blank if there is no subgroup. Must exist under the specified group.'],
         ['division',       'Yes',       'Allowed values: Junior  or  Primary'],
-        ['student_name',   'No',        'One name, OR comma-separated: "Ali Hassan, Sara Khan". Leave blank for team-only rows.'],
-        ['student_email',  'No',        'Required when student_name is given. Comma-separated in matching order: "ali@example.com, sara@example.com"'],
+        ['player_name',   'No',        'One name, OR comma-separated: "Ali Hassan, Sara Khan". Leave blank for team-only rows.'],
+        ['player_email',  'No',        ' Comma-separated in matching order: "ali@example.com, sara@example.com"'],
     ];
     foreach ($notesContent as $r => $row) {
         foreach ($row as $c => $val) {

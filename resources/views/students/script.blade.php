@@ -1,5 +1,4 @@
 <script>
-
     let userPermissions = [];
     
     document.addEventListener('DOMContentLoaded', () => {
@@ -9,23 +8,37 @@
         const tbody = document.getElementById('playersTableBody');
         const actionHeader = document.getElementById('actionHeader');
     
-        // ✅ Delete Player
         window.deletePlayer = async function(playerId) {
     
             if (!confirm("Are you sure you want to delete this player?")) return;
     
             try {
-                const res = await fetch(`/player/${playerId}`, {
+                const res = await fetch(`/player-destroy/${playerId}`, {
                     method: 'DELETE',
                     headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     }
                 });
     
-                const data = await res.json();
+                let data;
+    
+                try {
+                    data = await res.json();
+                } catch (e) {
+                    const text = await res.text();
+                    console.error("Non JSON response:", text);
+                    alert("Server returned invalid response (likely 404 or HTML)");
+                    return;
+                }
+    
+                if (!res.ok) {
+                    alert(data.message || "Delete failed");
+                    return;
+                }
     
                 if (data.success) {
-                    alert(data.message);
+                    toastr.success(data.message);
                     loadLeaderboard();
                 } else {
                     alert(data.message || "Delete failed");
@@ -35,21 +48,109 @@
                 console.error(err);
                 alert("Error deleting player");
             }
-        }
-        function renderRank(rank) {
-    if (!rank) return '';
+        };
+        window.editPlayer = async function(playerId) {
+    try {
+        const res = await fetch(`/players/${playerId}/edit`, {
+            headers: { 'Accept': 'application/json' }
+        });
 
-    // For top 3, use image icons from public/assets
-    if (rank >= 1 && rank <= 3) {
-        return `<img src="/assets/position-${rank}-icon.png" 
-                     alt="Rank ${rank}" 
-                     style="width:34px;height:34px" />`;
-    } else {
-        // For ranks 4+, fallback to number badge
-        return `<span style="font-size:22px;font-weight:800">${rank}</span>`;
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+            toastr.error(data.message || 'Failed to load player');
+            return;
+        }
+
+        document.getElementById('editPlayerId').value = data.data.id;
+        document.getElementById('editPlayerName').value = data.data.name;
+
+        const teamSelect = document.getElementById('editPlayerTeam');
+        teamSelect.innerHTML = '';
+
+        data.teams.forEach(team => {
+            const option = document.createElement('option');
+            option.value = team.id;
+            option.textContent = team.name;
+            if (team.id == data.data.team_id) option.selected = true;
+            teamSelect.appendChild(option);
+        });
+
+        new bootstrap.Modal(document.getElementById('editPlayerModal')).show();
+
+    } catch (err) {
+        console.error(err);
+        toastr.error('Error loading player');
     }
-}
-        // ✅ Load Data
+};
+
+window.updatePlayer = async function() {
+
+    const id = document.getElementById('editPlayerId').value;
+    const name = document.getElementById('editPlayerName').value.trim();
+    const team_id = document.getElementById('editPlayerTeam').value;
+
+    if (!name) {
+        toastr.error('Player name is required');
+        return;
+    }
+
+    if (!team_id) {
+        toastr.error('Team is required');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/players/${id}/update`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, team_id })
+        });
+
+        let data;
+
+        try {
+            data = await res.json();
+        } catch (e) {
+            const text = await res.text();
+            console.error("Non JSON:", text);
+            toastr.error('Server error');
+            return;
+        }
+
+        if (!res.ok) {
+            if (data.errors) {
+                Object.values(data.errors).flat().forEach(e => toastr.error(e));
+            } else {
+                toastr.error(data.message || 'Update failed');
+            }
+            return;
+        }
+
+        toastr.success(data.message);
+
+        bootstrap.Modal.getInstance(document.getElementById('editPlayerModal')).hide();
+
+        loadLeaderboard();
+
+    } catch (err) {
+        console.error(err);
+        toastr.error('Update failed');
+    }
+};
+    
+        function renderRank(rank) {
+            if (!rank) return '';
+            if (rank >= 1 && rank <= 3) {
+                return `<img src="/assets/position-${rank}-icon.png" style="width:34px;height:34px" />`;
+            }
+            return `<span style="font-size:22px;font-weight:800">${rank}</span>`;
+        }
+    
         window.loadLeaderboard = async function() {
     
             const eventId = eventFilter.value;
@@ -63,17 +164,15 @@
             tbody.innerHTML = `<tr><td colspan="6" class="text-center">Loading...</td></tr>`;
     
             try {
-                const res = await fetch(url);
+                const res = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+    
                 const data = await res.json();
     
                 userPermissions = data.permissions || [];
     
-                // ✅ show/hide action column
-                if (userPermissions.includes('delete_player')) {
-                    actionHeader.style.display = '';
-                } else {
-                    actionHeader.style.display = 'none';
-                }
+                actionHeader.style.display = userPermissions.includes('delete_player') ? '' : 'none';
     
                 if (!data.rows || data.rows.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="6" class="text-center">No data</td></tr>`;
@@ -83,25 +182,31 @@
                 let rows = '';
     
                 data.rows.forEach(row => {
-               
-    
-                    rows += `
+    rows += `
     <tr>
         <td>${row.student || 'N/A'}</td>
         <td>${row.team || 'N/A'}</td>
         <td>${row.activity || 'N/A'}</td>
         <td style="font-weight:700">${row.total || 0}</td>
-        <td style="color:#000; font-weight:700;font-size:22px;text-align:center">${renderRank(row.rank)}</td>
-    
-        ${userPermissions.includes('delete_player') ? `
+        <td style="font-weight:700;font-size:22px;text-align:center">${renderRank(row.rank)}</td>
+
         <td>
-            <button class="btn btn-icon btn-delete" onclick="deletePlayer(${row.id})">
-                <i data-lucide="trash"></i>
-            </button>
-        </td>` : ''}
-    </tr>
-    `;
-                });
+            <div class="d-flex gap-2 align-items-center">
+            ${userPermissions.includes('edit_player') ? `
+                <button class="btn btn-icon btn-edit" onclick="editPlayer(${row.id})">
+                    <i data-lucide="edit"></i>
+                </button>
+            ` : ''}
+
+            ${userPermissions.includes('delete_player') ? `
+                <button class="btn btn-icon btn-delete" onclick="deletePlayer(${row.id})">
+                    <i data-lucide="trash"></i>
+                </button>
+            ` : ''}
+            </div>
+        </td>
+    </tr>`;
+});
     
                 tbody.innerHTML = rows;
     
@@ -111,9 +216,8 @@
                 console.error(err);
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center">Error loading data</td></tr>`;
             }
-        }
+        };
     
-        // ✅ Load organizations
         eventFilter.addEventListener('change', async () => {
     
             const eventId = eventFilter.value;
@@ -123,7 +227,10 @@
             orgFilter.value = "";
     
             try {
-                const res = await fetch(`/event/${eventId}/organizations`);
+                const res = await fetch(`/event/${eventId}/organizations`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+    
                 const data = await res.json();
     
                 data.forEach(org => {
@@ -142,34 +249,9 @@
     
         orgFilter.addEventListener('change', loadLeaderboard);
     
-        // ✅ Auto load
         if (eventFilter.value) {
             loadLeaderboard();
         }
     
     });
-    
-    // optional safety
-    if (typeof handleKeyboardShortcuts === "undefined") {
-        function handleKeyboardShortcuts() {}
-    }
-
-document.getElementById('playerSearch').addEventListener('input', function() {
-    const filter = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#playersTableBody tr');
-
-    rows.forEach(row => {
-        const cell = row.cells[0];
-
-        if (!cell) return;
-
-        const playerName = cell.textContent.toLowerCase();
-
-        if (playerName.includes(filter)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
     </script>

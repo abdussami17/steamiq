@@ -9,7 +9,7 @@
                 {{-- Header --}}
                 <div class="modal-header">
                     <h5 class="modal-title" id="importTeamsModalTitle">
-                        <i data-lucide="file-spreadsheet" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;"></i>
+                       
                         Import Teams via Spreadsheet
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -25,8 +25,8 @@
                             <strong>Spreadsheet Format Instructions</strong>
                             <ul class="mb-1 mt-1 ps-3" style="font-size:.875rem;line-height:1.7;">
                                 <li>Row <strong>1</strong> must be the header row (exact column names listed below).</li>
-                                <li>One team per row. Team columns are <strong>required</strong>; student columns are <strong>optional</strong>.</li>
-                                <li>To add <strong>multiple students</strong> to the same team, use <strong>comma-separated values</strong> in <code>student_name</code> and <code>student_email</code> (same order). You can also repeat the team row instead — both styles work.</li>
+                                <li>One team per row. Team columns are <strong>required</strong>; player columns are <strong>optional</strong>.</li>
+                                <li>To add <strong>multiple players</strong> to the same team, use <strong>comma-separated values</strong> in <code>player_name</code> and <code>player_email</code> (same order). You can also repeat the team row instead — both styles work.</li>
                                 <li>Duplicate team names in the same file will be treated as the <strong>same team</strong>.</li>
                                 <li>Accepted formats: <code>.xlsx</code> or <code>.csv</code> · Max file size: <strong>5 MB</strong>.</li>
                             </ul>
@@ -47,8 +47,8 @@
                                         <tr><td><code>group</code></td><td><span class="badge bg-danger">Required</span></td><td>Exact group name under the organization</td></tr>
                                         <tr><td><code>subgroup</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Leave blank if none</td></tr>
                                         <tr><td><code>division</code></td><td><span class="badge bg-danger">Required</span></td><td><code>Junior</code> or <code>Primary</code></td></tr>
-                                        <tr><td><code>student_name</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Single name <em>or</em> comma-separated: <code>Ali Hassan, Sara Khan</code></td></tr>
-                                        <tr><td><code>student_email</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Optional. Comma-separated in same order as names: <code>ali@ex.com, sara@ex.com</code></td></tr>
+                                        <tr><td><code>player_name</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Single name <em>or</em> comma-separated: <code>Ali Hassan, Sara Khan</code></td></tr>
+                                        <tr><td><code>player_email</code></td><td><span class="badge bg-secondary">Optional</span></td><td>Optional. Comma-separated in same order as names: <code>ali@ex.com, sara@ex.com</code></td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -139,7 +139,7 @@
     
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:-3px;margin-right:6px;"></i>
+                      
                         Import Results
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -149,6 +149,17 @@
     
                     {{-- Summary badges --}}
                     <div class="d-flex gap-3 flex-wrap mb-4" id="importResultSummary"></div>
+
+                    {{-- ── Shared-reason banner (shown when ALL failed rows have the same error) ── --}}
+                    <div id="importSharedErrorBanner" class="alert alert-danger d-none mb-3" role="alert">
+                        <div class="d-flex gap-2 align-items-start">
+                            <i data-lucide="alert-triangle" style="width:18px;height:18px;flex-shrink:0;margin-top:2px;"></i>
+                            <div>
+                                <strong>All failed rows share the same reason:</strong>
+                                <p class="mb-0 mt-1" id="importSharedErrorText" style="font-size:.9rem;"></p>
+                            </div>
+                        </div>
+                    </div>
     
                     {{-- Tabs: success / failed --}}
                     <ul class="nav nav-tabs mb-3" id="importResultTabs" role="tablist">
@@ -170,19 +181,19 @@
                         </li>
                     </ul>
     
-                    <div class="tab-content">
+                    <div class="tab-content" style="display: block !important">
     
                         {{-- Success pane --}}
                         <div class="tab-pane fade show active" id="resultSuccessPane" role="tabpanel">
                             <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light sticky-top">
+                                <table class="data-table mb-0">
+                                    <thead >
                                         <tr>
                                             <th>#</th>
                                             <th>Team Name</th>
                                             <th>Division</th>
                                             <th>Group</th>
-                                            <th>Students Added</th>
+                                            <th>Players Added</th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
@@ -196,11 +207,11 @@
                         {{-- Failed pane --}}
                         <div class="tab-pane fade" id="resultFailedPane" role="tabpanel">
                             <div class="table-responsive" style="max-height:300px;overflow-y:auto;">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light sticky-top">
+                                <table class="data-table mb-0">
+                                    <thead >
                                         <tr>
-                                            <th>Row #</th>
-                                            <th>Team Name</th>
+                                            <th style="width:70px;">Row #</th>
+                                            <th style="width:160px;">Team Name</th>
                                             <th>Reason(s)</th>
                                         </tr>
                                     </thead>
@@ -230,6 +241,7 @@
          STYLES  (add to your main CSS file if preferred)
          ============================================================ --}}
     <style>
+
     .import-drop-zone {
         border: 2px dashed #adb5bd;
         border-radius: 8px;
@@ -269,6 +281,28 @@
         margin-top: .5rem;
         font-size: .875rem;
     }
+
+    /* ── Failed rows error list ── */
+    .import-error-list {
+        margin: 0;
+        padding-left: 1.1rem;
+        font-size: .82rem;
+        line-height: 1.6;
+    }
+    .import-error-list li + li {
+        margin-top: 2px;
+    }
+    /* Highlight each error reason for readability */
+    .import-error-tag {
+        display: inline-block;
+        background: #fff3f3;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: .78rem;
+        color: #842029;
+        margin-bottom: 2px;
+    }
     </style>
     
     
@@ -298,11 +332,8 @@
         });
     
         function setImportFile(file) {
-            // Validate client-side
-            const allowed = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                             'text/csv', 'application/vnd.ms-excel'];
-            const extOk   = /\.(xlsx|csv)$/i.test(file.name);
-            const maxMB   = 5;
+            const extOk = /\.(xlsx|csv)$/i.test(file.name);
+            const maxMB = 5;
     
             if (!extOk) {
                 showImportError('Only .xlsx or .csv files are accepted.');
@@ -313,7 +344,6 @@
                 return;
             }
     
-            // Assign to real input via DataTransfer
             const dt = new DataTransfer();
             dt.items.add(file);
             fileInput.files = dt.files;
@@ -331,7 +361,7 @@
         };
     
         function showImportError(msg) {
-            alert('⚠️ ' + msg); // swap with toastr/SweetAlert if available
+            alert('⚠️ ' + msg);
         }
     
         /* ── Submit via XHR so we can show progress & parse JSON result ── */
@@ -346,7 +376,7 @@
             const bar      = document.getElementById('importProgressBar');
             const pct      = document.getElementById('importProgressPct');
     
-            btn.disabled   = true;
+            btn.disabled = true;
             progress.classList.remove('d-none');
     
             const formData = new FormData(document.getElementById('importTeamsForm'));
@@ -354,14 +384,13 @@
             const xhr = new XMLHttpRequest();
             xhr.open('POST', document.getElementById('importTeamsForm').action);
     
-            // CSRF header (Laravel)
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             if (csrfMeta) xhr.setRequestHeader('X-CSRF-TOKEN', csrfMeta.content);
             xhr.setRequestHeader('Accept', 'application/json');
     
             xhr.upload.onprogress = function (e) {
                 if (e.lengthComputable) {
-                    const p = Math.round((e.loaded / e.total) * 80); // upload = 80%
+                    const p = Math.round((e.loaded / e.total) * 80);
                     bar.style.width = p + '%';
                     pct.textContent  = p + '%';
                 }
@@ -383,9 +412,7 @@
                 }
     
                 if (xhr.status === 200 && result) {
-                    // Close upload modal
                     bootstrap.Modal.getInstance(document.getElementById('importTeamsModal'))?.hide();
-                    // Show result modal
                     showImportResults(result);
                 } else {
                     const msg = result?.message || 'Import failed. Please check your file and try again.';
@@ -401,26 +428,88 @@
     
             xhr.send(formData);
         };
+
+        /* ── Helper: make a human-readable label for a raw error string ── */
+        function humanizeError(raw) {
+            if (!raw) return 'Unknown error.';
+            const s = String(raw).trim();
+
+            // Map known backend messages to friendlier copy
+            const map = [
+                [/team_name is required/i,          'Team name is missing.'],
+                [/organization is required/i,        'Organization name is missing.'],
+                [/group is required/i,               'Group name is missing.'],
+                [/division is required/i,            'Division is missing.'],
+                [/division must be junior or primary/i, 'Division must be either "Junior" or "Primary".'],
+                [/player_name is required when player_email/i, 'Player email was provided but player name is missing.'],
+                [/invalid email at position (\d+): (.+)/i, (m) =>
+                    `Invalid email at position ${m[1]}: "${m[2]}".`],
+                [/organization '(.+)' not found/i,  (m) =>
+                    `Organization "${m[1]}" was not found. Make sure the name matches exactly.`],
+                [/group '(.+)' not found/i,         (m) =>
+                    `Group "${m[1]}" was not found under the specified organization.`],
+                [/subgroup '(.+)' not found/i,      (m) =>
+                    `Subgroup "${m[1]}" was not found under the specified group.`],
+                [/conflict: team already seen with different/i,
+                    'This team name appears earlier in the file with a different organization, group, or division — all rows for a team must match.'],
+            ];
+
+            for (const [pattern, replacement] of map) {
+                const match = s.match(pattern);
+                if (match) {
+                    return typeof replacement === 'function' ? replacement(match) : replacement;
+                }
+            }
+
+            // Fall back to the original message (already informative enough)
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        /* ── Deduplicate errors: returns { shared: string|null, rows: [...] }
+               shared  → non-null when every failed row has exactly the same single reason
+               rows    → array with .row, .team_name, .humanErrors[]
+        ── */
+        function processFailedRows(failed) {
+            if (!failed.length) return { shared: null, rows: [] };
+
+            const rows = failed.map(f => ({
+                row:         f.row,
+                team_name:   f.team_name ?? '—',
+                humanErrors: (f.errors || ['Unknown error.']).map(humanizeError),
+            }));
+
+            // Check if every row has exactly one error AND all are identical
+            const allSingleError = rows.every(r => r.humanErrors.length === 1);
+            if (allSingleError) {
+                const firstMsg = rows[0].humanErrors[0];
+                const allSame  = rows.every(r => r.humanErrors[0] === firstMsg);
+                if (allSame) {
+                    return { shared: firstMsg, rows };
+                }
+            }
+
+            return { shared: null, rows };
+        }
     
         /* ── Populate & show the results modal ── */
         function showImportResults(data) {
             const { summary, imported, failed } = data;
     
-            // Summary badges
+            // ── Summary badges ──
             const summaryEl = document.getElementById('importResultSummary');
             summaryEl.innerHTML = `
                 <span class="badge bg-primary fs-6 px-3 py-2">Total Rows: ${summary.total_rows}</span>
                 <span class="badge bg-success fs-6 px-3 py-2">&#10003; Teams Created: ${summary.teams_created}</span>
                 <span class="badge bg-info   fs-6 px-3 py-2">&#10003; Teams Existing: ${summary.teams_existing ?? 0}</span>
-                <span class="badge bg-warning text-dark fs-6 px-3 py-2">Students Added: ${summary.students_added}</span>
+                <span class="badge bg-warning text-dark fs-6 px-3 py-2">Players Added: ${summary.students_added}</span>
                 <span class="badge bg-danger  fs-6 px-3 py-2">&#10007; Failed Rows: ${summary.failed_rows}</span>
             `;
     
-            // Success tab badge
+            // ── Tab badges ──
             document.getElementById('successCount').textContent = imported.length;
             document.getElementById('failedCount').textContent  = failed.length;
     
-            // Populate success table
+            // ── Success table ──
             const successBody = document.getElementById('importSuccessRows');
             if (imported.length) {
                 successBody.innerHTML = imported.map((row, i) => `
@@ -442,26 +531,57 @@
                 successBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No teams imported.</td></tr>';
             }
     
-            // Populate failed table
-            const failedBody = document.getElementById('importFailedRows');
+            // ── Failed table — with deduplication logic ──
+            const failedBody   = document.getElementById('importFailedRows');
+            const sharedBanner = document.getElementById('importSharedErrorBanner');
+            const sharedText   = document.getElementById('importSharedErrorText');
+
             if (failed.length) {
-                failedBody.innerHTML = failed.map(row => `
-                    <tr>
-                        <td>${row.row}</td>
-                        <td>${esc(row.team_name ?? '—')}</td>
-                        <td>
-                            <ul class="mb-0 ps-3" style="font-size:.82rem;">
-                                ${row.errors.map(e => `<li>${esc(e)}</li>`).join('')}
-                            </ul>
-                        </td>
-                    </tr>
-                `).join('');
+                const { shared, rows } = processFailedRows(failed);
+
+                if (shared) {
+                    // All rows failed for the exact same reason — show banner, simplify table
+                    sharedBanner.classList.remove('d-none');
+                    sharedText.textContent = shared;
+
+                    // Table still lists which rows failed, but no need to repeat the reason column
+                    failedBody.innerHTML = rows.map(row => `
+                        <tr>
+                            <td>${row.row}</td>
+                            <td>${esc(row.team_name)}</td>
+                            <td><span class="import-error-tag">See reason above</span></td>
+                        </tr>
+                    `).join('');
+
+                } else {
+                    // Different reasons per row — show each individually
+                    sharedBanner.classList.add('d-none');
+                    sharedText.textContent = '';
+
+                    failedBody.innerHTML = rows.map(row => `
+                        <tr>
+                            <td>${row.row}</td>
+                            <td>${esc(row.team_name)}</td>
+                            <td>
+                                <ul class="import-error-list">
+                                    ${row.humanErrors.map(e => `
+                                        <li><span class="import-error-tag">${esc(e)}</span></li>
+                                    `).join('')}
+                                </ul>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
             } else {
+                sharedBanner.classList.add('d-none');
                 failedBody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No failures — clean import!</td></tr>';
             }
     
-            // Switch to failed tab automatically if there are failures
-            if (failed.length > 0 && imported.length === 0) {
+            // ── Auto-switch to Failed tab if there are failures ──
+            // Switch when there are failures regardless of whether some succeeded,
+            // so the user immediately sees what went wrong.
+            if (failed.length > 0) {
                 document.getElementById('resultFailedTab').click();
             }
     

@@ -16,21 +16,21 @@
                         <label class="form-label">Sub Group Name</label>
                         <input type="text" name="name" class="form-input" required>
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Group</label>
-                        <select name="group_id" id="groupSelect" class="form-select" required>
-                            <option value="" hidden>--Select Group--</option>
-                            @foreach ($groups as $grp)
-                               
-                                    <option value="{{ $grp->id }}"
-                                            >
-                                        {{ $grp->group_name }}
-                                    </option>
-                            
-                            @endforeach
-                        </select>
-                    </div>
+<div class="mb-3">
+    <label class="form-label">Organization</label>
+    <select id="organizationSelectSubgroup" class="form-select" required>
+        <option value="" hidden>--Select Organization--</option>
+        @foreach ($organizations as $org)
+            <option value="{{ $org->id }}">{{ $org->name }}</option>
+        @endforeach
+    </select>
+</div>
+                 <div class="mb-3">
+    <label class="form-label">Group</label>
+    <select name="group_id" id="groupSelectOrganization" class="form-select" required>
+        <option value="">--Select Group--</option>
+    </select>
+</div>
 
                     <div class="mb-3 d-none" id="eventWrapper">
                         <label class="form-label">Event</label>
@@ -52,35 +52,47 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const groupSelect = document.getElementById('groupSelect');
-    const eventWrapper = document.getElementById('eventWrapper');
-    const eventDisplay = document.getElementById('eventDisplay');
-    const eventHidden = document.getElementById('eventHidden');
-
-    function updateEvent() {
-        const selectedOption = groupSelect.options[groupSelect.selectedIndex];
-        if (!selectedOption || !selectedOption.dataset.eventId) {
-            eventWrapper.classList.add('d-none');
-            eventDisplay.value = '';
-            eventHidden.value = '';
-            return;
+    document.addEventListener('DOMContentLoaded', function () {
+    
+        const orgSelect = document.getElementById('organizationSelectSubgroup');
+        const groupSelect = document.getElementById('groupSelectOrganization');
+    
+        function fetchGroups(orgId) {
+            groupSelect.innerHTML = '<option value="">Loading...</option>';
+    
+            fetch(`/get-org-groups/${orgId}`)
+                .then(res => res.json())
+                .then(data => {
+    
+                    groupSelect.innerHTML = '<option value="">--Select Group--</option>';
+    
+                    data.forEach(group => {
+                        const option = document.createElement('option');
+                        option.value = group.id;
+                        option.textContent = group.group_name;
+                        option.dataset.eventId = group.event_id ?? '';
+                        option.dataset.eventName = group.event?.name ?? '';
+                        groupSelect.appendChild(option);
+                    });
+                });
         }
+    
+ 
+    
+        orgSelect.addEventListener('change', function () {
+            const orgId = this.value;
+    
+            groupSelect.innerHTML = '<option value="">--Select Group--</option>';
+    
+            if (orgId) {
+                fetchGroups(orgId);
+            }
+    
+            updateEvent();
+        });
+    
+        groupSelect.addEventListener('change', updateEvent);
 
-        eventWrapper.classList.remove('d-none');
-        eventDisplay.value = selectedOption.dataset.eventName;
-        eventHidden.value = selectedOption.dataset.eventId;
-    }
-
-    groupSelect.addEventListener('change', updateEvent);
-
-    // **Important:** reset event fields whenever modal opens
-    const modal = document.getElementById('createSubGroupModal');
-    modal.addEventListener('show.bs.modal', function () {
-        groupSelect.value = '';
-        eventWrapper.classList.add('d-none');
-        eventDisplay.value = '';
-        eventHidden.value = '';
+    
     });
-});
-</script>
+    </script>

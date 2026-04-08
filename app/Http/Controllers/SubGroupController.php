@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
 use App\Models\SubGroup;
 use Illuminate\Http\Request;
 
@@ -59,4 +60,12 @@ class SubGroupController extends Controller
 
         return redirect()->back()->with('success', 'Sub Group updated successfully.');
     }
+
+    public function getGroupByOrganization($orgId)
+{
+    $groups = Group::where('organization_id', $orgId)
+        ->get(['id', 'group_name']);
+
+    return response()->json($groups);
+}
 }

@@ -12,7 +12,7 @@
             </h2>
             <div class="ms-auto d-flex gap-2 flex-wrap">
                 <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                    <i data-lucide="plus" style="width:13px;height:13px;vertical-align:-1px;"></i> Add Score
+                    <i data-lucide="plus" ></i> Add Score
                 </button>
                 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#assignBonusModal">
                     <i data-lucide="plus"></i> Bonus

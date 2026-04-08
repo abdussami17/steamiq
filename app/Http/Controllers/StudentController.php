@@ -172,38 +172,13 @@ class StudentController extends Controller
             ], 500);
         }
     }
-    public function updateScoreInline(Request $request)
-{
-    $studentId = $request->student_id;
-    $categoryName = $request->category;
-    $points = (int) $request->points;
 
-    $category = \App\Models\SteamCategory::where('name', $categoryName)->first();
-
-    Score::updateOrCreate(
-        [
-            'student_id' => $studentId,
-            'steam_category_id' => $category->id
-        ],
-        [
-            'points' => $points
-        ]
-    );
-
-    return response()->json(['success' => true]);
-}
 
 
 // Delete player
 public function destroy($id)
 {
-    // Check permission
-    if (!Auth::user()->can('delete_player')) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Unauthorized'
-        ], 403);
-    }
+
 
     $player = Student::find($id);
     if (!$player) {
@@ -218,6 +193,56 @@ public function destroy($id)
     return response()->json([
         'success' => true,
         'message' => 'Player deleted successfully'
+    ]);
+}
+public function edit($id)
+{
+    $player = Student::find($id);
+
+    if (!$player) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Player not found'
+        ], 404);
+    }
+
+    $teams = Team::select('id', 'name')->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'id' => $player->id,
+            'name' => $player->name,
+            'team_id' => $player->team_id
+        ],
+        'teams' => $teams
+    ]);
+}
+
+public function update(Request $request, $id)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'team_id' => 'required|exists:teams,id',
+    ]);
+
+    $player = Student::find($id);
+
+    if (!$player) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Player not found'
+        ], 404);
+    }
+
+    $player->update([
+        'name' => $request->name,
+        'team_id' => $request->team_id,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Player updated successfully'
     ]);
 }
 

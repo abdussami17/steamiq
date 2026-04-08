@@ -13,7 +13,7 @@
                     </span>
                     Events Management
                 </h2>
-          
+
             </div>
 
             <div class="card-grid events_grid">
@@ -32,16 +32,16 @@
                                 </span>
 
                                 @can('delete_event')
-                                <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
-                                    style="display:inline; height:0"
-                                    onsubmit="return confirm('Are you sure you want to delete this event?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-link p-0 m-0 align-baseline">
-                                        <i data-lucide="trash" class="text-danger"></i>
-                                    </button>
-                                </form>
-                            @endcan
+                                    <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
+                                        style="display:inline; height:0"
+                                        onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-link p-0 m-0 align-baseline">
+                                            <i data-lucide="trash" class="text-danger"></i>
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         </div>
 
@@ -59,7 +59,7 @@
                             {{-- TEAMS --}}
                             <div class="events_stat">
                                 <div class="events_stat-label">Teams</div>
-                                <div class="events_stat-value" >
+                                <div class="events_stat-value">
                                     {{ $allTeams->count() ?: 'N/A' }}
                                 </div>
                             </div>
@@ -67,7 +67,7 @@
                             {{-- PLAYERS --}}
                             <div class="events_stat">
                                 <div class="events_stat-label">Players</div>
-                                <div class="events_stat-value" >
+                                <div class="events_stat-value">
                                     {{ $allTeams->flatMap->students->count() ?: 'N/A' }}
                                 </div>
                             </div>
@@ -75,7 +75,7 @@
                             {{-- GROUPS --}}
                             <div class="events_stat">
                                 <div class="events_stat-label">Groups</div>
-                                <div class="events_stat-value" >
+                                <div class="events_stat-value">
                                     {{ $allevent->organizations->flatMap->groups->count() ?: 'N/A' }}
                                 </div>
                             </div>
@@ -83,7 +83,7 @@
                             {{-- SUBGROUPS --}}
                             <div class="events_stat">
                                 <div class="events_stat-label">Sub Groups</div>
-                                <div class="events_stat-value" >
+                                <div class="events_stat-value">
                                     {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A' }}
                                 </div>
                             </div>
@@ -132,7 +132,7 @@
                     onclick="switchTab('teams')">Teams</button>
                 <button class="tab {{ $activeTab == 'players-tab' ? 'active' : '' }}"
                     onclick="switchTab('players')">Players</button>
-                
+
             </div>
             @if (session('active_tab'))
                 <script>
@@ -154,12 +154,13 @@
             <div id="events-tab" class="tab-content {{ $activeTab == 'events-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
-                        <input type="text" id="eventSearch" class="form-input" placeholder="Search Event..." style="width:300px;">
-                       @can('create_event')
-                       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEventModal">
-                        <i data-lucide="plus"></i> Add Event
-                    </button>
-                       @endcan
+                        <input type="text" id="eventSearch" class="form-input" placeholder="Search Event..."
+                            style="width:300px;">
+                        @can('create_event')
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createEventModal">
+                                <i data-lucide="plus"></i> Add Event
+                            </button>
+                        @endcan
 
                     </div>
 
@@ -264,27 +265,27 @@
                                     <td>
                                         <div style="display:flex;gap:0.25rem;">
                                             @can('edit_event')
-                                            <button class="btn btn-icon btn-edit"
-                                                onclick="openEditEventModal({{ $allevent->id }})">
-                                                <i data-lucide="edit-2"></i>
-                                            </button>
+                                                <button class="btn btn-icon btn-edit"
+                                                    onclick="openEditEventModal({{ $allevent->id }})">
+                                                    <i data-lucide="edit-2"></i>
+                                                </button>
                                             @endcan
                                             @can('delete_event')
-                                            <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
-                                                onsubmit="return confirm('Are you sure you want to delete this event?');">
-                                                @csrf
-                                                @method('DELETE')
+                                                <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
+                                                    onsubmit="return confirm('Are you sure you want to delete this event?');">
+                                                    @csrf
+                                                    @method('DELETE')
 
-                                                <button type="submit" class="btn btn-icon btn-delete">
-                                                    <i data-lucide="trash-2"></i>
-                                                </button>
-                                            </form>
+                                                    <button type="submit" class="btn btn-icon btn-delete">
+                                                        <i data-lucide="trash-2"></i>
+                                                    </button>
+                                                </form>
                                             @endcan
                                             @can('duplicate_event')
-                                            <button class="btn btn-icon btn-copy"
-                                                onclick="duplicateEvent({{ $allevent->id }})">
-                                                <i data-lucide="copy"></i>
-                                            </button>
+                                                <button class="btn btn-icon btn-copy"
+                                                    onclick="duplicateEvent({{ $allevent->id }})">
+                                                    <i data-lucide="copy"></i>
+                                                </button>
                                             @endcan
                                             <button class="btn btn-icon btn-view"
                                                 onclick="openBracketModal({{ $allevent->id }})">
@@ -306,22 +307,26 @@
                     </table>
                     <!-- Modal -->
                     @push('scripts')
-                    <script>
-                         document.addEventListener('DOMContentLoaded', () => {
-                     // Simple search by Team Name
-             document.getElementById('eventSearch').addEventListener('input', function(){
-                 const filter = this.value.toLowerCase();
-                 const rows = document.querySelectorAll('#eventTableBody tr');
-                 rows.forEach(row => {
-                     const cell = row.cells[1]; // Team Name column
-                     if (!cell) { row.style.display = 'none'; return; }
-                     const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
-                     row.style.display = name.includes(filter) ? '' : 'none';
-                 });
-             });
-                 })
-                    </script>
-                @endpush
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                // Simple search by Team Name
+                                document.getElementById('eventSearch').addEventListener('input', function() {
+                                    const filter = this.value.toLowerCase();
+                                    const rows = document.querySelectorAll('#eventTableBody tr');
+                                    rows.forEach(row => {
+                                        const cell = row.cells[1]; // Team Name column
+                                        if (!cell) {
+                                            row.style.display = 'none';
+                                            return;
+                                        }
+                                        const name = cell.querySelector('input') ? cell.querySelector('input').value
+                                            .toLowerCase() : cell.textContent.toLowerCase();
+                                        row.style.display = name.includes(filter) ? '' : 'none';
+                                    });
+                                });
+                            })
+                        </script>
+                    @endpush
 
                 </div>
             </div>
@@ -330,14 +335,14 @@
             <div id="organizations-tab" class="tab-content {{ $activeTab == 'organizations-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
-                        <input type="text" id="orgSearch" class="form-input" placeholder="Search Organization..." style="width:300px;">
-                      @can('create_organization')
-                      <button class="btn btn-primary" data-next-tab="groups-tab" data-bs-toggle="modal"
-                      data-bs-target="#createOrganizationModal">
-                      <i data-lucide="plus"></i> Add Organization
-                  </button>
-
-                      @endcan
+                        <input type="text" id="orgSearch" class="form-input" placeholder="Search Organization..."
+                            style="width:300px;">
+                        @can('create_organization')
+                            <button class="btn btn-primary" data-next-tab="groups-tab" data-bs-toggle="modal"
+                                data-bs-target="#createOrganizationModal">
+                                <i data-lucide="plus"></i> Add Organization
+                            </button>
+                        @endcan
                     </div>
 
 
@@ -375,24 +380,23 @@
                                     <td>
                                         <div style="display:flex;gap:0.25rem;">
 
-                                        @can('edit_organization')
-                                        <button class="btn btn-icon btn-edit"
-                                        onclick="openEditOrgModal({{ $org->id }}, '{{ addslashes($org->name) }}', '{{ addslashes($org->email) }}', '{{ $org->organization_type }}' , '{{ $org->event_id }}')">
-                                        <i data-lucide="edit-2"></i>
-                                    </button>
+                                            @can('edit_organization')
+                                                <button class="btn btn-icon btn-edit"
+                                                    onclick="openEditOrgModal({{ $org->id }}, '{{ addslashes($org->name) }}', '{{ addslashes($org->email) }}', '{{ $org->organization_type }}' , '{{ $org->event_id }}')">
+                                                    <i data-lucide="edit-2"></i>
+                                                </button>
+                                            @endcan
+                                            @can('delete_oraganization')
+                                                <form action="{{ route('organizations.destroy', $org->id) }}" method="POST"
+                                                    onsubmit="return confirm('Are you sure you want to delete this organization?')">
+                                                    @csrf
+                                                    @method('DELETE')
 
-                                        @endcan
-                                          @can('delete_oraganization')
-                                          <form action="{{ route('organizations.destroy', $org->id) }}" method="POST"
-                                            onsubmit="return confirm('Are you sure you want to delete this organization?')">
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button type="submit" class="btn btn-icon btn-delete">
-                                                <i data-lucide="trash-2"></i>
-                                            </button>
-                                        </form>
-                                          @endcan
+                                                    <button type="submit" class="btn btn-icon btn-delete">
+                                                        <i data-lucide="trash-2"></i>
+                                                    </button>
+                                                </form>
+                                            @endcan
                                         </div>
 
 
@@ -408,23 +412,27 @@
                             @endforelse
                         </tbody>
                     </table>
- @push('scripts')
-       <script>
-            document.addEventListener('DOMContentLoaded', () => {
-        // Simple search by Team Name
-document.getElementById('orgSearch').addEventListener('input', function(){
-    const filter = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#orgTableBody tr');
-    rows.forEach(row => {
-        const cell = row.cells[1]; // Team Name column
-        if (!cell) { row.style.display = 'none'; return; }
-        const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
-        row.style.display = name.includes(filter) ? '' : 'none';
-    });
-});
-    })
-       </script>
-   @endpush
+                    @push('scripts')
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                // Simple search by Team Name
+                                document.getElementById('orgSearch').addEventListener('input', function() {
+                                    const filter = this.value.toLowerCase();
+                                    const rows = document.querySelectorAll('#orgTableBody tr');
+                                    rows.forEach(row => {
+                                        const cell = row.cells[1]; // Team Name column
+                                        if (!cell) {
+                                            row.style.display = 'none';
+                                            return;
+                                        }
+                                        const name = cell.querySelector('input') ? cell.querySelector('input').value
+                                            .toLowerCase() : cell.textContent.toLowerCase();
+                                        row.style.display = name.includes(filter) ? '' : 'none';
+                                    });
+                                });
+                            })
+                        </script>
+                    @endpush
 
                 </div>
             </div>
@@ -434,12 +442,13 @@ document.getElementById('orgSearch').addEventListener('input', function(){
             <div id="groups-tab" class="tab-content {{ $activeTab == 'groups-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
-                        <input type="text" id="groupSearch" class="form-input" placeholder="Search Group..." style="width:300px;">
-                    @can('create_group')
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
-                        <i data-lucide="plus"></i> Add Group
-                    </button> 
-                    @endcan
+                        <input type="text" id="groupSearch" class="form-input" placeholder="Search Group..."
+                            style="width:300px;">
+                        @can('create_group')
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                                <i data-lucide="plus"></i> Add Group
+                            </button>
+                        @endcan
                         {{-- <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="group">
                             <i data-lucide="club"></i> Assign Cards
                         </a> --}}
@@ -470,28 +479,28 @@ document.getElementById('orgSearch').addEventListener('input', function(){
 
                                     <td>
                                         <div style="display:flex;gap:0.25rem;">
-                                           @can('edit_group')
-                                           <button class="btn btn-icon btn-edit"
-                                           onclick="openGroupEditModal(
+                                            @can('edit_group')
+                                                <button class="btn btn-icon btn-edit"
+                                                    onclick="openGroupEditModal(
                                        {{ $group->id ?? 'null' }},
                                        '{{ addslashes($group->group_name ?? 'N/A') }}',
                                        '{{ $group->pod ?? 'N/A' }}',
                                    
                                        {{ $group->organization_id }}
                                    )">
-                                           <i data-lucide="pencil"></i>
-                                       </button>
-                                           @endcan
+                                                    <i data-lucide="pencil"></i>
+                                                </button>
+                                            @endcan
 
                                             @can('delete_group')
-                                            <form action="{{ route('groups.destroy', $group->id ?? 0) }}" method="POST"
-                                                onsubmit="return confirm('Delete this group?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-icon btn-delete">
-                                                    <i data-lucide="trash-2"></i>
-                                                </button>
-                                            </form>
+                                                <form action="{{ route('groups.destroy', $group->id ?? 0) }}" method="POST"
+                                                    onsubmit="return confirm('Delete this group?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button class="btn btn-icon btn-delete">
+                                                        <i data-lucide="trash-2"></i>
+                                                    </button>
+                                                </form>
                                             @endcan
                                         </div>
                                     </td>
@@ -507,33 +516,37 @@ document.getElementById('orgSearch').addEventListener('input', function(){
                     </table>
                 </div>
             </div>
-   @push('scripts')
-       <script>
-            document.addEventListener('DOMContentLoaded', () => {
-        // Simple search by Team Name
-document.getElementById('groupSearch').addEventListener('input', function(){
-    const filter = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#groupTableBody tr');
-    rows.forEach(row => {
-        const cell = row.cells[2]; // Team Name column
-        if (!cell) { row.style.display = 'none'; return; }
-        const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
-        row.style.display = name.includes(filter) ? '' : 'none';
-    });
-});
-    })
-       </script>
-   @endpush
+            @push('scripts')
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // Simple search by Team Name
+                        document.getElementById('groupSearch').addEventListener('input', function() {
+                            const filter = this.value.toLowerCase();
+                            const rows = document.querySelectorAll('#groupTableBody tr');
+                            rows.forEach(row => {
+                                const cell = row.cells[2]; // Team Name column
+                                if (!cell) {
+                                    row.style.display = 'none';
+                                    return;
+                                }
+                                const name = cell.querySelector('input') ? cell.querySelector('input').value
+                                    .toLowerCase() : cell.textContent.toLowerCase();
+                                row.style.display = name.includes(filter) ? '' : 'none';
+                            });
+                        });
+                    })
+                </script>
+            @endpush
             {{-- Subgroup Tab --}}
 
             <div id="subgroup-tab" class="tab-content {{ $activeTab == 'subgroup-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
-                      @can('create_subgroup')
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSubGroupModal">
-                        <i data-lucide="plus"></i> Add Sub Group
-                    </button>
-                      @endcan
+                        @can('create_subgroup')
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSubGroupModal">
+                                <i data-lucide="plus"></i> Add Sub Group
+                            </button>
+                        @endcan
                     </div>
 
                     <table class="data-table">
@@ -558,19 +571,22 @@ document.getElementById('groupSearch').addEventListener('input', function(){
 
                                     <td>
                                         <div style="display:flex;gap:0.25rem;">
-                                           @can('edit_subgroup')
-                                               
-                                           @endcan
+                                            @can('edit_subgroup')
+                                                <button class="btn btn-icon btn-edit"
+                                                    onclick="openSubGroupEditModal({{ $subgrp->id }})">
+                                                    <i data-lucide="pencil"></i>
+                                                </button>
+                                            @endcan
 
                                             @can('delete_subgroup')
-                                            <form action="{{ route('subgroups.destroy', $subgrp->id ?? 0) }}"
-                                                method="POST" onsubmit="return confirm('Delete this sub group?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-icon btn-delete">
-                                                    <i data-lucide="trash-2"></i>
-                                                </button>
-                                            </form>
+                                                <form action="{{ route('subgroups.destroy', $subgrp->id ?? 0) }}"
+                                                    method="POST" onsubmit="return confirm('Delete this sub group?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button class="btn btn-icon btn-delete">
+                                                        <i data-lucide="trash-2"></i>
+                                                    </button>
+                                                </form>
                                             @endcan
                                         </div>
                                     </td>
@@ -592,22 +608,23 @@ document.getElementById('groupSearch').addEventListener('input', function(){
             <div id="teams-tab" class="tab-content {{ $activeTab == 'teams-tab' ? 'active show' : '' }}">
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
-                        <input type="text" id="teamSearch" class="form-input" placeholder="Search Team..." style="width:300px;">
-                     @can('create_team')
-                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
-                        <i data-lucide="plus"></i> Add Team
-                    </button>
-                     @endcan
-                     @can('delete_team')
-                     <button class="btn btn-danger" onclick="deleteSelectedTeams()">
-                        Delete Selected
-                    </button>
-                     @endcan
-                      @can('import_team')
-                      <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
-                        <i data-lucide="upload"></i> Import Teams
-                    </button>
-                      @endcan
+                        <input type="text" id="teamSearch" class="form-input" placeholder="Search Team..."
+                            style="width:300px;">
+                        @can('create_team')
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_team">
+                                <i data-lucide="plus"></i> Add Team
+                            </button>
+                        @endcan
+                        @can('delete_team')
+                            <button class="btn btn-danger" onclick="deleteSelectedTeams()">
+                                Delete Selected
+                            </button>
+                        @endcan
+                        @can('import_team')
+                            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#importTeamsModal">
+                                <i data-lucide="upload"></i> Import Teams
+                            </button>
+                        @endcan
                         {{-- <a href="{{ route('teams.export') }}" class="btn btn-secondary">
                             <i data-lucide="upload"></i> Export Teams
                         </a> --}}
@@ -649,12 +666,13 @@ document.getElementById('groupSearch').addEventListener('input', function(){
                 <div class="spreadsheet-container">
                     <div class="spreadsheet-toolbar">
                         <!-- Add this inside your spreadsheet-toolbar, beside buttons -->
-<input type="text" id="playerSearch" class="form-input" placeholder="Search Player" style="width:300px">
-                     @can('create_player')
-                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <i data-lucide="plus"></i> Add New Player
-                    </button>
-                     @endcan
+                        <input type="text" id="playerSearch" class="form-input" placeholder="Search Player"
+                            style="width:300px">
+                        @can('create_player')
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                                <i data-lucide="plus"></i> Add New Player
+                            </button>
+                        @endcan
 
                         <button class="btn btn-secondary" onclick="loadLeaderboard()">
                             <i data-lucide="refresh-cw"></i> Refresh
@@ -665,49 +683,49 @@ document.getElementById('groupSearch').addEventListener('input', function(){
 
 
                     </div>
-                  <div class="row g-3">
-                      <!-- Event Filter -->
-                      <div class="mb-4 col-md-4">
-                        <label for="eventFilter" class="form-label">Select Event <span
-                                class="text-danger">*</span></label>
-                        <select id="eventFilter" class="form-select">
-                            <option hidden>-- Select Event --</option>
-                            @foreach ($allevents as $event)
-                                <option value="{{ $event->id }}">{{ $event->name }}</option>
-                            @endforeach
-                        </select>
+                    <div class="row g-3">
+                        <!-- Event Filter -->
+                        <div class="mb-4 col-md-4">
+                            <label for="eventFilter" class="form-label">Select Event <span
+                                    class="text-danger">*</span></label>
+                            <select id="eventFilter" class="form-select">
+                                <option hidden>-- Select Event --</option>
+                                @foreach ($allevents as $event)
+                                    <option value="{{ $event->id }}">{{ $event->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-4 col-md-4">
+                            <label for="organizationFilter" class="form-label">Select Organization<span
+                                    class="text-danger">*</span></label>
+                            <select id="organizationFilter" class="form-select">
+                                <option value="">-- Select Organization --</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-4 col-md-4">
-                        <label for="organizationFilter" class="form-label">Select Organization<span
-                            class="text-danger">*</span></label>
-                        <select id="organizationFilter" class="form-select">
-                            <option value="">-- Select Organization --</option>
-                        </select>
+                    <div id="playersGrid" style="width:100%; overflow:auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Team</th>
+                                    <th>Activity</th>
+                                    <th>Total</th>
+                                    <th>Rank</th>
+                                    <th id="actionHeader" style="display:none;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="playersTableBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Select event to load data</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                  </div>
-                  <div id="playersGrid" style="width:100%; overflow:auto;">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Team</th>
-                                <th>Activity</th>
-                                <th>Total</th>
-                                <th>Rank</th>
-                                <th id="actionHeader" style="display:none;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="playersTableBody">
-                            <tr>
-                                <td colspan="6" class="text-center">Select event to load data</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
                 </div>
             </div>
 
-         
+
 
 
 
@@ -725,8 +743,6 @@ document.getElementById('groupSearch').addEventListener('input', function(){
 
 
 @push('modals')
-
-
     {{-- Teams Modals --}}
     @include('teams.modals.create-team')
     @include('teams.modals.view-team')
@@ -758,6 +774,7 @@ document.getElementById('groupSearch').addEventListener('input', function(){
 
     {{-- Students Modal --}}
     @include('students.modals.create-students')
+    @include('students.modals.edit-students')
 
     {{-- Card Modal --}}
     @include('card.assign-card-modal')

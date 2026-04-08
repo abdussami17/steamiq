@@ -153,10 +153,10 @@ Route::middleware('auth')->group(function () {
         // ---------------------------------------------------------------------
         Route::get('/student',              [StudentController::class, 'index'])->name('student.index');
         Route::post('/student/store',       [StudentController::class, 'store'])->name('student.store');
-        Route::post('/players/import',      [PlayerController::class,  'import'])->name('players.import');
-        Route::get('/players/{player}/edit',        [PlayerController::class, 'edit'])->name('players.edit');
-        Route::post('/players/{player}/update',     [PlayerController::class, 'update'])->name('players.update');
-        Route::delete('/players/{player}',          [PlayerController::class, 'destroy'])->name('players.destroy');
+        Route::post('/players/import',      [StudentController::class,  'import'])->name('student.import');
+        Route::get('/players/{player}/edit',        [StudentController::class, 'edit'])->name('student.edit');
+        Route::post('/players/{player}/update',     [StudentController::class, 'update'])->name('student.update');
+        Route::delete('/player-destroy/{player}',          [StudentController::class, 'destroy'])->name('student.destroy');
 
         // ---------------------------------------------------------------------
         // Team Management
@@ -253,7 +253,7 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
         Route::delete('/subgroups/{subgroup}', [SubGroupController::class, 'destroy'])->name('subgroups.destroy');
         Route::get('/subgroup/fetch/{id}',     [SubGroupController::class, 'show'])->name('subgroup.fetch');
         Route::put('/subgroup/update/{subgroup}', [SubGroupController::class, 'update'])->name('subgroup.update');
-
+        Route::get('/get-org-groups/{orgId}', [SubGroupController::class, 'getGroupByOrganization']);
         // ---------------------------------------------------------------------
         // Leaderboard (admin view)
         // ---------------------------------------------------------------------
