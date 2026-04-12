@@ -70,6 +70,8 @@
                             <label class="form-label">Points</label>
                             <input type="number" id="sc_pointsInput" class="form-input"
                                 placeholder="Enter points">
+                                <div class="form-text text-muted" id="maxPointsHint"></div>
+                                <div class="invalid-feedback" id="pointsError"></div>
                         </div>
                     </div>
                 </div>
@@ -82,331 +84,317 @@
         </div>
     </div>
 </div>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const sc_eventSelect = document.getElementById('sc_eventSelect');
-        const sc_organizationDiv = document.getElementById('sc_organizationDiv');
-        const sc_groupDiv = document.getElementById('sc_groupDiv');
-        const sc_subgroupDiv = document.getElementById('sc_subgroupDiv');
-        const sc_typeDiv = document.getElementById('sc_typeDiv');
-        const sc_organizationSelect = document.getElementById('sc_organizationSelect');
-        const sc_groupSelect = document.getElementById('sc_groupSelect');
-        const sc_subgroupSelect = document.getElementById('sc_subgroupSelect');
-        const sc_entityType = document.getElementById('sc_entityType');
-        const sc_studentDiv = document.getElementById('sc_studentDiv');
-        const sc_teamDiv = document.getElementById('sc_teamDiv');
-        const sc_studentSelect = document.getElementById('sc_studentSelect');
-        const sc_teamSelect = document.getElementById('sc_teamSelect');
-        const sc_activityDiv = document.getElementById('sc_activityDiv');
-        const sc_activitySelect = document.getElementById('sc_activitySelect');
-        const sc_pointsDiv = document.getElementById('sc_pointsDiv');
-        const sc_submitBtn = document.getElementById('sc_submitBtn');
-        const sc_pointsInput = document.getElementById('sc_pointsInput');
+    // Add this to your score-script.blade.php or in the main script section
+document.addEventListener('DOMContentLoaded', function() {
+    // Elements
+    const modal = document.getElementById('scoreModal');
+    const eventSelect = document.getElementById('modalEvent');
+    const orgSelect = document.getElementById('modalOrganization');
+    const groupSelect = document.getElementById('modalGroup');
+    const subGroupSelect = document.getElementById('modalSubGroup');
+    const teamSelect = document.getElementById('modalTeam');
+    const studentSelect = document.getElementById('modalStudent');
+    const activitySelect = document.getElementById('modalActivity');
+    const pointsInput = document.getElementById('modalPoints');
+    const maxPointsHint = document.getElementById('maxPointsHint');
+    const pointsError = document.getElementById('pointsError');
+    const saveBtn = document.getElementById('saveScoreBtn');
 
-        let currentEvent = '';
-        let selectedEntityType = '';
+    let currentMaxScore = 0;
 
-        function resetAll() {
-            [sc_organizationDiv, sc_groupDiv, sc_subgroupDiv, sc_typeDiv, sc_studentDiv, sc_teamDiv,
-                sc_activityDiv, sc_pointsDiv
-            ]
-            .forEach(el => el.classList.add('d-none'));
-            [sc_organizationSelect, sc_groupSelect, sc_subgroupSelect, sc_studentSelect, sc_teamSelect,
-                sc_activitySelect
-            ]
-            .forEach(el => el.innerHTML = '');
-            sc_submitBtn.disabled = true;
-            selectedEntityType = '';
+    // Load organizations when event is selected
+    eventSelect.addEventListener('change', async function() {
+        const eventId = this.value;
+        if (!eventId) return;
+
+        try {
+            const res = await fetch(`/events/${eventId}/organizations`);
+            const orgs = await res.json();
+            
+            orgSelect.innerHTML = '<option value="">Select Organization</option>';
+            orgs.forEach(org => {
+                orgSelect.innerHTML += `<option value="${org.id}">${org.name}</option>`;
+            });
+            orgSelect.disabled = false;
+            
+            // Reset dependent fields
+            resetDependentFields(['group', 'subGroup', 'team', 'student', 'activity']);
+        } catch (err) {
+            console.error('Error loading organizations:', err);
         }
-
-        // ===== STEP 1: EVENT SELECTION =====
-        sc_eventSelect.addEventListener('change', function() {
-            currentEvent = this.value;
-            resetAll();
-
-            if (!currentEvent) return;
-
-            sc_organizationDiv.classList.remove('d-none');
-
-            fetch(`/events/${currentEvent}/organizations`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_organizationSelect.innerHTML =
-                        '<option value="">-- Select Organization --</option>';
-                    data.forEach(o => sc_organizationSelect.innerHTML +=
-                        `<option value="${o.id}">${o.name}</option>`);
-                })
-                .catch(err => console.error('Error fetching organizations:', err));
-        });
-
-        // ===== STEP 2: ORGANIZATION SELECTION =====
-        sc_organizationSelect.addEventListener('change', function() {
-            [sc_groupDiv, sc_subgroupDiv, sc_typeDiv, sc_studentDiv, sc_teamDiv, sc_activityDiv,
-                sc_pointsDiv
-            ]
-            .forEach(el => el.classList.add('d-none'));
-            [sc_groupSelect, sc_subgroupSelect, sc_studentSelect, sc_teamSelect, sc_activitySelect]
-            .forEach(el => el.innerHTML = '');
-
-            if (!this.value) return;
-
-            sc_groupDiv.classList.remove('d-none');
-
-            fetch(`/organizations/${this.value}/groups`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_groupSelect.innerHTML = '<option value="">-- Select Group --</option>';
-                    data.forEach(g => sc_groupSelect.innerHTML +=
-                        `<option value="${g.id}">${g.group_name}</option>`);
-                })
-                .catch(err => console.error('Error fetching groups:', err));
-        });
-
-        // ===== STEP 3: GROUP SELECTION =====
-        sc_groupSelect.addEventListener('change', function() {
-            [sc_subgroupDiv, sc_typeDiv, sc_studentDiv, sc_teamDiv, sc_activityDiv, sc_pointsDiv]
-            .forEach(el => el.classList.add('d-none'));
-            [sc_subgroupSelect, sc_studentSelect, sc_teamSelect, sc_activitySelect]
-            .forEach(el => el.innerHTML = '');
-
-            if (!this.value) return;
-
-            fetch(`/groups/${this.value}/subgroups`)
-                .then(r => r.json())
-                .then(data => {
-                    // Always show entity type selector
-                    sc_typeDiv.classList.remove('d-none');
-
-                    // Populate subgroup dropdown if any exist
-                    if (data.length > 0) {
-                        sc_subgroupDiv.classList.remove('d-none');
-                        sc_subgroupSelect.innerHTML =
-                            '<option value="">-- Select SubGroup --</option>';
-                        data.forEach(s => sc_subgroupSelect.innerHTML +=
-                            `<option value="${s.id}">${s.name}</option>`);
-                    }
-
-                 
-                })
-                .catch(err => console.error('Error fetching subgroups:', err));
-        });
-
-        function loadTeams(groupId, subGroupId = '') {
-            const params = new URLSearchParams({
-                group_id: groupId
-            });
-            if (subGroupId) params.append('sub_group_id', subGroupId);
-
-            sc_teamDiv.classList.remove('d-none');
-            fetch(`/teams?${params.toString()}`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
-                    data.forEach(t => sc_teamSelect.innerHTML +=
-                        `<option value="${t.id}">${t.name || t.team_name}</option>`);
-                })
-                .catch(err => console.error('Error fetching teams:', err));
-        }
-        // SUBGROUP selection now filters teams by subgroup
-        sc_subgroupSelect.addEventListener('change', function() {
-            [sc_teamSelect, sc_studentSelect].forEach(el => el.innerHTML = '');
-            if (this.value) {
-                loadTeams(sc_groupSelect.value, this.value);
-            } else {
-                // Show teams directly under group if no subgroup selected
-                loadTeams(sc_groupSelect.value, '');
-            }
-        });
-
-        // ===== STEP 5: ENTITY TYPE SELECTION (Student vs Team) =====
-        sc_entityType.addEventListener('change', function() {
-            selectedEntityType = this.value;
-            [sc_studentDiv, sc_teamDiv, sc_activityDiv, sc_pointsDiv]
-            .forEach(el => el.classList.add('d-none'));
-            [sc_studentSelect, sc_teamSelect, sc_activitySelect]
-            .forEach(el => el.innerHTML = '');
-
-            if (!selectedEntityType) return;
-
-            const groupId = sc_groupSelect.value;
-            const subGroupId = sc_subgroupSelect.value;
-            const params = new URLSearchParams({
-                group_id: groupId,
-                sub_group_id: subGroupId
-            });
-
-            // Always load the team dropdown first
-            sc_teamDiv.classList.remove('d-none');
-            fetch(`/teams?${params.toString()}`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
-                    data.forEach(t => sc_teamSelect.innerHTML +=
-                        `<option value="${t.id}">${t.name || t.team_name}</option>`);
-                })
-                .catch(err => console.error('Error fetching teams:', err));
-        });
-
-        // ===== STEP 6: STUDENT/PLAYER SELECTION =====
-        sc_studentSelect.addEventListener('change', function() {
-            [sc_activityDiv, sc_pointsDiv].forEach(el => el.classList.add('d-none'));
-            sc_activitySelect.innerHTML = '';
-
-            if (!this.value) return;
-
-            loadActivities();
-        });
-
-        // ===== STEP 7: TEAM SELECTION =====
-        sc_teamSelect.addEventListener('change', function() {
-            [sc_studentDiv, sc_activityDiv, sc_pointsDiv].forEach(el => el.classList.add('d-none'));
-            [sc_studentSelect, sc_activitySelect].forEach(el => el.innerHTML = '');
-
-            if (!this.value) return;
-
-            if (selectedEntityType === 'student') {
-                // Show players belonging to this team
-                sc_studentDiv.classList.remove('d-none');
-                fetch(`/team/${this.value}/students`)
-                    .then(r => r.json())
-                    .then(data => {
-                        sc_studentSelect.innerHTML =
-                        '<option value="">-- Select Player --</option>';
-                        data.forEach(s => sc_studentSelect.innerHTML +=
-                            `<option value="${s.id}">${s.name}</option>`);
-                    })
-                    .catch(err => console.error('Error fetching players:', err));
-            } else {
-                // Team selected — go straight to activities
-                loadActivities();
-            }
-        });
-
-        // ===== LOAD ACTIVITIES =====
-        function loadActivities() {
-    sc_activityDiv.classList.remove('d-none');
-
-    fetch(`/api/events/${currentEvent}/activities`)
-        .then(r => r.json())
-        .then(data => {
-            sc_activitySelect.innerHTML = '<option value="">-- Select Activity --</option>';
-
-            if (!selectedEntityType) return;
-
-            data.forEach(a => {
-                const structure = (a.point_structure || '').toLowerCase().trim();
-
-                if (
-                    (selectedEntityType === 'team' && structure !== 'per_team') ||
-                    (selectedEntityType === 'student' && structure !== 'per_player')
-                ) {
-                    return;
-                }
-
-                let name = a.badge_name || a.brain_type || a.esports_type || a.egaming_type || a.name || 'Playground';
-                name = name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-                let desc = ['brain'].includes((a.activity_type || '').toLowerCase())
-                    ? a.brain_description || ''
-                    : a.egaming_description || '';
-
-                sc_activitySelect.innerHTML +=
-                    `<option value="${a.id}">${desc ? name + ' - ' + desc : name}</option>`;
-            });
-
-            if (sc_activitySelect.options.length === 1) {
-                sc_activitySelect.innerHTML += `<option value="" disabled>No matching activities</option>`;
-            }
-        })
-        .catch(err => console.error('Error fetching activities:', err));
-}
-
-        // ===== STEP 8: ACTIVITY SELECTION =====
-        sc_activitySelect.addEventListener('change', function() {
-            [sc_pointsDiv].forEach(el => el.classList.add('d-none'));
-
-            if (!this.value) return;
-
-            sc_pointsDiv.classList.remove('d-none');
-
-            const params = new URLSearchParams({
-                event_id: sc_eventSelect.value,
-                challenge_activity_id: this.value,
-                student_id: selectedEntityType === 'student' ? sc_studentSelect.value : '',
-                team_id: selectedEntityType === 'team' ? sc_teamSelect.value : ''
-            });
-
-            fetch(`/scores/existing?${params.toString()}`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_pointsInput.value = data.points ?? '';
-                    sc_submitBtn.disabled = (data.points === null || data.points === '');
-                })
-                .catch(err => {
-                    console.error('Error fetching existing score:', err);
-                    sc_submitBtn.disabled = true;
-                });
-        });
-
-        // ===== POINTS INPUT VALIDATION =====
-        sc_pointsInput.addEventListener('input', function() {
-            sc_submitBtn.disabled = !this.value;
-        });
-
-        // ===== FORM SUBMISSION =====
-        document.getElementById('sc_scoreForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            if (!selectedEntityType) {
-                toastr.error('Please select either a Player or Team');
-                return;
-            }
-
-            const fd = new FormData();
-            fd.append('event_id', sc_eventSelect.value);
-            fd.append('challenge_activity_id', sc_activitySelect.value);
-            fd.append('points', sc_pointsInput.value);
-
-            if (selectedEntityType === 'student') {
-                fd.append('student_id', sc_studentSelect.value);
-            } else if (selectedEntityType === 'team') {
-                fd.append('team_id', sc_teamSelect.value);
-            }
-
-            fetch("<?php echo e(route('scores.store')); ?>", {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
-                            .getAttribute('content'),
-                        'Accept': 'application/json'
-                    },
-                    body: fd
-                })
-                .then(async r => {
-                    let d;
-                    try {
-                        d = await r.json();
-                    } catch (e) {
-                        throw new Error('Invalid JSON response');
-                    }
-                    if (!r.ok) throw new Error(d.message || 'Request failed');
-                    return d;
-                })
-                .then(d => {
-                    if (d.success) {
-                        toastr.success(d.message);
-                        bootstrap.Modal.getInstance(document.getElementById('scoreModal')).hide();
-                        resetAll(); // Reset form for next entry
-                        setTimeout(() => {
-                            window.location.reload(true);
-                        }, 2000);
-                    } else {
-                        toastr.error(d.message || 'Failed to save score');
-                    }
-                })
-                .catch(err => toastr.error(err.message || 'Error occurred'));
-        });
     });
-</script>
-<?php /**PATH C:\Users\PC\Downloads\steamiq (5)\resources\views/scores/modals/create-scores.blade.php ENDPATH**/ ?>
+
+    // Load groups when organization is selected
+    orgSelect.addEventListener('change', async function() {
+        const orgId = this.value;
+        if (!orgId) return;
+
+        try {
+            const res = await fetch(`/organizations/${orgId}/groups`);
+            const groups = await res.json();
+            
+            groupSelect.innerHTML = '<option value="">Select Group</option>';
+            groups.forEach(group => {
+                groupSelect.innerHTML += `<option value="${group.id}">${group.group_name}</option>`;
+            });
+            groupSelect.disabled = false;
+            
+            // Reset subgroups, teams, students, activities
+            resetDependentFields(['subGroup', 'team', 'student', 'activity']);
+        } catch (err) {
+            console.error('Error loading groups:', err);
+        }
+    });
+
+    // Load subgroups when group is selected
+    groupSelect.addEventListener('change', async function() {
+        const groupId = this.value;
+        if (!groupId) return;
+
+        try {
+            const res = await fetch(`/groups/${groupId}/subgroups`);
+            const subgroups = await res.json();
+            
+            subGroupSelect.innerHTML = '<option value="">Select Sub Group</option>';
+            subgroups.forEach(subgroup => {
+                subGroupSelect.innerHTML += `<option value="${subgroup.id}">${subgroup.name}</option>`;
+            });
+            subGroupSelect.disabled = false;
+            
+            // Load teams for this group
+            await loadTeams(groupId, null);
+            
+            resetDependentFields(['student', 'activity']);
+        } catch (err) {
+            console.error('Error loading subgroups:', err);
+        }
+    });
+
+    // Load teams when subgroup is selected
+    subGroupSelect.addEventListener('change', async function() {
+        const groupId = groupSelect.value;
+        const subGroupId = this.value;
+        
+        if (!groupId) return;
+        
+        await loadTeams(groupId, subGroupId);
+        resetDependentFields(['student', 'activity']);
+    });
+
+    // Load students when team is selected
+    teamSelect.addEventListener('change', async function() {
+        const teamId = this.value;
+        if (!teamId) {
+            studentSelect.disabled = true;
+            studentSelect.innerHTML = '<option value="">Select Student</option>';
+            return;
+        }
+
+        try {
+            const res = await fetch(`/teams/${teamId}/students`);
+            const students = await res.json();
+            
+            studentSelect.innerHTML = '<option value="">Select Student (Optional)</option>';
+            students.forEach(student => {
+                studentSelect.innerHTML += `<option value="${student.id}">${student.name}</option>`;
+            });
+            studentSelect.disabled = false;
+        } catch (err) {
+            console.error('Error loading students:', err);
+        }
+    });
+
+    // Load activities when event is selected (or when needed)
+    async function loadActivities(eventId) {
+        if (!eventId) return;
+
+        try {
+            const res = await fetch(`/events/${eventId}/activities`);
+            const activities = await res.json();
+            
+            activitySelect.innerHTML = '<option value="">Select Activity</option>';
+            activities.forEach(activity => {
+                activitySelect.innerHTML += `<option value="${activity.id}" data-max="${activity.max_score}">
+                    ${activity.name} (Max: ${activity.max_score})
+                </option>`;
+            });
+            activitySelect.disabled = false;
+        } catch (err) {
+            console.error('Error loading activities:', err);
+        }
+    }
+
+    // When activity is selected, update max score display
+    activitySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            currentMaxScore = parseInt(selectedOption.dataset.max) || 0;
+            maxPointsHint.textContent = `Maximum points allowed: ${currentMaxScore}`;
+            pointsInput.max = currentMaxScore;
+            
+            // Clear previous error
+            pointsInput.classList.remove('is-invalid');
+            pointsError.style.display = 'none';
+        } else {
+            currentMaxScore = 0;
+            maxPointsHint.textContent = '';
+            pointsInput.max = '';
+        }
+    });
+
+    // Validate points input in real-time
+    pointsInput.addEventListener('input', function() {
+        const value = parseInt(this.value);
+        
+        if (value > currentMaxScore && currentMaxScore > 0) {
+            this.classList.add('is-invalid');
+            pointsError.textContent = `Points cannot exceed maximum score (${currentMaxScore})`;
+            pointsError.style.display = 'block';
+            maxPointsHint.classList.add('text-danger');
+            maxPointsHint.innerHTML = `<span class="text-danger">⚠️ Exceeds maximum! Max allowed: ${currentMaxScore}</span>`;
+        } else {
+            this.classList.remove('is-invalid');
+            pointsError.style.display = 'none';
+            maxPointsHint.classList.remove('text-danger');
+            maxPointsHint.innerHTML = `Maximum points allowed: ${currentMaxScore}`;
+        }
+        
+        // Also check for negative values
+        if (value < 0) {
+            this.classList.add('is-invalid');
+            pointsError.textContent = 'Points cannot be negative';
+            pointsError.style.display = 'block';
+        }
+    });
+
+    // Helper function to load teams
+    async function loadTeams(groupId, subGroupId) {
+        try {
+            let url = '/teams/filtered?';
+            if (groupId) url += `group_id=${groupId}&`;
+            if (subGroupId) url += `sub_group_id=${subGroupId}`;
+            
+            const res = await fetch(url);
+            const teams = await res.json();
+            
+            teamSelect.innerHTML = '<option value="">Select Team</option>';
+            teams.forEach(team => {
+                teamSelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+            });
+            teamSelect.disabled = false;
+        } catch (err) {
+            console.error('Error loading teams:', err);
+        }
+    }
+
+    // Reset dependent fields
+    function resetDependentFields(fields) {
+        const fieldMap = {
+            group: groupSelect,
+            subGroup: subGroupSelect,
+            team: teamSelect,
+            student: studentSelect,
+            activity: activitySelect
+        };
+        
+        fields.forEach(field => {
+            if (fieldMap[field]) {
+                fieldMap[field].innerHTML = `<option value="">Select ${field.replace(/([A-Z])/g, ' $1').trim()}</option>`;
+                fieldMap[field].disabled = true;
+            }
+        });
+        
+        if (fields.includes('activity')) {
+            currentMaxScore = 0;
+            maxPointsHint.textContent = '';
+            pointsInput.value = '';
+            pointsInput.classList.remove('is-invalid');
+        }
+    }
+
+    // Save score button click handler
+    saveBtn.addEventListener('click', async function() {
+        const points = parseInt(pointsInput.value);
+        
+        // Validate points
+        if (points > currentMaxScore) {
+            pointsInput.classList.add('is-invalid');
+            pointsError.textContent = `Points cannot exceed maximum score (${currentMaxScore})`;
+            pointsError.style.display = 'block';
+            return;
+        }
+        
+        if (points < 0) {
+            pointsInput.classList.add('is-invalid');
+            pointsError.textContent = 'Points cannot be negative';
+            pointsError.style.display = 'block';
+            return;
+        }
+        
+        // Collect form data
+        const formData = {
+            event_id: eventSelect.value,
+            challenge_activity_id: activitySelect.value,
+            points: points,
+            student_id: studentSelect.value || null,
+            team_id: teamSelect.value || null
+        };
+        
+        // Validate required fields
+        if (!formData.event_id || !formData.challenge_activity_id) {
+            toast('Please select event and activity', 'warn');
+            return;
+        }
+        
+        if (!formData.team_id && !formData.student_id) {
+            toast('Please select a team or student', 'warn');
+            return;
+        }
+        
+        // Save the score
+        try {
+            const response = await fetch('/scores', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                toast(result.message, 'ok');
+                // Close modal
+                bootstrap.Modal.getInstance(modal).hide();
+                // Reset form
+                document.getElementById('scoreForm').reset();
+                resetDependentFields(['group', 'subGroup', 'team', 'student', 'activity']);
+                // Refresh leaderboard
+                const eventSelect = document.getElementById('selectEvent');
+                if (eventSelect && eventSelect.value) {
+                    fetchLeaderboard(eventSelect.value);
+                }
+            } else {
+                toast(result.message || 'Error saving score', 'err');
+            }
+        } catch (err) {
+            console.error('Error saving score:', err);
+            toast('Error saving score', 'err');
+        }
+    });
+    
+    // Also load activities when event is selected in the modal
+    const originalEventChange = eventSelect.onchange;
+    eventSelect.addEventListener('change', async function() {
+        if (this.value) {
+            await loadActivities(this.value);
+        } else {
+            activitySelect.disabled = true;
+            activitySelect.innerHTML = '<option value="">Select Activity</option>';
+        }
+    });
+});
+</script><?php /**PATH C:\Users\PC\Downloads\steamiq (5)\resources\views/scores/modals/create-scores.blade.php ENDPATH**/ ?>

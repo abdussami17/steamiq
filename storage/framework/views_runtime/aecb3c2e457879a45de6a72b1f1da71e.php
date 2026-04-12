@@ -20,12 +20,12 @@
 
 /* ── Full page wrapper ── */
 .bb-page {
-    background: #f1f5f9;
+    /* background: #f1f5f9; */
     min-height: 100vh;
     padding: 28px 0 64px;
     font-family: var(--bb-font);
 }
-.bb-wrap { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+.bb-wrap { max-width: 100%; margin: 0 auto; padding: 0 24px; }
 
 /* ── Top bar ── */
 .bb-topbar {
@@ -43,7 +43,7 @@
     border: 1.5px solid var(--bb-border-lit);
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    color: var(--bb-cyan);
+    color: #fff;
 }
 .bb-icon svg { width: 22px; height: 22px; }
 .bb-title-main {
@@ -51,14 +51,14 @@
     color: #0f172a; text-transform: uppercase; letter-spacing: 3px;
 }
 .bb-title-sub {
-    font-size: .7rem; font-weight: 700; letter-spacing: 2px;
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 2px;
     color: #64748b; text-transform: uppercase; margin-top: 3px;
 }
 
 /* ── Event selector ── */
-.bb-selector { display: flex; align-items: center; gap: 10px; }
+.bb-selector { display: flex; align-items: center; gap: 10px;flex-wrap:wrap }
 .bb-sel-lbl {
-    font-size: .7rem; font-weight: 700; letter-spacing: 2px;
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 2px;
     color: #64748b; text-transform: uppercase; white-space: nowrap;
 }
 .bb-select {
@@ -109,7 +109,7 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 100px 24px; gap: 16px;
-    color: var(--bb-dimmer);
+    color: #fff;
 }
 .bb-placeholder svg { opacity: .18; }
 .bb-placeholder p {

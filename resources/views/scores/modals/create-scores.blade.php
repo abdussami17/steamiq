@@ -69,6 +69,8 @@
                             <label class="form-label">Points</label>
                             <input type="number" id="sc_pointsInput" class="form-input"
                                 placeholder="Enter points">
+                                <div class="form-text text-muted" id="maxPointsHint"></div>
+                                <div class="invalid-feedback" id="pointsError"></div>
                         </div>
                     </div>
                 </div>

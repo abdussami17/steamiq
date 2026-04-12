@@ -24,6 +24,76 @@
     .notification-title {
         font-size: 0.9rem;
     }
+    .activities-filter-container{
+        flex-wrap: wrap;
+    }
+    #activities-filter-search-input{
+        width: 100% !important;
+    }
+    .tabs-setting-wrappper{
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .tabs-setting-wrappper .tab {
+        white-space: nowrap;
+        font-size: 15px;
+    }
+    #eventTabs{
+        display: flex;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+    }
+    #eventTabs .tab {
+        white-space: nowrap;
+        font-size: 16px;
+    }
+    .dashboard_hero_section{
+        grid-template-columns: 1fr !important;
+    }
+    .container {
+        padding: 0 1rem !important;
+    }
+    .pg-board-name {
+        font-size: 1rem !important;
+    }
+    .pg-titlebar {
+        flex-wrap: wrap;
+    }
+    .pg-selector {
+        flex-wrap: wrap;
+    }
+    .pg-grp td{
+        font-size: 1.2rem !important;
+    }
+    .modal-content {
+        padding: 0.5rem !important  ;
+    }
+    .evm-tabs {
+        overflow-x:auto ;
+    }
+    .evm-stats-row {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    .evm-info-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .evm-tournament-grid {
+        grid-template-columns: 1fr !important;
+
+    }
+    .bm-pill {font-size: 0.8rem !important;}
+    .bm-reinit-btn {font-size: 0.8rem;}
+    .bm-pod-tab {
+        font-size: 0.8rem !important;
+    }
+    .bm-pod-badge {font-size: 0.7rem !important;}
+    .bm-round-label {font-size: 0.8rem !important;}
+    .bm-tname {font-size: 0.8rem !important;}
+    .bm-champion-name {font-size: 0.8rem !important;}
+    .bm-champion-label {font-size: 1rem !important;}
     .lb-legend-dot {
         font-size: 0.7rem !important;
     }
@@ -59,5 +129,8 @@
 }
 .section .section-header{
     flex-wrap: wrap;
+}
+.dashboard_hero_section{
+    grid-template-columns: 1fr !important   ;
 }
 }

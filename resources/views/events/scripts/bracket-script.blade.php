@@ -92,9 +92,9 @@ function renderBracketModal(res) {
             const desc = a.brain_description ?? a.esports_description ?? a.egaming_description ?? a.playground_description ?? '';
             return `<div class="bm-act-card">
                 ${tag}
-                ${isMission ? `<div style="font-size:13px;font-weight:700;color:#f1f5f9;margin-bottom:4px;">${a.badge_name ?? 'Mission'}</div>` : ''}
-                ${sub  ? `<div style="font-size:11px;color:#475569;margin-bottom:3px;">${sub.replace(/_/g,' ')}</div>` : ''}
-                ${desc ? `<div style="font-size:11px;color:#334155;margin-bottom:8px;line-height:1.5;">${desc}</div>` : ''}
+                ${isMission ? `<div style="font-size:1.1rem;text-transform:uppercase;font-weight:700;color:#fff;margin-bottom:4px;">${a.badge_name ?? 'Mission'}</div>` : ''}
+                ${sub  ? `<div style="font-size:1.1rem;text-transform:uppercase;color:#fff;margin-bottom:3px;">${sub.replace(/_/g,' ')}</div>` : ''}
+                ${desc ? `<div style="font-size:1.1rem;text-transform:uppercase;color:#fff;margin-bottom:8px;line-height:1.5;">${desc}</div>` : ''}
                 <div class="bm-act-score">${a.max_score ?? 0}<span>pts</span></div>
             </div>`;
         }).join('');

@@ -199,6 +199,7 @@
                     </div>
 
 
+                 <div style="width:100%;overflow-x:auto;">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -350,6 +351,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                 </div>
                     <!-- Modal -->
                     @push('scripts')
                     @include("events.scripts.bulk-delete")
@@ -397,6 +399,7 @@
                     </div>
 
 
+                 <div style="overflow-x: auto;width:100% ">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -468,6 +471,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
                     @push('scripts')
                     @include('organization.script')
                         <script>
@@ -517,6 +521,7 @@
 
                     </div>
 
+                   <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -584,6 +589,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                   </div>
                 </div>
             </div>
             @push('scripts')
@@ -627,6 +633,7 @@
 
                     </div>
 
+                  <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -684,6 +691,7 @@
                             @endforelse
                         </tbody>
                     </table>
+                  </div>
                     @push('scripts')
                     @include('subgroups.scripts.bulk-edit')
                         
@@ -723,6 +731,7 @@
 
 
                     </div>
+                   <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -746,6 +755,7 @@
 
 
                     </table>
+                   </div>
                 </div>
             </div>
             <!-- Players Tab -->

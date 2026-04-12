@@ -64,11 +64,16 @@
             </div>
 
             
+            <div id="lb-scroll-hint">
+                ← Swipe left / right to see all columns →
+            </div>
+
+            
             <div id="bulk-bar">
                 <span style="font-weight:900;color:#f5c518;font-size:12px;letter-spacing:.08em;">BULK EDIT MODE</span>
                 <span style="color:#3a4454;">|</span>
                 <span><span id="bulk-count" style="font-weight:900;color:#f5c518;font-size:1.4rem;">0</span> selected</span>
-                <span style="color:#fff;font-size:11px;">Click score cells to select / deselect</span>
+                <span style="color:#fff;font-size:11px;">Tap score cells to select / deselect</span>
                 <button class="lb-btn lb-btn-bulk-go ms-auto" style="padding:5px 12px;font-size:12px;"
                 onclick="document.getElementById('openBulkModalBtn').click()">
                 Open Edit Panel <i data-lucide="arrow-right"></i>

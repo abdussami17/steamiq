@@ -1,6 +1,8 @@
 <div style="padding: 0 0;margin-bottom:3rem">
 
     <div
+
+    class="dashboard_hero_section"
         style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 0rem; overflow: hidden;">
 
         <!-- LEFT: Text -->

@@ -206,6 +206,7 @@
                     </div>
 
 
+                 <div style="width:100%;overflow-x:auto;">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -358,6 +359,7 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                 </div>
                     <!-- Modal -->
                     <?php $__env->startPush('scripts'); ?>
                     <?php echo $__env->make("events.scripts.bulk-delete", array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
@@ -405,6 +407,7 @@
                     </div>
 
 
+                 <div style="overflow-x: auto;width:100% ">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -476,6 +479,7 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
                     <?php $__env->startPush('scripts'); ?>
                     <?php echo $__env->make('organization.script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         <script>
@@ -523,6 +527,7 @@
 
                     </div>
 
+                   <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -592,6 +597,7 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                   </div>
                 </div>
             </div>
             <?php $__env->startPush('scripts'); ?>
@@ -635,6 +641,7 @@
 
                     </div>
 
+                  <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -692,6 +699,7 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                  </div>
                     <?php $__env->startPush('scripts'); ?>
                     <?php echo $__env->make('subgroups.scripts.bulk-edit', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         
@@ -727,6 +735,7 @@
 
 
                     </div>
+                   <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -750,6 +759,7 @@
 
 
                     </table>
+                   </div>
                 </div>
             </div>
             <!-- Players Tab -->

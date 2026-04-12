@@ -125,7 +125,7 @@
 
                     <!-- XR SECTION -->
                     <div id="editXrSection" style="display:none">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
                             <h5 class="text-dark fw-bold mb-0">C.A.M. ACTIVITIES &amp; MISSION</h5>
                             <button type="button" class="btn btn-primary btn-sm" onclick="addEditCampActivity()">+ Add Activity</button>
                         </div>

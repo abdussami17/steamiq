@@ -1,8 +1,8 @@
-@extends('layouts.app')
-@section('title', 'Settings - SteamIQ')
+
+<?php $__env->startSection('title', 'Settings - SteamIQ'); ?>
 
 
-@section('content')
+<?php $__env->startSection('content'); ?>
     <div class="container">
 
 
@@ -19,22 +19,22 @@
 
 
 <div class="tabs-setting-wrappper">
-    @role('admin')
+    <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
     <button class="tab active" onclick="switchTab('users', event)">Users</button>
     <button class="tab" onclick="switchTab('roles', event)">Roles</button>
     <button class="tab" onclick="switchTab('permissions', event)">Permission</button>
     <button class="tab" onclick="switchTab('activities', event)">Activities</button>
     <button class="tab" onclick="switchTab('cards', event)">Cards</button>
     <button class="tab" onclick="switchTab('cards-history', event)">Cards History</button>
-@endrole
+<?php endif; ?>
 
-<button class="tab {{ !auth()->user()->hasRole('admin') ? 'active' : '' }}"
+<button class="tab <?php echo e(!auth()->user()->hasRole('admin') ? 'active' : ''); ?>"
     onclick="switchTab('profile', event)">
     Profile
 </button>
 </div>
 
-@role('admin')
+<?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
 
             <div id="users-tab" class="tab-content show active">
                 <div class="spreadsheet-container mt-4">
@@ -56,58 +56,60 @@
                             </tr>
                         </thead>
                         <tbody id="userTableBody">
-                            @forelse ($users as $us)
+                            <?php $__empty_1 = true; $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $us): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
-                                    <td>{{ $us->id ?? 'N/A' }}</td>
-                                    <td>{{ $us->name ?? 'N/A' }}</td>
-                                    <td>{{ $us->username ?? 'N/A' }}</td>
-                                    <td>{{ $us->email ?? 'N/A' }}</td>
+                                    <td><?php echo e($us->id ?? 'N/A'); ?></td>
+                                    <td><?php echo e($us->name ?? 'N/A'); ?></td>
+                                    <td><?php echo e($us->username ?? 'N/A'); ?></td>
+                                    <td><?php echo e($us->email ?? 'N/A'); ?></td>
                                     <td>
-                                        @if ($us->roles->count() > 0)
-                                            {{ $us->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ') }}
-                                        @else
+                                        <?php if($us->roles->count() > 0): ?>
+                                            <?php echo e($us->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ')); ?>
+
+                                        <?php else: ?>
                                             N/A
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td>
-                                        {{ $us->created_at ? \Carbon\Carbon::parse($us->created_at)->format('M d, Y') : 'N/A' }}
+                                        <?php echo e($us->created_at ? \Carbon\Carbon::parse($us->created_at)->format('M d, Y') : 'N/A'); ?>
+
                                     </td>
                                     <td>
-                                        @if (!$us->hasRole('admin'))
-                                            @push('modals')
-                                                @include('settings.modals.edit-user')
-                                            @endpush
+                                        <?php if(!$us->hasRole('admin')): ?>
+                                            <?php $__env->startPush('modals'); ?>
+                                                <?php echo $__env->make('settings.modals.edit-user', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                                            <?php $__env->stopPush(); ?>
                                             <div class="d-flex gap-2">
                                                 <!-- Edit Button triggers modal -->
                                                 <button type="button" class="btn btn-icon btn-edit" data-bs-toggle="modal"
-                                                    data-bs-target="#editUserModal{{ $us->id }}">
+                                                    data-bs-target="#editUserModal<?php echo e($us->id); ?>">
                                                     <i data-lucide="pencil"></i>
                                                 </button>
-                                                <form action="{{ route('setting.users.destroy', $us->id) }}" method="POST"
+                                                <form action="<?php echo e(route('setting.users.destroy', $us->id)); ?>" method="POST"
                                                     class="delete-form" style="display:inline-block;">
-                                                    @csrf
-                                                    @method('DELETE')
+                                                    <?php echo csrf_field(); ?>
+                                                    <?php echo method_field('DELETE'); ?>
 
                                                     <button type="button" class="btn btn-icon btn-delete delete-btn">
                                                         <i data-lucide="trash-2"></i>
                                                     </button>
                                                 </form>
                                             </div>
-                                        @else
+                                        <?php else: ?>
                                             <span class="text-muted">Admin</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
 
                                 </tr>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="7" class="text-center">No users currently</td>
                                 </tr>
-                            @endforelse
+                            <?php endif; ?>
 
                         </tbody>
                     </table>
-                    @push('scripts')
+                    <?php $__env->startPush('scripts'); ?>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                         
@@ -153,7 +155,7 @@
                                 });
                             })
                         </script>
-                    @endpush
+                    <?php $__env->stopPush(); ?>
 
 
                 </div>
@@ -214,31 +216,31 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($permissions as $perms)
+                            <?php $__empty_1 = true; $__currentLoopData = $permissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $perms): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
-                                    <td>{{ $perms->id }}</td>
-                                    <td>{{ $perms->label }}</td>
+                                    <td><?php echo e($perms->id); ?></td>
+                                    <td><?php echo e($perms->label); ?></td>
                                     <td>
-                                        <form action="{{ route('permissions.destroy', $perms->id) }}" method="POST"
+                                        <form action="<?php echo e(route('permissions.destroy', $perms->id)); ?>" method="POST"
                                             onsubmit="return confirm('Are you sure you want to delete this permission?');">
-                                            @csrf
-                                            @method('DELETE')
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
                                             <button type="submit" class="btn btn-icon btn-delete"><i
                                                     data-lucide="trash"></i></button>
                                         </form>
                                     </td>
                                 </tr>
-                            @empty
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="2">No data</td>
                                 </tr>
-                            @endforelse
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-                @push('modals')
-                    @include('settings.modals.create-permission')
-                @endpush
+                <?php $__env->startPush('modals'); ?>
+                    <?php echo $__env->make('settings.modals.create-permission', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php $__env->stopPush(); ?>
             </div>
 
             <div class="tab-content" id="roles-tab">
@@ -258,33 +260,34 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($roles as $role)
+                            <?php $__empty_1 = true; $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
-                                    <td>{{ $role->id }}</td>
-                                    <td>{{ $role->name }}</td>
+                                    <td><?php echo e($role->id); ?></td>
+                                    <td><?php echo e($role->name); ?></td>
                                     <td>
-                                        @if ($role->name === 'admin')
+                                        <?php if($role->name === 'admin'): ?>
                                             <span class="text-success fw-bold">ALL Permissions</span>
-                                        @elseif($role->permissions->count())
-                                            {{ $role->permissions->pluck('label')->join(', ') }}
-                                        @else
+                                        <?php elseif($role->permissions->count()): ?>
+                                            <?php echo e($role->permissions->pluck('label')->join(', ')); ?>
+
+                                        <?php else: ?>
                                             <span class="text-muted">No permissions</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                     <td>
-                                        @if ($role->name !== 'admin')
+                                        <?php if($role->name !== 'admin'): ?>
                                         <div class="d-flex gap-2">
 
                                             <!-- Edit -->
                                             <button class="btn btn-icon btn-edit" data-bs-toggle="modal"
-                                                data-bs-target="#editRoleModal{{ $role->id }}">
+                                                data-bs-target="#editRoleModal<?php echo e($role->id); ?>">
                                                 <i data-lucide="pencil"></i>
                                             </button>
                                     
                                             <!-- Delete -->
-                                            <form action="{{ route('roles.destroy', $role->id) }}" method="POST" class="delete-role-form">
-                                                @csrf
-                                                @method('DELETE')
+                                            <form action="<?php echo e(route('roles.destroy', $role->id)); ?>" method="POST" class="delete-role-form">
+                                                <?php echo csrf_field(); ?>
+                                                <?php echo method_field('DELETE'); ?>
                                     
                                                 <button type="button" class="btn btn-icon btn-delete delete-role-btn">
                                                     <i data-lucide="trash-2"></i>
@@ -292,26 +295,26 @@
                                             </form>
                                     
                                         </div>
-                                        @else
+                                        <?php else: ?>
                                             <span class="text-muted">Not editable</span>
-                                        @endif
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
 
                                 <!-- Edit Role Modal -->
-                                @if ($role->name !== 'admin')
-                                    @push('modals')
-                                        @include('settings.modals.edit-roles')
-                                    @endpush
-                                @endif
-                            @empty
+                                <?php if($role->name !== 'admin'): ?>
+                                    <?php $__env->startPush('modals'); ?>
+                                        <?php echo $__env->make('settings.modals.edit-roles', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                                    <?php $__env->stopPush(); ?>
+                                <?php endif; ?>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                 <tr>
                                     <td colspan="4">No data found</td>
                                 </tr>
-                            @endforelse
+                            <?php endif; ?>
                         </tbody>
                     </table>
-                    @push('scripts')
+                    <?php $__env->startPush('scripts'); ?>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                         
@@ -339,11 +342,11 @@
                         });
                         </script>
                         
-                    @endpush
+                    <?php $__env->stopPush(); ?>
                 </div>
-                @push('modals')
-                    @include('settings.modals.create-roles')
-                @endpush
+                <?php $__env->startPush('modals'); ?>
+                    <?php echo $__env->make('settings.modals.create-roles', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php $__env->stopPush(); ?>
             </div>
             <div id="cards-tab" class="tab-content">
                 <div class="spreadsheet-container mt-4">
@@ -362,45 +365,46 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach ($cards as $card)
+                                <?php $__currentLoopData = $cards; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <tr>
-                                        <td>{{ $card->id }}</td>
-                                        <td class="text-capitalize">{{ $card->type }}</td>
+                                        <td><?php echo e($card->id); ?></td>
+                                        <td class="text-capitalize"><?php echo e($card->type); ?></td>
                                         <td>
-                                            @if ($card->negative_points == 0)
+                                            <?php if($card->negative_points == 0): ?>
                                                 Deducted All Points
-                                            @else
-                                                {{ $card->negative_points }}
-                                            @endif
+                                            <?php else: ?>
+                                                <?php echo e($card->negative_points); ?>
+
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <div style="display:flex;gap:0.25rem;">
                                                 <button class="btn btn-icon btn-edit editCardBtn"
-                                                    data-id="{{ $card->id }}" data-type="{{ $card->type }}"
-                                                    data-points="{{ $card->negative_points }}" data-bs-toggle="modal"
+                                                    data-id="<?php echo e($card->id); ?>" data-type="<?php echo e($card->type); ?>"
+                                                    data-points="<?php echo e($card->negative_points); ?>" data-bs-toggle="modal"
                                                     data-bs-target="#editCardModal">
                                                     <i data-lucide="edit-2"></i>
                                                 </button>
 
-                                                <form action="{{ route('cards.delete', $card->id) }}" method="POST"
+                                                <form action="<?php echo e(route('cards.delete', $card->id)); ?>" method="POST"
                                                     style="display:inline-block;">
-                                                    @csrf
-                                                    @method('DELETE')
+                                                    <?php echo csrf_field(); ?>
+                                                    <?php echo method_field('DELETE'); ?>
                                                     <button type="submit" class="btn btn-icon btn-delete">
                                                         <i data-lucide="trash-2"></i></button>
                                                 </form>
                                             </div>
                                         </td>
                                     </tr>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </tbody>
                         </table>
                     </div>
 
-                    @push('modals')
-                        @include('card.create')
-                        @include('card.edit')
-                    @endpush
+                    <?php $__env->startPush('modals'); ?>
+                        <?php echo $__env->make('card.create', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                        <?php echo $__env->make('card.edit', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                    <?php $__env->stopPush(); ?>
 
                 </div>
             </div>
@@ -422,8 +426,8 @@
                             </thead>
 
                             <tbody>
-                                @forelse($logs as $log)
-                                    @php
+                                <?php $__empty_1 = true; $__currentLoopData = $logs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                    <?php
                                         $entityName = '-';
 
                                         if ($log->assignable_type === 'student') {
@@ -439,26 +443,27 @@
                                             $entity = \App\Models\Organization::find($log->assignable_id);
                                             $entityName = $entity->name ?? '-';
                                         }
-                                    @endphp
+                                    ?>
 
                                     <tr>
-                                        <td>{{ $loop->iteration }}</td>
+                                        <td><?php echo e($loop->iteration); ?></td>
                                         <td>
                                             <span
-                                                class="badge bg-{{ $log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info') }}">
-                                                {{ strtoupper($log->card->type) }}
+                                                class="badge bg-<?php echo e($log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info')); ?>">
+                                                <?php echo e(strtoupper($log->card->type)); ?>
+
                                             </span>
                                         </td>
-                                        <td>{{ ucfirst($log->assignable_type) }}</td>
-                                        <td>{{ $entityName }}</td>
-                                        <td>{{ $log->created_at->format('d M Y H:i') }}</td>
+                                        <td><?php echo e(ucfirst($log->assignable_type)); ?></td>
+                                        <td><?php echo e($entityName); ?></td>
+                                        <td><?php echo e($log->created_at->format('d M Y H:i')); ?></td>
                                     </tr>
 
-                                @empty
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                                     <tr>
                                         <td colspan="5" class="text-center">No logs found</td>
                                     </tr>
-                                @endforelse
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -467,22 +472,23 @@
 
                 </div>
             </div>
-            @endrole
-            <div id="profile-tab" class="tab-content {{ !auth()->user()->hasRole('admin') ? 'show active' : '' }}">
+            <?php endif; ?>
+            <div id="profile-tab" class="tab-content <?php echo e(!auth()->user()->hasRole('admin') ? 'show active' : ''); ?>">
                 <div class="spreadsheet-container mt-4">
 
                     <div class="sems-profile-wrapper">
                         <div class="sems-profile-card">
 
-                            {{-- Hero Banner --}}
+                            
                             <div class="sems-profile-hero-banner">
                                 <div class="d-flex align-items-center gap-3 mb-3">
                                     <div class="sems-profile-avatar-ring" id="semsProfileAvatarInitials">
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}{{ strtoupper(substr(strstr(auth()->user()->name, ' '), 1, 1)) }}
+                                        <?php echo e(strtoupper(substr(auth()->user()->name, 0, 1))); ?><?php echo e(strtoupper(substr(strstr(auth()->user()->name, ' '), 1, 1))); ?>
+
                                     </div>
                                     <div>
                                         <p class="sems-profile-hero-name" id="semsProfileHeroName">
-                                            {{ auth()->user()->name }}</p>
+                                            <?php echo e(auth()->user()->name); ?></p>
 
                                     </div>
                                     <div class="ms-auto">
@@ -496,12 +502,13 @@
 
                                     <div class="sems-profile-stat-tile">
                                         <p class="sems-profile-stat-label">Member Since</p>
-                                        <p class="sems-profile-stat-value">{{ auth()->user()->created_at->year }}</p>
+                                        <p class="sems-profile-stat-value"><?php echo e(auth()->user()->created_at->year); ?></p>
                                     </div>
                                     <div class="sems-profile-stat-tile">
                                         <p class="sems-profile-stat-label">Role</p>
                                         <p class="sems-profile-stat-value">
-                                            {{ auth()->user()->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ') }}
+                                            <?php echo e(auth()->user()->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ')); ?>
+
                                         </p>
                                    
                                     </div>
@@ -509,9 +516,9 @@
                             </div>
 
                             <form id="profile-update-form">
-                                @csrf
+                                <?php echo csrf_field(); ?>
 
-                                {{-- Account Details --}}
+                                
                                 <div class="sems-profile-body-section">
                                     <div class="sems-profile-section-header">
                                         <div class="sems-profile-section-icon">
@@ -529,7 +536,7 @@
                                         <div class="col-md-6">
                                             <label class="sems-profile-label" for="semsNameInput">Full name</label>
                                             <input class="sems-profile-input form-control" id="semsNameInput"
-                                                name="name" type="text" value="{{ auth()->user()->name }}"
+                                                name="name" type="text" value="<?php echo e(auth()->user()->name); ?>"
                                                 placeholder="Your full name">
                                         </div>
                                         <div class="col-md-6">
@@ -537,7 +544,7 @@
                                             <div class="sems-profile-input-wrap">
                                                 <input class="sems-profile-input form-control" id="semsUsernameInput"
                                                     name="username" type="text"
-                                                    value="{{ auth()->user()->username }}" placeholder="username"
+                                                    value="<?php echo e(auth()->user()->username); ?>" placeholder="username"
                                                     style="padding-left:28px;">
                                                 <span class="sems-profile-at-prefix">@</span>
                                             </div>
@@ -547,7 +554,7 @@
 
                                 <hr class="sems-profile-divider">
 
-                                {{-- Password Section --}}
+                                
                                 <div class="sems-profile-body-section">
                                     <div class="sems-profile-section-header">
                                         <div class="sems-profile-section-icon">
@@ -640,10 +647,10 @@
 
                 </div>
             </div>
-            @push('scripts')
-                @include('settings.scripts.profile-script')
-                @include('settings.scripts.activity-script')
-            @endpush
+            <?php $__env->startPush('scripts'); ?>
+                <?php echo $__env->make('settings.scripts.profile-script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                <?php echo $__env->make('settings.scripts.activity-script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+            <?php $__env->stopPush(); ?>
 
 
 
@@ -654,4 +661,6 @@
 
 
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\PC\Downloads\steamiq (5)\resources\views/settings/index.blade.php ENDPATH**/ ?>

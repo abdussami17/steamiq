@@ -1,5 +1,3 @@
-
-
 {{-- Bulk Edit Modal --}}
 <div class="modal fade" id="bulkEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -14,7 +12,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="padding:0;">
-                <div class="table-responsive" style="max-height:400px;overflow-y:auto;">
+                <div class="table-responsive" style="max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
                     <table class="table table-sm mb-0" id="bulkEditTable">
                         <thead>
                             <tr>
@@ -52,15 +50,21 @@
     (function() {
         'use strict';
 
-
         const $id = id => document.getElementById(id);
 
         /* ═══════════════════════════════════════════════════════════
            STATE
         ═══════════════════════════════════════════════════════════ */
-        let _currentData = null; // last fetched {categories, rows}
+        let _currentData = null;
         let _bulkMode = false;
-        let _bulkSelected = []; // [{td, row, cat, pts, slug, maxScore, activityId}, …]
+        let _bulkSelected = [];
+
+        /* ═══════════════════════════════════════════════════════════
+           MOBILE DETECTION
+        ═══════════════════════════════════════════════════════════ */
+        function isTouchDevice() {
+            return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+        }
 
         /* ═══════════════════════════════════════════════════════════
            TOAST
@@ -70,9 +74,7 @@
             el.textContent = msg;
             el.className = 'show ' + type;
             clearTimeout(el._t);
-            el._t = setTimeout(() => {
-                el.className = '';
-            }, 2800);
+            el._t = setTimeout(() => { el.className = ''; }, 2800);
         }
 
         /* ═══════════════════════════════════════════════════════════
@@ -105,13 +107,10 @@
                 const t = (c.type || 'unknown');
                 counts[t] = (counts[t] || 0) + 1;
             });
-            const map = {
-                red: 'card-red',
-                yellow: 'card-yellow',
-                orange: 'card-orange',
-                unknown: 'card-unknown'
-            };
-            return `<span class="card-badges">${Object.keys(counts).map(t => `<span class="card-badge ${map[t]||'card-unknown'}">${counts[t]}</span>`).join('')}</span>`;
+            const map = { red: 'card-red', yellow: 'card-yellow', orange: 'card-orange', unknown: 'card-unknown' };
+            return `<span class="card-badges">${Object.keys(counts).map(t =>
+                `<span class="card-badge ${map[t]||'card-unknown'}">${counts[t]}</span>`
+            ).join('')}</span>`;
         }
 
         function csrfToken() {
@@ -121,17 +120,9 @@
 
         function slugToLabel(slug) {
             const map = {
-                science: 'Science',
-                technology: 'Technology',
-                engineering: 'Engineering',
-                art: 'Art',
-                math: 'Math',
-                playground: 'Playground',
-                egaming: 'E-Gaming',
-                esports: 'ESports',
-                mission: 'Missions',
-                bonus: 'Bonus',
-                other: 'Other',
+                science: 'Science', technology: 'Technology', engineering: 'Engineering',
+                art: 'Art', math: 'Math', playground: 'Playground', egaming: 'E-Gaming',
+                esports: 'ESports', mission: 'Missions', bonus: 'Bonus', other: 'Other',
             };
             return map[slug] || slug;
         }
@@ -144,6 +135,22 @@
         }
 
         /* ═══════════════════════════════════════════════════════════
+           SCROLL HINT — hide after first scroll
+        ═══════════════════════════════════════════════════════════ */
+        (function() {
+            const scroll = $id('lb-scroll');
+            if (!scroll) return;
+            function hideHint() {
+                const hint = $id('lb-scroll-hint');
+                if (hint) hint.style.display = 'none';
+                scroll.removeEventListener('scroll', hideHint);
+                scroll.removeEventListener('touchmove', hideHint);
+            }
+            scroll.addEventListener('scroll', hideHint, { passive: true });
+            scroll.addEventListener('touchmove', hideHint, { passive: true });
+        })();
+
+        /* ═══════════════════════════════════════════════════════════
            FETCH LEADERBOARD DATA
         ═══════════════════════════════════════════════════════════ */
         async function fetchLeaderboard(eventId) {
@@ -154,11 +161,13 @@
             tbody.innerHTML = `<tr class="lb-state-row"><td colspan="999">Loading…</td></tr>`;
             thead.innerHTML = '';
 
+            // Re-show scroll hint on new event load
+            const hint = $id('lb-scroll-hint');
+            if (hint) hint.style.display = '';
+
             try {
                 const res = await fetch(`/leaderboard-data?event_id=${eventId}`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json' }
                 });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
@@ -166,15 +175,13 @@
                 window.__lbCurrentData = data;
 
                 if (!data.rows || !data.rows.length) {
-                    tbody.innerHTML =
-                        `<tr class="lb-state-row"><td colspan="999">No data available for this event.</td></tr>`;
+                    tbody.innerHTML = `<tr class="lb-state-row"><td colspan="999">No data available for this event.</td></tr>`;
                     return;
                 }
                 buildTable(data, thead, tbody);
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML =
-                    `<tr class="lb-state-row"><td colspan="999">Error loading leaderboard.</td></tr>`;
+                tbody.innerHTML = `<tr class="lb-state-row"><td colspan="999">Error loading leaderboard.</td></tr>`;
             }
         }
 
@@ -212,9 +219,7 @@
                 const tdPP = tr.querySelector('.td-total-player');
                 if (tdPP) tdPP.textContent = Number(dataRow.total_points).toLocaleString();
 
-                // Update parent team's player_points & grand_total
-                const teamDataRow = _currentData.rows.find(r => r.type === 'team' && r.team_name === dataRow
-                    .team_name);
+                const teamDataRow = _currentData.rows.find(r => r.type === 'team' && r.team_name === dataRow.team_name);
                 if (teamDataRow) {
                     teamDataRow.player_points = (teamDataRow.player_points ?? 0) + diff;
                     teamDataRow.grand_total = (teamDataRow.grand_total ?? 0) + diff;
@@ -238,9 +243,7 @@
             const teamRows = _currentData.rows.filter(r => r.type === 'team');
             const sorted = [...teamRows].sort((a, b) => (b.grand_total ?? 0) - (a.grand_total ?? 0));
 
-            let rank = 1,
-                prevGT = null,
-                prevRank = 1;
+            let rank = 1, prevGT = null, prevRank = 1;
             sorted.forEach(row => {
                 const gt = row.grand_total ?? 0;
                 let assignedRank = null;
@@ -274,67 +277,35 @@
             const cats = data.categories || [];
             const rows = data.rows;
 
-            const catNames = cats.map(c => c.name);
-            const catSlugs = cats.map(c => c.type);
-            const catIds = cats.map(c => c.id);
+            const catNames     = cats.map(c => c.name);
+            const catSlugs     = cats.map(c => c.type);
+            const catIds       = cats.map(c => c.id);
             const catMaxScores = cats.map(c => c.max_score || 9999);
 
-            // Check if any row has a non-zero bonus_assignment or card flags
             const hasBonusData = rows.some(r => (r.bonus_assignment ?? 0) > 0);
-            const hasFlags = rows.some(r => (r.cards && r.cards.length > 0));
+            const hasFlags     = rows.some(r => (r.cards && r.cards.length > 0));
 
             /* Banner groups — merge consecutive same-slug columns */
             const bannerGroups = [];
             catSlugs.forEach((slug, i) => {
                 const last = bannerGroups[bannerGroups.length - 1];
-                if (last && last.slug === slug) {
-                    last.span++;
-                } else {
-                    bannerGroups.push({
-                        slug,
-                        label: slugToLabel(slug),
-                        span: 1
-                    });
-                }
+                if (last && last.slug === slug) { last.span++; }
+                else { bannerGroups.push({ slug, label: slugToLabel(slug), span: 1 }); }
             });
 
-            // Total fixed columns count: 6 meta (PLAYER PTS moved) + catNames.length + (bonus col if present) + (flags col if present) + 4 totals
             const totalCols = 6 + catNames.length + (hasBonusData ? 1 : 0) + (hasFlags ? 1 : 0) + 4;
 
             /* ── ROW 1: Banner ── */
             const r1 = document.createElement('tr');
             r1.className = 'row-banner';
+
             [
-                {
-                    label: '#',
-                    cls: 'fix-0',
-                    w: 46
-                },
-                {
-                    label: 'NO',
-                    cls: 'fix-1',
-                    w: 50
-                },
-                {
-                    label: 'TEAM',
-                    cls: 'fix-2',
-                    w: 134
-                },
-                {
-                    label: 'MEMBERS',
-                    cls: 'fix-3',
-                    w: 130
-                },
-                {
-                    label: 'PLAYER POINTS',
-                    cls: 'fix-4',
-                    w: 100
-                },
-                {
-                    label: 'DIVISION',
-                    cls: 'fix-5',
-                    w: 100
-                }
+                { label: '#',             cls: 'fix-0', w: 46 },
+                { label: 'NO',            cls: 'fix-1', w: 50 },
+                { label: 'TEAM',          cls: 'fix-2', w: 134 },
+                { label: 'MEMBERS',       cls: 'fix-3', w: 130 },
+                { label: 'PLAYER POINTS', cls: 'fix-4', w: 100 },
+                { label: 'DIVISION',      cls: 'fix-5', w: 100 },
             ].forEach(m => {
                 const th = document.createElement('th');
                 th.className = m.cls;
@@ -342,52 +313,42 @@
                 th.style.minWidth = m.w + 'px';
                 r1.appendChild(th);
             });
-            // YOUR POINTS (grand total) — placed before activity columns
+
             const thYP1 = document.createElement('th');
             thYP1.textContent = 'YOUR POINTS';
             thYP1.className = 'banner-your-points';
-            thYP1.style.minWidth = '130px';
+            thYP1.style.minWidth = '120px';
             r1.appendChild(thYP1);
+
             bannerGroups.forEach(g => {
                 const th = document.createElement('th');
                 th.colSpan = g.span;
                 th.textContent = g.label.toUpperCase();
                 th.className = 'banner-' + g.slug;
-                th.style.minWidth = (g.span * 120) + 'px';
+                th.style.minWidth = (g.span * 110) + 'px';
                 r1.appendChild(th);
             });
-            // Bonus banner (only if bonus data exists)
+
             if (hasBonusData) {
                 const thBonus = document.createElement('th');
                 thBonus.textContent = 'BONUS';
                 thBonus.className = 'banner-bonus';
-                thBonus.style.minWidth = '100px';
+                thBonus.style.minWidth = '90px';
                 r1.appendChild(thBonus);
             }
-            // Flags banner (if any flags exist)
+
             if (hasFlags) {
                 const thFlags = document.createElement('th');
                 thFlags.textContent = 'FLAGS';
                 thFlags.className = 'banner-flags';
-                thFlags.style.minWidth = '90px';
+                thFlags.style.minWidth = '80px';
                 r1.appendChild(thFlags);
             }
+
             [
-                {
-                    label: 'TEAM POINTS',
-                    cls: 'banner-total-team',
-                    w: 100
-                },
-                {
-                    label: 'RANK',
-                    cls: '',
-                    w: 70
-                },
-                {
-                    label: 'ORG',
-                    cls: '',
-                    w: 120
-                },
+                { label: 'TEAM POINTS', cls: 'banner-total-team', w: 100 },
+                { label: 'RANK',        cls: '',                  w: 70 },
+                { label: 'ORG',         cls: '',                  w: 120 },
             ].forEach(m => {
                 const th = document.createElement('th');
                 th.textContent = m.label;
@@ -400,37 +361,14 @@
             /* ── ROW 2: Column labels ── */
             const r2 = document.createElement('tr');
             r2.className = 'row-cols';
+
             [
-                {
-                    label: 'RANK',
-                    cls: 'fix-0',
-                    w: 46
-                },
-                {
-                    label: 'TEAM NO',
-                    cls: 'fix-1',
-                    w: 50
-                },
-                {
-                    label: 'TEAM NAME',
-                    cls: 'fix-2',
-                    w: 134
-                },
-                {
-                    label: 'MEMBERS',
-                    cls: 'fix-3',
-                    w: 130
-                },
-                {
-                    label: 'PLAYER PTS',
-                    cls: 'fix-4',
-                    w: 100
-                },
-                {
-                    label: 'DIVISION',
-                    cls: 'fix-5',
-                    w: 100
-                },
+                { label: 'RANK',       cls: 'fix-0', w: 46 },
+                { label: 'TEAM NO',    cls: 'fix-1', w: 50 },
+                { label: 'TEAM NAME',  cls: 'fix-2', w: 134 },
+                { label: 'MEMBERS',    cls: 'fix-3', w: 130 },
+                { label: 'PLAYER PTS', cls: 'fix-4', w: 100 },
+                { label: 'DIVISION',   cls: 'fix-5', w: 100 },
             ].forEach(m => {
                 const th = document.createElement('th');
                 th.className = m.cls;
@@ -438,52 +376,42 @@
                 th.style.minWidth = m.w + 'px';
                 r2.appendChild(th);
             });
-            // YOUR POINTS column label (before activity columns)
+
             const thYP2 = document.createElement('th');
             thYP2.textContent = 'YOUR POINTS';
             thYP2.className = 'col-your-points';
-            thYP2.style.minWidth = '130px';
+            thYP2.style.minWidth = '120px';
             r2.appendChild(thYP2);
+
             catNames.forEach((name, i) => {
                 const th = document.createElement('th');
                 th.textContent = name;
                 th.className = 'cat-' + catSlugs[i];
-                th.style.minWidth = '140px';
+                th.style.minWidth = '120px';
                 th.title = name;
                 r2.appendChild(th);
             });
-            // Bonus column label
+
             if (hasBonusData) {
                 const thBonus = document.createElement('th');
                 thBonus.textContent = 'BONUS';
                 thBonus.className = 'cat-bonus';
-                thBonus.style.minWidth = '100px';
+                thBonus.style.minWidth = '90px';
                 r2.appendChild(thBonus);
             }
-            // Flags column label
+
             if (hasFlags) {
                 const thFlags = document.createElement('th');
                 thFlags.textContent = 'FLAGS';
                 thFlags.className = 'cat-flags';
-                thFlags.style.minWidth = '90px';
+                thFlags.style.minWidth = '80px';
                 r2.appendChild(thFlags);
             }
+
             [
-                {
-                    label: 'TEAM PTS',
-                    cls: 'col-total-team',
-                    w: 100
-                },
-                {
-                    label: 'RANK',
-                    cls: '',
-                    w: 70
-                },
-                {
-                    label: 'ORGANIZATION',
-                    cls: '',
-                    w: 120
-                },
+                { label: 'TEAM PTS',     cls: 'col-total-team', w: 100 },
+                { label: 'RANK',         cls: '',               w: 70 },
+                { label: 'ORGANIZATION', cls: '',               w: 120 },
             ].forEach(m => {
                 const th = document.createElement('th');
                 th.textContent = m.label;
@@ -502,15 +430,13 @@
                 const isTeam = row.type === 'team';
                 const groupKey = row.group || 'Ungrouped';
 
-                /* Group divider row */
                 if (isTeam && groupKey !== currentGroup) {
                     currentGroup = groupKey;
                     const divTr = document.createElement('tr');
                     divTr.className = 'tr-divider';
                     const divTd = document.createElement('td');
                     divTd.colSpan = totalCols;
-                    const sub = (row.subgroup && row.subgroup !== '-') ? '  ›  ' + row.subgroup
-                        .toUpperCase() : '';
+                    const sub = (row.subgroup && row.subgroup !== '-') ? '  ›  ' + row.subgroup.toUpperCase() : '';
                     divTd.textContent = '▸  ' + groupKey.toUpperCase() + sub;
                     divTr.appendChild(divTd);
                     frag.appendChild(divTr);
@@ -555,7 +481,7 @@
                 td3.textContent = isTeam ? '' : (row.student_name || '—');
                 tr.appendChild(td3);
 
-                /* player points (moved next to members) */
+                /* player points */
                 const tdPPearly = document.createElement('td');
                 tdPPearly.className = 'fix-4 td-total-player';
                 tdPPearly.textContent = isTeam ?
@@ -563,13 +489,13 @@
                     Number(row.total_points ?? 0).toLocaleString();
                 tr.appendChild(tdPPearly);
 
-                /* col 4: division (shifted to fix-5) */
+                /* col 4: division */
                 const td4 = document.createElement('td');
                 td4.className = 'fix-5';
                 td4.textContent = row.division || '—';
                 tr.appendChild(td4);
 
-                /* YOUR POINTS — grand total displayed before activity columns */
+                /* YOUR POINTS */
                 const tdGT = document.createElement('td');
                 tdGT.className = 'td-total-grand td-your-points';
                 tdGT.textContent = isTeam
@@ -586,28 +512,36 @@
                     const maxSc = catMaxScores[i];
 
                     td.innerHTML = scorePill(pts, slug);
-
                     td.dataset.cat = cat;
                     td.dataset.pts = pts;
                     td.dataset.slug = slug;
                     td.dataset.activityId = actId;
                     td.dataset.maxScore = maxSc;
 
-                  
-                        td.className = 'score-edit-cell';
-                        td.addEventListener('click', function() {
-                            if (_bulkMode) {
-                                toggleBulkSelect(td, row);
-                            } else {
-                                openScoreEditor(td, row);
-                            }
+                    td.className = 'score-edit-cell';
+
+                    // Use touchend on mobile to avoid 300ms tap delay
+                    if (isTouchDevice()) {
+                        let touchMoved = false;
+                        td.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
+                        td.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+                        td.addEventListener('touchend', function(e) {
+                            if (touchMoved) return; // was a scroll gesture, not a tap
+                            e.preventDefault();
+                            if (_bulkMode) { toggleBulkSelect(td, row); }
+                            else { openScoreEditor(td, row); }
                         });
-                  
+                    } else {
+                        td.addEventListener('click', function() {
+                            if (_bulkMode) { toggleBulkSelect(td, row); }
+                            else { openScoreEditor(td, row); }
+                        });
+                    }
 
                     tr.appendChild(td);
                 });
 
-                /* ── Bonus column (read-only, yellow) ── */
+                /* ── Bonus column ── */
                 if (hasBonusData) {
                     const tdBon = document.createElement('td');
                     const bonusVal = parseInt(row.bonus_assignment) || 0;
@@ -621,7 +555,7 @@
                     tr.appendChild(tdBon);
                 }
 
-                // Flags column (card badges)
+                /* Flags column */
                 if (hasFlags) {
                     const tdFlags = document.createElement('td');
                     tdFlags.innerHTML = renderCardBadges(row.cards);
@@ -667,7 +601,10 @@
 
             const input = document.createElement('input');
             input.type = 'number';
+            input.inputMode = 'numeric'; // triggers numeric keyboard on mobile
+            input.pattern = '[0-9]*';    // iOS numeric keyboard
             input.max = maxScore;
+            input.min = 0;
             input.className = 'score-edit-input';
             input.value = oldPts;
             input.title = `Max: ${maxScore}`;
@@ -675,7 +612,9 @@
             td.innerHTML = '';
             td.appendChild(input);
             input.focus();
-            input.select();
+            // On iOS, select() may not work perfectly — use setSelectionRange
+            try { input.select(); } catch(e) {}
+            try { input.setSelectionRange(0, input.value.length); } catch(e) {}
 
             let committed = false;
 
@@ -683,21 +622,13 @@
                 if (committed) return;
                 const newVal = parseInt(input.value, 10);
 
-                if (isNaN(newVal)) {
-                    cancel();
-                    return;
-                }
-                if (newVal > maxScore) {
-                    toast(`Max score is ${maxScore}`, 'warn');
-                    cancel();
-                    return;
-                }
+                if (isNaN(newVal)) { cancel(); return; }
+                if (newVal > maxScore) { toast(`Max score is ${maxScore}`, 'warn'); cancel(); return; }
 
                 committed = true;
                 td.innerHTML = scorePill(newVal, slug);
                 td.dataset.pts = newVal;
                 updateRowTotalsInDOM(row, cat, newVal);
-
                 saveScore(td, row, cat, newVal, slug, oldPts, actId, maxScore);
             }
 
@@ -708,15 +639,10 @@
             }
 
             input.addEventListener('keydown', e => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    commit();
-                }
+                if (e.key === 'Enter') { e.preventDefault(); commit(); }
                 if (e.key === 'Escape') cancel();
             });
-            input.addEventListener('blur', () => {
-                if (!committed) commit();
-            });
+            input.addEventListener('blur', () => { if (!committed) commit(); });
         }
 
         /* ── POST score to server ── */
@@ -777,11 +703,12 @@
                 table.classList.add('bulk-mode');
             } else {
                 btn.classList.remove('active');
-                btn.textContent = '⊞ Bulk Edit';
+                btn.innerHTML = '<i data-lucide="plus-square"></i> Bulk Edit';
                 bulkBar.classList.remove('visible');
                 table.classList.remove('bulk-mode');
                 document.querySelectorAll('.score-edit-cell.bulk-selected')
                     .forEach(td => td.classList.remove('bulk-selected'));
+                if (window.lucide) lucide.createIcons();
             }
             updateBulkBar();
         }
@@ -793,8 +720,7 @@
                 td.classList.remove('bulk-selected');
             } else {
                 _bulkSelected.push({
-                    td,
-                    row,
+                    td, row,
                     cat: td.dataset.cat,
                     pts: parseInt(td.dataset.pts) || 0,
                     slug: td.dataset.slug,
@@ -841,7 +767,8 @@
                     <td style="text-align:left;font-size:11px;">${esc(sel.cat)}</td>
                     <td><span class="score-pill score-${sel.slug}">${sel.pts}</span></td>
                     <td>
-                        <input type="number" max="${sel.maxScore}" value="${sel.pts}"
+                        <input type="number" inputmode="numeric" pattern="[0-9]*"
+                               max="${sel.maxScore}" min="0" value="${sel.pts}"
                                class="bulk-pts-input" data-idx="${i}" data-max="${sel.maxScore}">
                         <div class="err-hint" id="bulk-err-${i}">Exceeds max (${sel.maxScore})</div>
                     </td>
@@ -855,9 +782,7 @@
             const selectAll = $id('bulkSelectAll');
             selectAll.checked = true;
             selectAll.onchange = function() {
-                document.querySelectorAll('.bulk-row-check').forEach(cb => {
-                    cb.checked = this.checked;
-                });
+                document.querySelectorAll('.bulk-row-check').forEach(cb => { cb.checked = this.checked; });
             };
 
             tbodyEl.querySelectorAll('.bulk-pts-input').forEach(input => {
@@ -905,10 +830,7 @@
                     input.style.borderColor = '#f85149';
                     return;
                 }
-                tasks.push({
-                    sel: _bulkSelected[idx],
-                    newPts
-                });
+                tasks.push({ sel: _bulkSelected[idx], newPts });
             });
 
             if (hasError) {
@@ -921,10 +843,7 @@
             let successCount = 0;
             let failCount = 0;
 
-            await Promise.all(tasks.map(async ({
-                sel,
-                newPts
-            }) => {
+            await Promise.all(tasks.map(async ({ sel, newPts }) => {
                 const payload = {
                     event_id: eventId,
                     challenge_activity_id: sel.activityId,
@@ -964,11 +883,8 @@
             _bulkSelected = [];
             updateBulkBar();
 
-            if (failCount === 0) {
-                toast(`✓ ${successCount} score(s) saved`, 'ok');
-            } else {
-                toast(`${successCount} saved, ${failCount} failed`, 'err');
-            }
+            if (failCount === 0) { toast(`✓ ${successCount} score(s) saved`, 'ok'); }
+            else { toast(`${successCount} saved, ${failCount} failed`, 'err'); }
 
             btn.disabled = false;
             btn.textContent = 'Save All Changes';
@@ -977,11 +893,7 @@
         /* ═══════════════════════════════════════════════════════════
            EVENT DROPDOWN INIT
         ═══════════════════════════════════════════════════════════ */
-        fetch('/leaderboard-events', {
-                headers: {
-                    'Accept': 'application/json'
-                }
-            })
+        fetch('/leaderboard-events', { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(events => {
                 const sel = $id('selectEvent');
@@ -1009,44 +921,40 @@
         $id('openBulkModalBtn').addEventListener('click', openBulkEditModal);
 
     })();
-    // ═══════════════════════════════════════════════════════════
-    //  XLSX EXPORT  (client-side via SheetJS)
-    // ═══════════════════════════════════════════════════════════
 </script>
+
 <script>
     (function() {
         'use strict';
-    
+
         const COLORS = {
-            science: { bg: 'FFC0392B', fg: 'FFFFFFFF' },
-            technology: { bg: 'FFE67E22', fg: 'FFFFFFFF' },
+            science:     { bg: 'FFC0392B', fg: 'FFFFFFFF' },
+            technology:  { bg: 'FFE67E22', fg: 'FFFFFFFF' },
             engineering: { bg: 'FF27AE60', fg: 'FFFFFFFF' },
-            art: { bg: 'FF2980B9', fg: 'FFFFFFFF' },
-            math: { bg: 'FF8E44AD', fg: 'FFFFFFFF' },
-            playground: { bg: 'FF7F8C8D', fg: 'FFFFFFFF' },
-            egaming: { bg: 'FFE91E8C', fg: 'FFFFFFFF' },
-            esports: { bg: 'FF00BCD4', fg: 'FF000000' },
-            mission: { bg: 'FFFF6F00', fg: 'FFFFFFFF' },
-            other: { bg: 'FF34495E', fg: 'FFC9D1D9' },
-            bonus: { bg: 'FFB8860B', fg: 'FFFFFFFF' },
-            totalTeam: { bg: 'FF0D2D6E', fg: 'FF79C0FF' },
+            art:         { bg: 'FF2980B9', fg: 'FFFFFFFF' },
+            math:        { bg: 'FF8E44AD', fg: 'FFFFFFFF' },
+            playground:  { bg: 'FF7F8C8D', fg: 'FFFFFFFF' },
+            egaming:     { bg: 'FFE91E8C', fg: 'FFFFFFFF' },
+            esports:     { bg: 'FF00BCD4', fg: 'FF000000' },
+            mission:     { bg: 'FFFF6F00', fg: 'FFFFFFFF' },
+            other:       { bg: 'FF34495E', fg: 'FFC9D1D9' },
+            bonus:       { bg: 'FFB8860B', fg: 'FFFFFFFF' },
+            totalTeam:   { bg: 'FF0D2D6E', fg: 'FF79C0FF' },
             totalPlayer: { bg: 'FF1A3A1A', fg: 'FF56D364' },
-            totalGrand: { bg: 'FF3D1A00', fg: 'FFF5C518' },
-            teamRow: { bg: 'FF1C2638', fg: 'FFE6EDF3' },
-            studentRow: { bg: 'FF151B27', fg: 'FF8B949E' },
-            divider: { bg: 'FF1A3A2A', fg: 'FF56D364' },
-            headerBg: { bg: 'FF1E2535', fg: 'FFC9D1D9' },
-            rankCol: { bg: 'FF0F1318', fg: 'FFFFFFFF' },
-            gold: { bg: 'FFF5C518', fg: 'FF000000' },
-            silver: { bg: 'FFB8C4D0', fg: 'FF000000' },
-            bronze: { bg: 'FFCD7F32', fg: 'FFFFFFFF' },
-            orgCell: { bg: 'FF1C2638', fg: 'FFF5C518' },
+            totalGrand:  { bg: 'FF3D1A00', fg: 'FFF5C518' },
+            teamRow:     { bg: 'FF1C2638', fg: 'FFE6EDF3' },
+            studentRow:  { bg: 'FF151B27', fg: 'FF8B949E' },
+            divider:     { bg: 'FF1A3A2A', fg: 'FF56D364' },
+            headerBg:    { bg: 'FF1E2535', fg: 'FFC9D1D9' },
+            rankCol:     { bg: 'FF0F1318', fg: 'FFFFFFFF' },
+            gold:        { bg: 'FFF5C518', fg: 'FF000000' },
+            silver:      { bg: 'FFB8C4D0', fg: 'FF000000' },
+            bronze:      { bg: 'FFCD7F32', fg: 'FFFFFFFF' },
+            orgCell:     { bg: 'FF1C2638', fg: 'FFF5C518' },
         };
-    
-        function slugColor(slug) {
-            return COLORS[slug] || COLORS.other;
-        }
-    
+
+        function slugColor(slug) { return COLORS[slug] || COLORS.other; }
+
         function rankLabel(r) {
             if (!r && r !== 0) return '';
             if (r === 1) return '#1';
@@ -1054,42 +962,42 @@
             if (r === 3) return '#3';
             return '#' + r;
         }
-    
+
         async function exportLeaderboardExcelJS() {
             const data = window.__lbCurrentData;
             if (!data || !data.rows || !data.rows.length) {
                 alert('No leaderboard data to export. Please select an event first.');
                 return;
             }
-    
+
             const eventName = document.getElementById('selectEvent')?.selectedOptions?.[0]?.text || 'Event';
             const cats = data.categories || [];
             const rows = data.rows;
             const catNames = cats.map(c => c.name);
             const catSlugs = cats.map(c => c.type);
             const hasBonusData = rows.some(r => (r.bonus_assignment ?? 0) > 0);
-    
+
             const META_COLS = ['Rank', 'No', 'Team Name', 'Member', 'Division', 'Your Points'];
-    
+
             const workbook = new ExcelJS.Workbook();
             const sheet = workbook.addWorksheet('Leaderboard', { views: [{ state: 'frozen', ySplit: 3 }] });
-    
+
             const cellStyle = (bg, fg, opts = {}) => ({
                 font: { bold: opts.bold || false, color: { argb: fg }, size: opts.sz || 11, italic: opts.italic || false },
                 alignment: { horizontal: opts.halign || 'center', vertical: 'middle' },
                 fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } },
                 border: {
-                    top: { style: 'thin', color: { argb: 'FF2A3040' } },
+                    top:    { style: 'thin', color: { argb: 'FF2A3040' } },
                     bottom: { style: 'thin', color: { argb: 'FF2A3040' } },
-                    left: { style: 'thin', color: { argb: 'FF2A3040' } },
-                    right: { style: 'thin', color: { argb: 'FF2A3040' } }
+                    left:   { style: 'thin', color: { argb: 'FF2A3040' } },
+                    right:  { style: 'thin', color: { argb: 'FF2A3040' } }
                 }
             });
-    
+
             const titleRow = sheet.addRow([eventName + '  —  Leaderboard']);
             titleRow.font = { bold: true, color: { argb: 'FFF5C518' }, size: 14 };
             sheet.mergeCells(1, 1, 1, META_COLS.length + catNames.length + (hasBonusData ? 1 : 0) + 5);
-    
+
             const bannerRowValues = ['', '', '', '', '', 'YOUR POINTS'];
             catNames.forEach((name, i) => bannerRowValues.push(catSlugs[i].toUpperCase()));
             if (hasBonusData) bannerRowValues.push('BONUS');
@@ -1112,19 +1020,19 @@
                     }
                 }
             });
-    
+
             const colLabelRowValues = ['RANK', 'NO', 'TEAM NAME', 'MEMBER', 'DIVISION', 'YOUR POINTS', ...catNames];
             if (hasBonusData) colLabelRowValues.push('BONUS');
             colLabelRowValues.push('TEAM PTS', 'PLAYER PTS', 'RANK', 'ORGANIZATION');
             const colLabelRow = sheet.addRow(colLabelRowValues);
             colLabelRow.eachCell(cell => cell.style = cellStyle(COLORS.headerBg.bg, COLORS.headerBg.fg, { bold: true, sz: 10 }));
-    
+
             let currentGroup = null;
             const teamSeq = {};
             rows.forEach(row => {
                 const isTeam = row.type === 'team';
                 const groupKey = row.group || 'Ungrouped';
-    
+
                 if (isTeam && groupKey !== currentGroup) {
                     currentGroup = groupKey;
                     const sub = (row.subgroup && row.subgroup !== '-') ? '  \u203a  ' + row.subgroup.toUpperCase() : '';
@@ -1133,7 +1041,7 @@
                     sheet.mergeCells(divRow.number, 1, divRow.number, colLabelRowValues.length);
                     divRow.eachCell(c => c.style = cellStyle(COLORS.divider.bg, COLORS.divider.fg, { bold: true, sz: 11, halign: 'left' }));
                 }
-    
+
                 const dataRowValues = [];
                 const rank = isTeam ? row.rank : null;
                 dataRowValues.push(rank ? rankLabel(rank) : '');
@@ -1151,7 +1059,7 @@
                 dataRowValues.push(isTeam ? row.organization ?? '' : '');
                 sheet.addRow(dataRowValues).height = 18;
             });
-    
+
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = URL.createObjectURL(blob);
@@ -1163,11 +1071,11 @@
             a.click();
             document.body.removeChild(a);
         }
-    
+
         window.__exportLeaderboardExcelJS = exportLeaderboardExcelJS;
         document.addEventListener('DOMContentLoaded', () => {
             const btn = document.getElementById('exportXlsxBtn');
             if (btn) btn.addEventListener('click', exportLeaderboardExcelJS);
         });
     })();
-    </script>
+</script>

@@ -89,7 +89,7 @@
 
     function buildEditRowShell(i) {
         return `
-        <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center py-2">
             <span class="text-dark fw-semibold camp-row-label">Activity Row</span>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-icon btn-view"  title="Save"      onclick="saveEditCampRow(this)"><i data-lucide="save"></i></button>
