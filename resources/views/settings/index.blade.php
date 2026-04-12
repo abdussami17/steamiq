@@ -18,24 +18,28 @@
             </div>
 
 
-
+            @role('admin')
             <button class="tab active" onclick="switchTab('users', event)">Users</button>
             <button class="tab" onclick="switchTab('roles', event)">Roles</button>
             <button class="tab" onclick="switchTab('permissions', event)">Permission</button>
-
             <button class="tab" onclick="switchTab('activities', event)">Activities</button>
             <button class="tab" onclick="switchTab('cards', event)">Cards</button>
             <button class="tab" onclick="switchTab('cards-history', event)">Cards History</button>
+        @endrole
+        
+        <button class="tab {{ !auth()->user()->hasRole('admin') ? 'active' : '' }}"
+            onclick="switchTab('profile', event)">
+            Profile
+        </button>
 
-            <button class="tab" onclick="switchTab('profile', event)">Profile</button>
-
-
+@role('admin')
 
             <div id="users-tab" class="tab-content show active">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
-                        <input type="text" id="userSearch" class="form-input" placeholder="Search User..." style="width:300px;">
-                        </div>
+                        <input type="text" id="userSearch" class="form-input" placeholder="Search User..."
+                            style="width:300px;">
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -57,30 +61,40 @@
                                     <td>{{ $us->username ?? 'N/A' }}</td>
                                     <td>{{ $us->email ?? 'N/A' }}</td>
                                     <td>
-                                      @if($us->roles->count() > 0)
-                                          {{ $us->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ') }}
-                                      @else
-                                          N/A
-                                      @endif
-                                  </td>
+                                        @if ($us->roles->count() > 0)
+                                            {{ $us->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ') }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
                                     <td>
                                         {{ $us->created_at ? \Carbon\Carbon::parse($us->created_at)->format('M d, Y') : 'N/A' }}
                                     </td>
                                     <td>
-                                      @if(!$us->hasRole('admin'))
-                                      @push('modals')
-                            @include('settings.modals.edit-user')
-                              
-                            @endpush
-                                          <!-- Edit Button triggers modal -->
-                                          <button type="button" class="btn btn-icon btn-edit" data-bs-toggle="modal" data-bs-target="#editUserModal{{ $us->id }}">
-                                              <i data-lucide="pencil"></i>
-                                          </button>
+                                        @if (!$us->hasRole('admin'))
+                                            @push('modals')
+                                                @include('settings.modals.edit-user')
+                                            @endpush
+                                            <div class="d-flex gap-2">
+                                                <!-- Edit Button triggers modal -->
+                                                <button type="button" class="btn btn-icon btn-edit" data-bs-toggle="modal"
+                                                    data-bs-target="#editUserModal{{ $us->id }}">
+                                                    <i data-lucide="pencil"></i>
+                                                </button>
+                                                <form action="{{ route('setting.users.destroy', $us->id) }}" method="POST"
+                                                    class="delete-form" style="display:inline-block;">
+                                                    @csrf
+                                                    @method('DELETE')
 
-                                      @else
-                                          <span class="text-muted">Admin</span>
-                                      @endif
-                                  </td>
+                                                    <button type="button" class="btn btn-icon btn-delete delete-btn">
+                                                        <i data-lucide="trash-2"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @else
+                                            <span class="text-muted">Admin</span>
+                                        @endif
+                                    </td>
 
                                 </tr>
                             @empty
@@ -88,26 +102,56 @@
                                     <td colspan="7" class="text-center">No users currently</td>
                                 </tr>
                             @endforelse
-                            
+
                         </tbody>
                     </table>
                     @push('scripts')
                     <script>
-                         document.addEventListener('DOMContentLoaded', () => {
-                     // Simple search by Team Name
-             document.getElementById('userSearch').addEventListener('input', function(){
-                 const filter = this.value.toLowerCase();
-                 const rows = document.querySelectorAll('#userTableBody tr');
-                 rows.forEach(row => {
-                     const cell = row.cells[1]; // Team Name column
-                     if (!cell) { row.style.display = 'none'; return; }
-                     const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
-                     row.style.display = name.includes(filter) ? '' : 'none';
-                 });
-             });
-                 })
-                    </script>
-                @endpush
+                        document.addEventListener('DOMContentLoaded', function () {
+                        
+                            document.querySelectorAll('.delete-btn').forEach(button => {
+                                button.addEventListener('click', function () {
+                        
+                                    let form = this.closest('form');
+                        
+                                    Swal.fire({
+                                        title: 'Are you sure?',
+                                        text: "User will be permanently deleted!",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#d33',
+                                        confirmButtonText: 'Yes, delete it!'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            form.submit(); 
+                                        }
+                                    });
+                        
+                                });
+                            });
+                        
+                        });
+                        </script>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                // Simple search by Team Name
+                                document.getElementById('userSearch').addEventListener('input', function() {
+                                    const filter = this.value.toLowerCase();
+                                    const rows = document.querySelectorAll('#userTableBody tr');
+                                    rows.forEach(row => {
+                                        const cell = row.cells[1]; // Team Name column
+                                        if (!cell) {
+                                            row.style.display = 'none';
+                                            return;
+                                        }
+                                        const name = cell.querySelector('input') ? cell.querySelector('input').value
+                                            .toLowerCase() : cell.textContent.toLowerCase();
+                                        row.style.display = name.includes(filter) ? '' : 'none';
+                                    });
+                                });
+                            })
+                        </script>
+                    @endpush
 
 
                 </div>
@@ -173,12 +217,14 @@
                                     <td>{{ $perms->id }}</td>
                                     <td>{{ $perms->label }}</td>
                                     <td>
-                                      <form action="{{ route('permissions.destroy', $perms->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this permission?');">
-                                          @csrf
-                                          @method('DELETE')
-                                          <button type="submit" class="btn btn-icon btn-delete"><i data-lucide="trash"></i></button>
-                                      </form>
-                                  </td>
+                                        <form action="{{ route('permissions.destroy', $perms->id) }}" method="POST"
+                                            onsubmit="return confirm('Are you sure you want to delete this permission?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-icon btn-delete"><i
+                                                    data-lucide="trash"></i></button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
@@ -194,62 +240,109 @@
             </div>
 
             <div class="tab-content" id="roles-tab">
-              <div class="spreadsheet-container mt-4">
-                  <div class="spreadsheet-toolbar">
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal"><i
-                              data-lucide="plus"></i>Add Role</button>
-                  </div>
+                <div class="spreadsheet-container mt-4">
+                    <div class="spreadsheet-toolbar">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal"><i
+                                data-lucide="plus"></i>Add Role</button>
+                    </div>
 
-                  <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Permissions</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($roles as $role)
+                    <table class="data-table">
+                        <thead>
                             <tr>
-                                <td>{{ $role->id }}</td>
-                                <td>{{ $role->name }}</td>
-                                <td>
-                                    @if($role->name === 'admin')
-                                        <span class="text-success fw-bold">ALL Permissions</span>
-                                    @elseif($role->permissions->count())
-                                        {{ $role->permissions->pluck('label')->join(', ') }}
-                                    @else
-                                        <span class="text-muted">No permissions</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($role->name !== 'admin')
-                                        <button class="btn btn-icon btn-edit" data-bs-toggle="modal" data-bs-target="#editRoleModal{{ $role->id }}"><i data-lucide="pencil"></i></button>
-                                    @else
-                                        <span class="text-muted">Not editable</span>
-                                    @endif
-                                </td>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Permissions</th>
+                                <th>Actions</th>
                             </tr>
-                
-                            <!-- Edit Role Modal -->
-                            @if($role->name !== 'admin')
-                           @push('modals')
-                             @include('settings.modals.edit-roles')
-                           @endpush
-                            @endif
-                        @empty
-                            <tr>
-                                <td colspan="4">No data found</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-              </div>
-              @push('modals')
-                  @include('settings.modals.create-roles')
-              @endpush
-          </div>
+                        </thead>
+                        <tbody>
+                            @forelse ($roles as $role)
+                                <tr>
+                                    <td>{{ $role->id }}</td>
+                                    <td>{{ $role->name }}</td>
+                                    <td>
+                                        @if ($role->name === 'admin')
+                                            <span class="text-success fw-bold">ALL Permissions</span>
+                                        @elseif($role->permissions->count())
+                                            {{ $role->permissions->pluck('label')->join(', ') }}
+                                        @else
+                                            <span class="text-muted">No permissions</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($role->name !== 'admin')
+                                        <div class="d-flex gap-2">
+
+                                            <!-- Edit -->
+                                            <button class="btn btn-icon btn-edit" data-bs-toggle="modal"
+                                                data-bs-target="#editRoleModal{{ $role->id }}">
+                                                <i data-lucide="pencil"></i>
+                                            </button>
+                                    
+                                            <!-- Delete -->
+                                            <form action="{{ route('roles.destroy', $role->id) }}" method="POST" class="delete-role-form">
+                                                @csrf
+                                                @method('DELETE')
+                                    
+                                                <button type="button" class="btn btn-icon btn-delete delete-role-btn">
+                                                    <i data-lucide="trash-2"></i>
+                                                </button>
+                                            </form>
+                                    
+                                        </div>
+                                        @else
+                                            <span class="text-muted">Not editable</span>
+                                        @endif
+                                    </td>
+                                </tr>
+
+                                <!-- Edit Role Modal -->
+                                @if ($role->name !== 'admin')
+                                    @push('modals')
+                                        @include('settings.modals.edit-roles')
+                                    @endpush
+                                @endif
+                            @empty
+                                <tr>
+                                    <td colspan="4">No data found</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                    @push('scripts')
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                        
+                            document.querySelectorAll('.delete-role-btn').forEach(button => {
+                                button.addEventListener('click', function () {
+                        
+                                    let form = this.closest('form');
+                        
+                                    Swal.fire({
+                                        title: 'Are you sure?',
+                                        text: "Role will be permanently deleted!",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#d33',
+                                        confirmButtonText: 'Yes, delete it!'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            form.submit(); 
+                                        }
+                                    });
+                        
+                                });
+                            });
+                        
+                        });
+                        </script>
+                        
+                    @endpush
+                </div>
+                @push('modals')
+                    @include('settings.modals.create-roles')
+                @endpush
+            </div>
             <div id="cards-tab" class="tab-content">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
@@ -312,7 +405,7 @@
             <div id="cards-history-tab" class="tab-content">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
-                    
+
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -325,38 +418,32 @@
                                     <th>Date</th>
                                 </tr>
                             </thead>
-                    
+
                             <tbody>
                                 @forelse($logs as $log)
-                    
                                     @php
                                         $entityName = '-';
-                    
+
                                         if ($log->assignable_type === 'student') {
                                             $entity = \App\Models\Student::find($log->assignable_id);
                                             $entityName = $entity->name ?? '-';
-                                        }
-                    
-                                        elseif ($log->assignable_type === 'team') {
+                                        } elseif ($log->assignable_type === 'team') {
                                             $entity = \App\Models\Team::find($log->assignable_id);
                                             $entityName = $entity->name ?? '-';
-                                        }
-                    
-                                        elseif ($log->assignable_type === 'group') {
+                                        } elseif ($log->assignable_type === 'group') {
                                             $entity = \App\Models\Group::find($log->assignable_id);
                                             $entityName = $entity->group_name ?? '-';
-                                        }
-                    
-                                        elseif ($log->assignable_type === 'organization') {
+                                        } elseif ($log->assignable_type === 'organization') {
                                             $entity = \App\Models\Organization::find($log->assignable_id);
                                             $entityName = $entity->name ?? '-';
                                         }
                                     @endphp
-                    
+
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            <span class="badge bg-{{ $log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info') }}">
+                                            <span
+                                                class="badge bg-{{ $log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info') }}">
                                                 {{ strtoupper($log->card->type) }}
                                             </span>
                                         </td>
@@ -364,7 +451,7 @@
                                         <td>{{ $entityName }}</td>
                                         <td>{{ $log->created_at->format('d M Y H:i') }}</td>
                                     </tr>
-                    
+
                                 @empty
                                     <tr>
                                         <td colspan="5" class="text-center">No logs found</td>
@@ -374,11 +461,12 @@
                         </table>
                     </div>
 
-               
+
 
                 </div>
             </div>
-            <div id="profile-tab" class="tab-content">
+            @endrole
+            <div id="profile-tab" class="tab-content {{ !auth()->user()->hasRole('admin') ? 'show active' : '' }}">
                 <div class="spreadsheet-container mt-4">
 
                     <div class="sems-profile-wrapper">
@@ -410,8 +498,10 @@
                                     </div>
                                     <div class="sems-profile-stat-tile">
                                         <p class="sems-profile-stat-label">Role</p>
-                                        <p class="sems-profile-stat-value">{{ ucfirst(auth()->user()->role ?? 'Admin') }}
+                                        <p class="sems-profile-stat-value">
+                                            {{ auth()->user()->roles->pluck('name')->map(fn($r) => ucfirst($r))->join(', ') }}
                                         </p>
+                                   
                                     </div>
                                 </div>
                             </div>

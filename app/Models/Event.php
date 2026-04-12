@@ -22,7 +22,7 @@ class Event extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name','type','location','start_date','end_date','status'];
+    protected $fillable = ['name','type','location','start_date','end_date','status','winner_team_id'];
     protected $dates = [
         'start_date',
         'end_date'

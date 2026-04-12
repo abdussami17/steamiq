@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BracketMatch;
 use App\Models\Card;
 use App\Models\ChallengeActivity;
+use App\Models\Score;
 use App\Models\Challenges;
 use App\Models\Event;
 use App\Models\Matches;
@@ -192,6 +194,13 @@ public function getOrganizations($eventId)
             \Log::error('Event edit fetch error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to fetch event data.'], 500);
         }
+    }
+
+    public function updateStatus(Request $request, Event $event): JsonResponse
+    {
+        $request->validate(['status' => 'required|in:draft,live,closed']);
+        $event->update(['status' => $request->status]);
+        return response()->json(['success' => true, 'status' => $event->status]);
     }
     
     public function update(Request $request, Event $event): JsonResponse
@@ -383,7 +392,35 @@ public function getWinnerTeams(Event $event): JsonResponse
         return $direct->concat($fromSubs);
     })->unique('id')->values();
 
-    return response()->json(['success' => true, 'teams' => $teams, 'current_winner' => $event->winner_team_id]);
+    // Also find teams that have reached the grand final (last-round bracket match)
+    $finalTeams = collect();
+    $grandFinal = \App\Models\BracketMatch::where('event_id', $event->id)
+        ->whereIn('phase', ['grand_final', 'pod_final'])
+        ->orderByRaw("CASE WHEN phase='grand_final' THEN 0 ELSE 1 END")
+        ->orderBy('round_no', 'desc')
+        ->orderBy('match_no')
+        ->first();
+
+    if ($grandFinal) {
+        $teamIds = array_filter([$grandFinal->team_a_id, $grandFinal->team_b_id]);
+        if (count($teamIds)) {
+            $dbTeams = \App\Models\Team::whereIn('id', $teamIds)->get();
+            $finalTeams = $dbTeams->map(fn($t) => [
+                'id'           => $t->id,
+                'name'         => $t->name,
+                'group_name'   => null,
+                'subgroup_name'=> null,
+                'org_name'     => null,
+            ])->values();
+        }
+    }
+
+    return response()->json([
+        'success'         => true,
+        'teams'           => $teams,
+        'final_teams'     => $finalTeams,
+        'current_winner'  => $event->winner_team_id,
+    ]);
 }
 
 public function setWinner(Request $request, Event $event): JsonResponse
@@ -392,134 +429,634 @@ public function setWinner(Request $request, Event $event): JsonResponse
 
     try {
         $event->update(['winner_team_id' => $request->winner_team_id]);
+
+        // If caller requested closure, also close event and return aggregated stats
+        if ($request->has('close') && $request->close) {
+            $event->update(['status' => 'closed']);
+
+            // collect team models (teams under orgs/groups/subgroups)
+            $teamModels = $event->organizations->flatMap->groups->flatMap(function ($group) {
+                $direct   = $group->teams;
+                $fromSubs = $group->subgroups->flatMap(fn($s) => $s->teams);
+                return $direct->concat($fromSubs);
+            })->unique('id')->values();
+
+            $participants = $teamModels->flatMap->students->count();
+
+            // total points
+            $totalPoints = \App\Models\Score::where('event_id', $event->id)->sum('points');
+
+            // helper to pull top N by activity type
+            $topByType = function ($type) use ($event) {
+                return \App\Models\Score::where('event_id', $event->id)
+                    ->whereHas('challengeActivity', fn($q) => $q->where('activity_type', $type))
+                    ->with(['student','team','challengeActivity'])
+                    ->orderBy('points', 'desc')
+                    ->take(10)
+                    ->get()
+                    ->map(fn($s) => [
+                        'points' => $s->points,
+                        'student' => $s->student?->name,
+                        'team' => $s->team?->name,
+                        'activity' => $s->challengeActivity?->display_name ?? null,
+                    ])->values()->toArray();
+            };
+
+            $stats = [
+                'participants' => $participants,
+                'total_points' => (int) $totalPoints,
+                'top10_brain' => $topByType('brain'),
+                'top10_playground' => $topByType('playground'),
+                'top10_egaming' => $topByType('egaming'),
+                'top10_esports' => $topByType('esports'),
+            ];
+
+            // overall top score
+            $top = \App\Models\Score::where('event_id', $event->id)
+                ->with(['student','team','challengeActivity'])
+                ->orderBy('points','desc')
+                ->first();
+            $stats['top_score'] = $top ? [
+                'points' => $top->points,
+                'student' => $top->student?->name,
+                'team' => $top->team?->name,
+                'activity' => $top->challengeActivity?->display_name ?? null,
+            ] : null;
+
+            $winner = \App\Models\Team::find($request->winner_team_id);
+
+            return response()->json(['success' => true, 'message' => 'Event closed and winner set.', 'stats' => $stats, 'winner' => $winner]);
+        }
+
         return response()->json(['success' => true, 'message' => 'Winner saved successfully.']);
     } catch (\Throwable $e) {
         \Log::error('Set winner error: ' . $e->getMessage());
         return response()->json(['success' => false, 'message' => 'Failed to save winner.'], 500);
     }
 }
+    /**
+     * Return the aggregated results/stats for an event (used to re-open the summary modal).
+     */
+    public function results(Event $event): JsonResponse
+    {
+        try {
+            $event->load([
+                'organizations.groups.teams',
+                'organizations.groups.subgroups.teams',
+            ]);
 
+            // collect team models (teams under orgs/groups/subgroups)
+            $teamModels = $event->organizations->flatMap->groups->flatMap(function ($group) {
+                $direct   = $group->teams;
+                $fromSubs = $group->subgroups->flatMap(fn($s) => $s->teams);
+                return $direct->concat($fromSubs);
+            })->unique('id')->values();
 
+            $participants = $teamModels->flatMap->students->count();
 
+            // total points
+            $totalPoints = \App\Models\Score::where('event_id', $event->id)->sum('points');
 
+            // helper to pull top N by activity type
+            $topByType = function ($type) use ($event) {
+                return \App\Models\Score::where('event_id', $event->id)
+                    ->whereHas('challengeActivity', fn($q) => $q->where('activity_type', $type))
+                    ->with(['student','team','challengeActivity'])
+                    ->orderBy('points', 'desc')
+                    ->take(10)
+                    ->get()
+                    ->map(fn($s) => [
+                        'points' => $s->points,
+                        'student' => $s->student?->name,
+                        'team' => $s->team?->name,
+                        'activity' => $s->challengeActivity?->display_name ?? null,
+                    ])->values()->toArray();
+            };
 
+            $stats = [
+                'participants' => $participants,
+                'total_points' => (int) $totalPoints,
+                'top10_brain' => $topByType('brain'),
+                'top10_playground' => $topByType('playground'),
+                'top10_egaming' => $topByType('egaming'),
+                'top10_esports' => $topByType('esports'),
+            ];
 
-public function bracket(Event $event): JsonResponse
-{
-    $event->load([
-        'tournamentSetting',
-        'activities',
-        'organizations.groups.teams',
-        'organizations.groups.subgroups.teams',
-    ]);
+            // overall top score
+            $top = \App\Models\Score::where('event_id', $event->id)
+                ->with(['student','team','challengeActivity'])
+                ->orderBy('points','desc')
+                ->first();
+            $stats['top_score'] = $top ? [
+                'points' => $top->points,
+                'student' => $top->student?->name,
+                'team' => $top->team?->name,
+                'activity' => $top->challengeActivity?->display_name ?? null,
+            ] : null;
 
-    $ts       = $event->tournamentSetting;
-    $numTeams = (int) ($ts->number_of_teams ?? 0);
-    $type     = $ts->tournament_type ?? 'single_elimination';
+            $winner = $event->winner_team_id ? \App\Models\Team::find($event->winner_team_id) : null;
 
-    // ── Collect real teams from event hierarchy ──────────────────────────
-    $realTeams = $event->organizations->flatMap->groups->flatMap(function ($group) {
-        $direct   = $group->teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name]);
-        $fromSubs = $group->subgroups->flatMap(
-            fn($sub) => $sub->teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name])
-        );
-        return $direct->concat($fromSubs);
-    })->unique('id')->values();
-
-    // ── Build seeded slots: real teams first, fill with TBD up to numTeams ──
-    $slots = $realTeams->map(fn($t, $i) => ['seed' => $i + 1, 'name' => $t['name'], 'id' => $t['id']])
-        ->values()->toArray();
-
-    $fill = max($numTeams, count($slots), 2);
-    while (count($slots) < $fill) {
-        $slots[] = ['seed' => count($slots) + 1, 'name' => 'TBD', 'id' => null];
-    }
-
-    $teamCollection = collect($slots);
-
-    $rounds = match ($type) {
-        'round_robin'        => $this->buildRoundRobin($teamCollection),
-        'double_elimination' => $this->buildDoubleElimination($teamCollection),
-        default              => $this->buildSingleElimination($teamCollection),
-    };
-
-    return response()->json([
-        'success'    => true,
-        'event'      => $event->only('id', 'name', 'type', 'location', 'status', 'start_date', 'end_date'),
-        'setting'    => $ts,
-        'activities' => $event->activities,
-        'type'       => $type,
-        'rounds'     => $rounds,
-        'teams'      => $realTeams->values(),   // flat list for the UI team list
-    ]);
-}
-
-private function buildSingleElimination(\Illuminate\Support\Collection $teams): array
-{
-    $slots = $teams->toArray();
-    $size  = max(2, (int) pow(2, ceil(log(max(count($slots), 2), 2))));
-
-    // pad with BYE slots
-    while (count($slots) < $size) {
-        $slots[] = ['seed' => null, 'name' => 'BYE', 'id' => null];
-    }
-
-    $rounds  = [];
-    $current = array_chunk($slots, 2);
-    $num     = 1;
-
-    while (count($current) >= 1) {
-        $rounds[] = [
-            'name'    => match (true) {
-                count($current) === 1 => 'Final',
-                count($current) === 2 => 'Semi-Finals',
-                count($current) === 4 => 'Quarter-Finals',
-                default               => 'Round ' . $num,
-            },
-            'bracket' => 'Winners',
-            'matches' => $current,
-        ];
-
-        if (count($current) <= 1) break;
-
-        // next round: TBD winners
-        $nextCount = (int) (count($current) / 2);
-        $nextSlots = array_fill(0, $nextCount * 2, ['seed' => null, 'name' => 'TBD', 'id' => null]);
-        $current   = array_chunk($nextSlots, 2);
-        $num++;
-    }
-
-    return $rounds;
-}
-
-private function buildRoundRobin(\Illuminate\Support\Collection $teams): array
-{
-    $slots   = $teams->toArray();
-    $matches = [];
-    for ($i = 0; $i < count($slots); $i++) {
-        for ($j = $i + 1; $j < count($slots); $j++) {
-            $matches[] = [$slots[$i], $slots[$j]];
+            return response()->json(['success' => true, 'stats' => $stats, 'winner' => $winner]);
+        } catch (\Throwable $e) {
+            \Log::error('Fetch results error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to fetch results.'], 500);
         }
     }
 
-    return [['name' => 'Round Robin', 'bracket' => 'Round Robin', 'matches' => $matches]];
-}
 
-private function buildDoubleElimination(\Illuminate\Support\Collection $teams): array
+
+
+
+
+
+    // =========================================================================
+    // BRACKET — DB-backed, interactive, pod-based
+    // =========================================================================
+
+    public function bracket(Event $event): JsonResponse
+    {
+        $event->load([
+            'tournamentSetting',
+            'activities',
+            'organizations.groups.teams',
+            'organizations.groups.subgroups.teams',
+        ]);
+
+        $ts   = $event->tournamentSetting;
+        $type = $ts->tournament_type ?? 'single_elimination';
+
+        // Auto-init if no matches exist in DB yet
+        if (!BracketMatch::where('event_id', $event->id)->exists()) {
+            $this->initBracketMatches($event);
+        }
+
+        // Load all bracket matches with team relations
+        $allMatches = BracketMatch::where('event_id', $event->id)
+            ->with(['teamA', 'teamB', 'winner'])
+            ->orderBy('pod')->orderBy('division')->orderBy('phase')
+            ->orderBy('round_no')->orderBy('match_no')
+            ->get();
+
+        // ── Organise into pods → phases → rounds ─────────────────────────────
+        $podsMap      = [];  // [podName => [phaseKey => [round_no => [matches]]]]
+        $grandFinalRd = [];  // [round_no => [matches]]
+
+        foreach ($allMatches as $m) {
+            $matchData = $this->formatBracketMatch($m);
+
+            if ($m->phase === 'grand_final') {
+                $grandFinalRd[$m->round_no][$m->match_no] = $matchData;
+            } else {
+                $pod      = $m->pod      ?? 'General';
+                $div      = $m->division ?? 'Cross';
+                $phaseKey = $m->phase === 'pod_semifinal'
+                    ? 'pod_final'
+                    : (strtolower($div) . '_qualification');
+
+                if (!isset($podsMap[$pod][$phaseKey])) {
+                    $podsMap[$pod][$phaseKey] = [
+                        'key'      => $phaseKey,
+                        'label'    => $m->phase === 'pod_semifinal'
+                            ? 'Pod Final'
+                            : ucfirst(strtolower($div)) . ' Division',
+                        'division' => $m->phase === 'pod_semifinal' ? null : $div,
+                        'rounds'   => [],
+                    ];
+                }
+                $podsMap[$pod][$phaseKey]['rounds'][$m->round_no][$m->match_no] = $matchData;
+            }
+        }
+
+        // ── Format pods array ─────────────────────────────────────────────────
+        $phaseOrder = [
+            'primary_qualification' => 0,
+            'junior_qualification'  => 1,
+            'pod_final'             => 2,
+        ];
+        $pods = [];
+        foreach ($podsMap as $podName => $phases) {
+            uksort($phases, fn($a, $b) => ($phaseOrder[$a] ?? 99) <=> ($phaseOrder[$b] ?? 99));
+            $formattedPhases = [];
+
+            foreach ($phases as $phaseData) {
+                $rounds = [];
+                ksort($phaseData['rounds']);
+                $maxRound = max(array_keys($phaseData['rounds']));
+
+                foreach ($phaseData['rounds'] as $rNo => $rMatches) {
+                    ksort($rMatches);
+                    $cnt = count($rMatches);
+                    $roundName = match (true) {
+                        $rNo === $maxRound && $cnt === 1 => 'Final',
+                        $rNo === $maxRound - 1 && $cnt <= 2 => 'Semi-Finals',
+                        $rNo === $maxRound - 2 && $cnt <= 4 => 'Quarter-Finals',
+                        default => 'Round ' . $rNo,
+                    };
+                    $rounds[] = [
+                        'round_no'   => $rNo,
+                        'round_name' => $roundName,
+                        'matches'    => array_values($rMatches),
+                    ];
+                }
+                $formattedPhases[] = array_merge($phaseData, ['rounds' => $rounds]);
+            }
+
+            $pods[] = [
+                'name'   => $podName,
+                'label'  => $podName . ' Pod',
+                'phases' => $formattedPhases,
+            ];
+        }
+
+        // ── Grand Final ───────────────────────────────────────────────────────
+        $grandFinal = null;
+        if (!empty($grandFinalRd)) {
+            ksort($grandFinalRd);
+            $gfRounds = [];
+            foreach ($grandFinalRd as $rNo => $rMatches) {
+                ksort($rMatches);
+                $gfRounds[] = [
+                    'round_no'   => $rNo,
+                    'round_name' => 'Grand Final',
+                    'matches'    => array_values($rMatches),
+                ];
+            }
+            $grandFinal = ['rounds' => $gfRounds];
+        }
+
+        // Flat team list for UI
+        $realTeams = $event->organizations->flatMap->groups->flatMap(function ($group) {
+            $direct   = $group->teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'division' => $t->division]);
+            $fromSubs = $group->subgroups->flatMap(
+                fn($sub) => $sub->teams->map(fn($t) => ['id' => $t->id, 'name' => $t->name, 'division' => $t->division])
+            );
+            return $direct->concat($fromSubs);
+        })->unique('id')->values();
+
+        return response()->json([
+            'success'     => true,
+            'event'       => $event->only('id', 'name', 'type', 'location', 'status', 'start_date', 'end_date'),
+            'setting'     => $ts,
+            'activities'  => $event->activities,
+            'type'        => $type,
+            'editable'    => auth()->check(),
+            'pods'        => $pods,
+            'grand_final' => $grandFinal,
+            'teams'       => $realTeams->values(),
+        ]);
+    }
+
+    // ── Force re-initialise bracket ───────────────────────────────────────────
+    public function bracketBoard()
+    {
+        $events = Event::orderBy('start_date', 'desc')->get(['id', 'name', 'type', 'status', 'start_date']);
+        return view('bracket.index', compact('events'));
+    }
+
+    public function bracketInit(Request $request, Event $event): JsonResponse
+    {
+        try {
+            BracketMatch::where('event_id', $event->id)->delete();
+
+            // Also clear any bracket scores previously synced to the scores table
+            $bracketActivity = ChallengeActivity::where('event_id', $event->id)
+                ->where('name', 'Tournament Bracket')->first();
+            if ($bracketActivity) {
+                Score::where('event_id', $event->id)
+                    ->where('challenge_activity_id', $bracketActivity->id)
+                    ->delete();
+            }
+
+            $event->load(['organizations.groups.teams', 'organizations.groups.subgroups.teams']);
+            $this->initBracketMatches($event);
+            return response()->json(['success' => true, 'message' => 'Bracket initialised.']);
+        } catch (\Throwable $e) {
+            \Log::error('bracketInit error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to initialise bracket.'], 500);
+        }
+    }
+
+    // ── Update a single match (set score / winner) ────────────────────────────
+    public function bracketUpdateMatch(Request $request, Event $event, BracketMatch $match): JsonResponse
+    {
+        if ($match->event_id !== $event->id) {
+            return response()->json(['success' => false, 'message' => 'Match not found.'], 404);
+        }
+
+        $request->validate([
+            'winner_team_id' => 'nullable|exists:teams,id',
+            'team_a_score'   => 'nullable|integer',
+            'team_b_score'   => 'nullable|integer',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request, $match) {
+                $winnerId  = $request->winner_team_id ?? null;
+                $prevWinner = $match->winner_team_id;
+
+                $match->update([
+                    'winner_team_id' => $winnerId,
+                    'team_a_score'   => $request->has('team_a_score') ? $request->team_a_score : $match->team_a_score,
+                    'team_b_score'   => $request->has('team_b_score') ? $request->team_b_score : $match->team_b_score,
+                    'status'         => $winnerId ? 'completed' : 'pending',
+                ]);
+
+                if ($match->next_match_id) {
+                    $next = BracketMatch::find($match->next_match_id);
+                    if ($next) {
+                        // If winner changed or was cleared, also clear any deeper advancement
+                        if ($prevWinner && $prevWinner !== $winnerId) {
+                            // Clear old winner from next match if it was there
+                            if ($match->next_is_team_a && $next->team_a_id === $prevWinner) {
+                                $next->update(['team_a_id' => $winnerId, 'winner_team_id' => null, 'status' => 'pending']);
+                            } elseif (!$match->next_is_team_a && $next->team_b_id === $prevWinner) {
+                                $next->update(['team_b_id' => $winnerId, 'winner_team_id' => null, 'status' => 'pending']);
+                            }
+                        } elseif ($winnerId) {
+                            // Advance winner
+                            if ($match->next_is_team_a) {
+                                $next->update(['team_a_id' => $winnerId]);
+                            } else {
+                                $next->update(['team_b_id' => $winnerId]);
+                            }
+                        } elseif (!$winnerId) {
+                            // Undo: clear slot in next match
+                            if ($match->next_is_team_a) {
+                                $next->update(['team_a_id' => null, 'winner_team_id' => null, 'status' => 'pending']);
+                            } else {
+                                $next->update(['team_b_id' => null, 'winner_team_id' => null, 'status' => 'pending']);
+                            }
+                        }
+                    }
+                }
+            });
+
+            $match->refresh()->load(['teamA', 'teamB', 'winner']);
+
+            // Sync cumulative bracket points into the scores table (outside transaction, non-fatal)
+            $this->syncBracketScores($event);
+
+            return response()->json(['success' => true, 'match' => $this->formatBracketMatch($match)]);
+        } catch (\Throwable $e) {
+            \Log::error('bracketUpdateMatch error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to update match.'], 500);
+        }
+    }
+
+    // ── Sync bracket match totals → scores table ──────────────────────────────
+    private function syncBracketScores(Event $event): void
+    {
+        try {
+            // Ensure there is a dedicated challenge activity for bracket points
+            $activity = ChallengeActivity::firstOrCreate(
+                ['event_id' => $event->id, 'name' => 'Tournament Bracket'],
+                [
+                    'activity_or_mission' => 'activity',
+                    'activity_type'       => 'esports',
+                    'esports_type'        => 'Tournament Bracket',
+                    'point_structure'     => 'per_team',
+                    'max_score'           => 99999,
+                ]
+            );
+
+            // Sum each team's points across all bracket matches in this event
+            $matches = BracketMatch::where('event_id', $event->id)->get();
+            $teamPoints = [];
+            foreach ($matches as $m) {
+                if ($m->team_a_id !== null && $m->team_a_score !== null) {
+                    $teamPoints[$m->team_a_id] = ($teamPoints[$m->team_a_id] ?? 0) + (int) $m->team_a_score;
+                }
+                if ($m->team_b_id !== null && $m->team_b_score !== null) {
+                    $teamPoints[$m->team_b_id] = ($teamPoints[$m->team_b_id] ?? 0) + (int) $m->team_b_score;
+                }
+            }
+
+            // Upsert one Score row per team for this activity
+            foreach ($teamPoints as $teamId => $points) {
+                Score::updateOrCreate(
+                    [
+                        'event_id'             => $event->id,
+                        'challenge_activity_id' => $activity->id,
+                        'team_id'              => $teamId,
+                        'student_id'           => null,
+                    ],
+                    ['points' => $points]
+                );
+            }
+        } catch (\Throwable $e) {
+            \Log::error('syncBracketScores error: ' . $e->getMessage());
+        }
+    }
+
+    // ── Internal: format a BracketMatch for the API response ─────────────────
+    private function formatBracketMatch(BracketMatch $m): array
+    {
+        $ta = $m->teamA;
+        $tb = $m->teamB;
+        return [
+            'id'             => $m->id,
+            'round_no'       => $m->round_no,
+            'match_no'       => $m->match_no,
+            'team_a'         => $ta ? ['id' => $ta->id, 'name' => $ta->name, 'division' => $ta->division] : null,
+            'team_b'         => $tb ? ['id' => $tb->id, 'name' => $tb->name, 'division' => $tb->division] : null,
+            'team_a_score'   => $m->team_a_score,
+            'team_b_score'   => $m->team_b_score,
+            'winner_team_id' => $m->winner_team_id,
+            'winner_name'    => $m->winner?->name,
+            'status'         => $m->status,
+            'next_match_id'  => $m->next_match_id,
+            'next_is_team_a' => $m->next_is_team_a,
+            'is_bye_a'       => ($m->team_a_id === null && $tb !== null),
+            'is_bye_b'       => ($m->team_b_id === null && $ta !== null),
+        ];
+    }
+
+    // ── Internal: initialise bracket match records in DB ─────────────────────
+    private function initBracketMatches(Event $event): void
+    {
+        // Collect teams by pod (group->pod) and division
+        $podTeams = [];  // ['Red' => ['Primary' => [...], 'Junior' => []], 'Blue' => [...]]
+
+        foreach ($event->organizations as $org) {
+            foreach ($org->groups as $group) {
+                $podName = $group->pod ?? $group->group_name;
+                if (!isset($podTeams[$podName])) {
+                    $podTeams[$podName] = ['Primary' => [], 'Junior' => [], 'Other' => []];
+                }
+                foreach ($group->teams as $team) {
+                    $div = in_array($team->division, ['Primary', 'Junior']) ? $team->division : 'Other';
+                    $podTeams[$podName][$div][] = ['id' => $team->id, 'name' => $team->name];
+                }
+                foreach ($group->subgroups as $sub) {
+                    foreach ($sub->teams as $team) {
+                        $div = in_array($team->division, ['Primary', 'Junior']) ? $team->division : 'Other';
+                        $podTeams[$podName][$div][] = ['id' => $team->id, 'name' => $team->name];
+                    }
+                }
+            }
+        }
+
+        DB::transaction(function () use ($event, $podTeams) {
+            // Count active pods (pods that have at least one team)
+            $activePods = array_filter($podTeams, fn($t) =>
+                !empty($t['Primary']) || !empty($t['Junior']) || !empty($t['Other'])
+            );
+
+            // Create Grand Final if multiple pods
+            $grandFinal = null;
+            if (count($activePods) >= 2) {
+                $grandFinal = BracketMatch::create([
+                    'event_id' => $event->id,
+                    'pod'      => null,
+                    'division' => null,
+                    'phase'    => 'grand_final',
+                    'round_no' => 1,
+                    'match_no' => 0,
+                    'status'   => 'pending',
+                ]);
+            }
+
+            $podIdx = 0;
+            foreach ($activePods as $podName => $divTeams) {
+                $hasPrimary = !empty($divTeams['Primary']);
+                $hasJunior  = !empty($divTeams['Junior']);
+                $hasOther   = !empty($divTeams['Other']);
+
+                $allTeams = array_merge(
+                    $divTeams['Primary'],
+                    $divTeams['Junior'],
+                    $divTeams['Other']
+                );
+
+                $bothDivs = ($hasPrimary || $hasOther) && $hasJunior;
+
+                // Pod Final (cross-division): primary champ vs junior champ
+                $podFinal = null;
+                if ($bothDivs) {
+                    $podFinal = BracketMatch::create([
+                        'event_id'       => $event->id,
+                        'pod'            => $podName,
+                        'division'       => null,
+                        'phase'          => 'pod_semifinal',
+                        'round_no'       => 1,
+                        'match_no'       => 0,
+                        'status'         => 'pending',
+                        'next_match_id'  => $grandFinal?->id,
+                        'next_is_team_a' => $grandFinal ? ($podIdx % 2 === 0) : null,
+                    ]);
+                }
+
+                // Determine where each division's final feeds into
+                $primNextId  = $podFinal?->id ?? $grandFinal?->id;
+                $primNextIsA = $podFinal ? true : ($podIdx % 2 === 0 ? true : false);
+
+                $junNextId   = $podFinal?->id ?? $grandFinal?->id;
+                $junNextIsA  = $podFinal ? false : ($podIdx % 2 === 0 ? true : false);
+
+                if ($hasPrimary) {
+                    $this->buildElimBracket($event->id, $podName, 'Primary', 'qualification', $divTeams['Primary'], $primNextId, $primNextIsA);
+                }
+                if ($hasJunior) {
+                    $this->buildElimBracket($event->id, $podName, 'Junior', 'qualification', $divTeams['Junior'], $junNextId, $junNextIsA);
+                }
+                if ($hasOther && !$hasPrimary) {
+                    // Treat "Other" as primary-side if no primary teams
+                    $this->buildElimBracket($event->id, $podName, 'Primary', 'qualification', $divTeams['Other'], $primNextId, $primNextIsA);
+                }
+
+                $podIdx++;
+            }
+        });
+    }
+
+    // ── Internal: build a single-elimination bracket for a set of teams ───────
+    private function buildElimBracket(
+        int     $eventId,
+        string  $pod,
+        string  $division,
+        string  $phase,
+        array   $teams,
+        ?int    $nextMatchId,
+        ?bool   $nextIsTeamA
+    ): void {
+        if (empty($teams)) return;
+
+        // Pad to next power of 2 with BYE slots
+        $size = max(2, (int) pow(2, ceil(log(max(count($teams), 2), 2))));
+        while (count($teams) < $size) {
+            $teams[] = ['id' => null, 'name' => 'BYE'];
+        }
+
+        $numRounds = (int) log($size, 2);
+
+        // Insert from final (round $numRounds) → first round (round 1) so IDs are available for chaining
+        $matchIdsByRound = [];
+
+        for ($r = $numRounds; $r >= 1; $r--) {
+            $matchCount          = (int) ($size / pow(2, $r));
+            $matchIdsByRound[$r] = [];
+
+            for ($m = 0; $m < $matchCount; $m++) {
+                if ($r === $numRounds) {
+                    $nMatchId = $nextMatchId;
+                    $nIsTeamA = $nextIsTeamA;
+                } else {
+                    $nMatchId = $matchIdsByRound[$r + 1][intdiv($m, 2)] ?? null;
+                    $nIsTeamA = ($m % 2 === 0);
+                }
+
+                $teamAId = null;
+                $teamBId = null;
+                if ($r === 1) {
+                    $teamAId = $teams[$m * 2]['id']     ?? null;
+                    $teamBId = $teams[$m * 2 + 1]['id'] ?? null;
+                }
+
+                $match = BracketMatch::create([
+                    'event_id'       => $eventId,
+                    'pod'            => $pod,
+                    'division'       => $division,
+                    'phase'          => $phase,
+                    'round_no'       => $r,
+                    'match_no'       => $m,
+                    'team_a_id'      => $teamAId,
+                    'team_b_id'      => $teamBId,
+                    'status'         => 'pending',
+                    'next_match_id'  => $nMatchId,
+                    'next_is_team_a' => $nIsTeamA,
+                ]);
+
+                $matchIdsByRound[$r][$m] = $match->id;
+
+                // Auto-advance BYE: if exactly one side is null, auto-win
+                if ($r === 1 && ($teamAId === null) !== ($teamBId === null)) {
+                    $autoWinner = $teamAId ?? $teamBId;
+                    $match->update(['winner_team_id' => $autoWinner, 'status' => 'completed']);
+                    if ($nMatchId) {
+                        $next = BracketMatch::find($nMatchId);
+                        if ($next) {
+                            $nIsTeamA
+                                ? $next->update(['team_a_id' => $autoWinner])
+                                : $next->update(['team_b_id' => $autoWinner]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    public function bulkDelete(Request $request)
 {
-    $winners = $this->buildSingleElimination($teams);
+    $ids = $request->ids;
 
-    $losers = [['name' => 'Losers Round 1', 'bracket' => 'Losers', 'matches' => $winners[0]['matches'] ?? []]];
-    $grand  = [['name' => 'Grand Final',    'bracket' => 'Grand Final', 'matches' => [[
-        ['seed' => null, 'name' => 'TBD', 'id' => null],
-        ['seed' => null, 'name' => 'TBD', 'id' => null],
-    ]]]];
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
 
-    return array_merge(
-        array_map(fn($r) => array_merge($r, ['bracket' => 'Winners']), $winners),
-        $losers,
-        $grand
-    );
+    Event::whereIn('id', $ids)->delete();
+
+    return response()->json(['success' => true]);
 }
- 
+
 }

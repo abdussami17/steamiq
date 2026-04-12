@@ -7,6 +7,7 @@ use App\Models\Score;
 use App\Models\Student;
 use App\Models\Team;
 use App\Models\ChallengeActivity;
+use App\Models\BonusAssignment;
 use Illuminate\Http\Request;
 
 class LeaderboardController extends Controller
@@ -49,7 +50,7 @@ return view('leaderboard.index');
              * Order: team-level scores first, then student-level.
              * Deduplication preserves first-seen order.
              */
-            $activityMap = []; // [ displayName => slug ]  (insertion-ordered)
+            $activityMap = []; // [ displayName => ['slug' => ..., 'id' => ...] ]  (insertion-ordered)
 
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
@@ -65,7 +66,7 @@ return view('leaderboard.index');
                                 $dn   = $score->challengeActivity->display_name;
                                 $slug = $this->activitySlug($score->challengeActivity);
                                 if (!empty($dn) && !array_key_exists($dn, $activityMap)) {
-                                    $activityMap[$dn] = $slug;
+                                    $activityMap[$dn] = ['slug' => $slug, 'id' => $score->challengeActivity->id];
                                 }
                             }
                         }
@@ -76,7 +77,7 @@ return view('leaderboard.index');
                                     $dn   = $score->challengeActivity->display_name;
                                     $slug = $this->activitySlug($score->challengeActivity);
                                     if (!empty($dn) && !array_key_exists($dn, $activityMap)) {
-                                        $activityMap[$dn] = $slug;
+                                        $activityMap[$dn] = ['slug' => $slug, 'id' => $score->challengeActivity->id];
                                     }
                                 }
                             }
@@ -86,12 +87,87 @@ return view('leaderboard.index');
             }
 
             // category display names in order (used as score keys in buildBlock)
-            $categoryNames = array_keys($activityMap);
+            $categoryNames = array_keys($activityMap); // keys are still display names
 
             /*
              * ── BUILD BLOCKS ──────────────────────────────────────────────────
              */
             $blocks = [];
+
+            // Preload bonus assignments for this event and fold group/org bonuses into per-team totals
+            $allTeamIds = [];
+            $allStudentIds = [];
+            $groupTeamsMap = [];
+            $orgTeamsMap = [];
+            foreach ($event->organizations as $org) {
+                $orgTeamsMap[$org->id] = [];
+                foreach ($org->groups as $group) {
+                    $groupTeamsMap[$group->id] = [];
+                    $teams = $group->teams->merge($group->subgroups->flatMap(fn($sg) => $sg->teams));
+                    foreach ($teams as $team) {
+                        $allTeamIds[] = $team->id;
+                        $orgTeamsMap[$org->id][] = $team->id;
+                        $groupTeamsMap[$group->id][] = $team->id;
+                        foreach ($team->students as $student) {
+                            $allStudentIds[] = $student->id;
+                        }
+                    }
+                }
+            }
+
+            $teamBonusMapRaw = [];
+            $studentBonusMap = [];
+            if (!empty($allTeamIds)) {
+                $teamBonusMapRaw = BonusAssignment::where('assignable_type', 'team')
+                    ->whereIn('assignable_id', $allTeamIds)
+                    ->selectRaw('assignable_id, SUM(points) as total')
+                    ->groupBy('assignable_id')
+                    ->pluck('total', 'assignable_id')
+                    ->toArray();
+            }
+            if (!empty($allStudentIds)) {
+                $studentBonusMap = BonusAssignment::where('assignable_type', 'student')
+                    ->whereIn('assignable_id', $allStudentIds)
+                    ->selectRaw('assignable_id, SUM(points) as total')
+                    ->groupBy('assignable_id')
+                    ->pluck('total', 'assignable_id')
+                    ->toArray();
+            }
+
+            $groupBonusMap = [];
+            $orgBonusMap = [];
+            if (!empty($groupTeamsMap)) {
+                $groupIds = array_keys($groupTeamsMap);
+                $groupBonusMap = BonusAssignment::where('assignable_type', 'group')
+                    ->whereIn('assignable_id', $groupIds)
+                    ->selectRaw('assignable_id, SUM(points) as total')
+                    ->groupBy('assignable_id')
+                    ->pluck('total', 'assignable_id')
+                    ->toArray();
+            }
+            if (!empty($orgTeamsMap)) {
+                $orgIds = array_keys($orgTeamsMap);
+                $orgBonusMap = BonusAssignment::where('assignable_type', 'organization')
+                    ->whereIn('assignable_id', $orgIds)
+                    ->selectRaw('assignable_id, SUM(points) as total')
+                    ->groupBy('assignable_id')
+                    ->pluck('total', 'assignable_id')
+                    ->toArray();
+            }
+
+            // fold into per-team map
+            $teamBonusMap = [];
+            foreach ($event->organizations as $org) {
+                foreach ($org->groups as $group) {
+                    $teams = $group->teams->merge($group->subgroups->flatMap(fn($sg) => $sg->teams));
+                    foreach ($teams as $team) {
+                        $tid = $team->id;
+                        $teamBonusMap[$tid] = (int) ($teamBonusMapRaw[$tid] ?? 0)
+                            + (int) ($groupBonusMap[$group->id] ?? 0)
+                            + (int) ($orgBonusMap[$org->id] ?? 0);
+                    }
+                }
+            }
 
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
@@ -99,14 +175,14 @@ return view('leaderboard.index');
                     // Direct-group teams (no sub_group_id)
                     foreach ($group->teams as $team) {
                         if ($team->sub_group_id) continue;
-                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categoryNames);
+                        $blocks[] = $this->buildBlock($event, $org, $group, null, $team, $categoryNames, $teamBonusMap, $studentBonusMap);
                     }
 
                     // Subgroup teams
                     foreach ($group->subgroups as $subgroup) {
                         foreach ($subgroup->teams as $team) {
-                            $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categoryNames);
-                        }
+                                $blocks[] = $this->buildBlock($event, $org, $group, $subgroup, $team, $categoryNames, $teamBonusMap, $studentBonusMap);
+                            }
                     }
                 }
             }
@@ -162,7 +238,7 @@ return view('leaderboard.index');
              * the correct colour without guessing from the display-name string.
              */
             $categories = array_values(array_map(
-                fn($name, $slug) => ['name' => $name, 'type' => $slug],
+                fn($name, $data) => ['name' => $name, 'type' => $data['slug'], 'id' => $data['id']],
                 array_keys($activityMap),
                 array_values($activityMap)
             ));
@@ -233,7 +309,7 @@ return view('leaderboard.index');
     // Build one block: team row + student rows
     // -------------------------------------------------------------------------
 
-    private function buildBlock($event, $org, $group, $subgroup, $team, array $categoryNames): array
+    private function buildBlock($event, $org, $group, $subgroup, $team, array $categoryNames, array $teamBonusMap = [], array $studentBonusMap = []): array
     {
         // Team-level score lookup: display_name → summed points (student_id IS NULL)
         $teamLookup = [];
@@ -252,6 +328,9 @@ return view('leaderboard.index');
             $teamScores[$cat] = $pts;
             $teamPoints      += $pts;
         }
+
+        // Include any bonus assignments for team and students
+        $teamBonusAssignment = (int) ($teamBonusMap[$team->id] ?? 0);
 
         // Student rows
         $studentRows  = [];
@@ -288,12 +367,13 @@ return view('leaderboard.index');
                 'division'     => $team->division ?? '-',
                 'student_name' => $student->name,
                 'scores'       => $studentScores,
-                'total_points' => $studentTotal,
+                'total_points' => $studentTotal + (int) ($studentBonusMap[$student->id] ?? 0),
+                'bonus_assignment' => (int) ($studentBonusMap[$student->id] ?? 0),
                 'rank'         => null,
             ];
         }
 
-        $grandTotal = $teamPoints + $playerPoints;
+        $grandTotal = $teamPoints + $playerPoints + $teamBonusAssignment;
 
         $teamRow = [
             'type'          => 'team',
@@ -310,6 +390,7 @@ return view('leaderboard.index');
             'player_points' => $playerPoints,
             'total_points'  => $grandTotal,
             'grand_total'   => $grandTotal,
+            'bonus_assignment' => $teamBonusAssignment,
             'rank'          => null, // filled after rank computation
         ];
 

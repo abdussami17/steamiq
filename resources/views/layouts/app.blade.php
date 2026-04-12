@@ -62,10 +62,17 @@
         rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap"
         rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('assets/styles/style.css?v=' . time()) }}">
-<link rel="icon" href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-32x32.png" sizes="32x32">
-<link rel="icon" href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-192x192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-180x180.png">
+    <link rel="stylesheet" href="{{ asset('assets/styles/style.css?v=' . time()) }}">
+    <link rel="stylesheet" href="{{ asset('assets/styles/responsive.css?v=' . time()) }}">
+
+    <link rel="icon"
+        href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-32x32.png"
+        sizes="32x32">
+    <link rel="icon"
+        href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-192x192.png"
+        sizes="192x192">
+    <link rel="apple-touch-icon"
+        href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-180x180.png">
     <style>
         /* Improve font and icon visibility */
         .toast {
@@ -80,7 +87,8 @@
         .toast-error {
             background-color: #BD362F !important;
         }
-        .swal2-confirm-custom{
+
+        .swal2-confirm-custom {
             border: 2px solid #ccc;
         }
     </style>
@@ -93,127 +101,186 @@
         <div class="loader-spinner"></div>
     </div>
     <div class="bg-pattern"></div>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="{{ asset('assets/logo.png') }}" alt="Logo">
-                    <div class="logo-text">
-                        <p>EVENT & TOURNEY<br>MANAGEMENT</p>
-                    </div>
-                </div>
-    
-                <nav class="nav-menu">
-                    {{-- Dashboard always visible --}}
-                    <a href="{{ route('dashboard.index') }}"
-                       class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
-                        Dashboard
-                    </a>
-                    @guest
-                    <a href="{{ route('scoreboard.index') }}"
-                    class="nav-link-custom {{ request()->routeIs('scoreboard.index') ? 'active' : '' }}">
-                     Scoreboard
+     <header>
+         <div class="container">
+             <div class="header-content">
+     
+                 {{-- Logo --}}
+                 <a href="{{ route('dashboard.index') }}" class="logo">
+                     <img src="{{ asset('assets/logo.png') }}" alt="Logo">
+                     <div class="logo-text">
+                         <p>EVENT &amp; TOURNEY<br>MANAGEMENT</p>
+                     </div>
                  </a>
-                    @endguest
-    
-                    @auth
-                        @php $user = auth()->user(); @endphp
-    
-                        {{-- Admin: full access --}}
-                        @role('admin')
-                            <a href="{{ route('events.index') }}"
-                               class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
-                                Events
-                            </a>
-    
-                            <!-- Boards Dropdown -->
-                            <div class="nav-item dropdown">
-                                <button class="nav-link-custom dropdown-toggle">The Boards</button>
-                                <div class="dropdown-menu">
-                                    <a href="{{ route('leaderboard.index') }}">Leaderboards</a>
-                                    <a href="{{ route('scoreboard.index') }}">Scoreboards</a>
-                                    <a href="#">Tournament Bracket</a>
-                                </div>
-                            </div>
-    
-                            <a href="{{ route('scoring.index') }}"
-                               class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
-                                Scoring
-                            </a>
-    
-                            <!-- Q-Action Dropdown -->
-                            <div class="nav-item dropdown">
-                                <button class="nav-link-custom dropdown-toggle">Q-Action</button>
-                                <div class="dropdown-menu">
-                                    <a href="#" data-bs-target="#createEventModal" data-bs-toggle="modal">Create Event</a>
-                                    <a href="#" data-bs-target="#addStudentModal" data-bs-toggle="modal">Add Player</a>
-                                    <a href="#" data-bs-target="#addCardModal" data-bs-toggle="modal">Create Cards</a>
-                                    <a href="#" data-bs-target="#assignCardModal" data-bs-toggle="modal">Assign Card</a>
-                                </div>
-                            </div>
-    
-                            <a href="{{ route('settings.index') }}"
-                               class="nav-link-custom {{ request()->routeIs('settings.index') ? 'active' : '' }}">
-                                Settings
-                            </a>
-                        @else
-                            {{-- Role-assigned users (non-admin) --}}
-                            @if($user->roles->count() > 0)
-                                <a href="{{ route('events.index') }}"
-                                   class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
-                                    Events
-                                </a>
-    
-                                <!-- Boards Dropdown -->
-                                <div class="nav-item dropdown">
-                                    <button class="nav-link-custom dropdown-toggle">The Boards</button>
-                                    <div class="dropdown-menu">
-                                        <a href="{{ route('leaderboard.index') }}">Leaderboards</a>
-                                        <a href="{{ route('scoreboard.index') }}">Scoreboards</a>
-                                        <a href="#">Tournament Bracket</a>
-                                    </div>
-                                </div>
-    
-                                <a href="{{ route('scoring.index') }}"
-                                   class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
-                                    Scoring
-                                </a>
-                            @endif
-                        @endrole
-    
-                        {{-- Logout for all logged-in users --}}
-                        <a href="{{ route('logout') }}" class="nav-link-custom filled"
-                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            Logout
-                        </a>
-    
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
-    
-                    @else
-                        {{-- Login for guests --}}
-                        <a href="{{ route('login') }}" class="nav-link-custom">Login</a>
-                    @endauth
-                </nav>
-            </div>
-        </div>
-    </header>
+     
+                 {{-- Hamburger (mobile only) --}}
+                 <button class="hamburger" id="hamburger"
+                         aria-label="Open menu"
+                         aria-expanded="false"
+                         aria-controls="nav-menu">
+                     <span></span>
+                     <span></span>
+                     <span></span>
+                 </button>
+     
+                 {{-- Navigation --}}
+                 <nav class="nav-menu" id="nav-menu" role="navigation">
+     
+                     {{-- Dashboard — always visible --}}
+                     <a href="{{ route('dashboard.index') }}"
+                        class="nav-link-custom {{ request()->routeIs('dashboard.index') ? 'active' : '' }}">
+                         Dashboard
+                     </a>
+     
+                     @guest
+                         <a href="{{ route('scoreboard.index') }}"
+                            class="nav-link-custom {{ request()->routeIs('scoreboard.index') ? 'active' : '' }}">
+                             Scoreboard
+                         </a>
+                         <a href="{{ route('bracket.index') }}"
+                            class="nav-link-custom {{ request()->routeIs('bracket.index') ? 'active' : '' }}">
+                             Tournament Bracket
+                         </a>
+                     @endguest
+     
+                     @auth
+                         @php $user = auth()->user(); @endphp
+     
+                         @role('admin')
+                             {{-- Admin: full access --}}
+                             <a href="{{ route('events.index') }}"
+                                class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
+                                 Events
+                             </a>
+     
+                             <div class="nav-item" id="dd-boards">
+                                 <button class="nav-link-custom dropdown-toggle"
+                                         aria-haspopup="true"
+                                         aria-expanded="false"
+                                         onclick="toggleDropdown('dd-boards')">
+                                     The Boards
+                                     <span class="nav-chevron"><i data-lucide="chevron-down"></i></span>
+                                 </button>
+                                 <div class="dropdown-menu" role="menu">
+                                     <a href="{{ route('leaderboard.index') }}" role="menuitem">Leaderboards</a>
+                                     <a href="{{ route('scoreboard.index') }}" role="menuitem">Scoreboards</a>
+                                     <a href="{{ route('bracket.index') }}" role="menuitem">Tournament Bracket</a>
+                                 </div>
+                             </div>
+     
+                             <a href="{{ route('scoring.index') }}"
+                                class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
+                                 Scoring
+                             </a>
+     
+                         @else
+                             {{-- Role-assigned non-admin users --}}
+                             @if ($user->roles->count() > 0)
+                                 <a href="{{ route('events.index') }}"
+                                    class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
+                                     Events
+                                 </a>
+     
+                                 <div class="nav-item" id="dd-boards">
+                                     <button class="nav-link-custom dropdown-toggle"
+                                             aria-haspopup="true"
+                                             aria-expanded="false"
+                                             onclick="toggleDropdown('dd-boards')">
+                                         The Boards
+                                         <span class="nav-chevron"><i data-lucide="chevron-down"></i></span>
+                                     </button>
+                                     <div class="dropdown-menu" role="menu">
+                                         <a href="{{ route('leaderboard.index') }}" role="menuitem">Leaderboards</a>
+                                         <a href="{{ route('scoreboard.index') }}" role="menuitem">Scoreboards</a>
+                                         <a href="{{ route('bracket.index') }}" role="menuitem">Tournament Bracket</a>
+                                     </div>
+                                 </div>
+     
+                                 <a href="{{ route('scoring.index') }}"
+                                    class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
+                                     Scoring
+                                 </a>
+                             @endif
+                         @endrole
+     
+                         {{-- Q-Action — all authenticated users --}}
+                         <div class="nav-item" id="dd-qa">
+                             <button class="nav-link-custom dropdown-toggle"
+                                     aria-haspopup="true"
+                                     aria-expanded="false"
+                                     onclick="toggleDropdown('dd-qa')">
+                                 Q-Action
+                                 <span class="nav-chevron"><i data-lucide="chevron-down"></i></span>
+                             </button>
+                             <div class="dropdown-menu" role="menu">
+                                 @can('create_event')
+                                     <a href="#" role="menuitem"
+                                        data-bs-target="#createEventModal"
+                                        data-bs-toggle="modal">
+                                         Create Event
+                                     </a>
+                                 @endcan
+                                 @can('create_player')
+                                     <a href="#" role="menuitem"
+                                        data-bs-target="#addStudentModal"
+                                        data-bs-toggle="modal">
+                                         Add Player
+                                     </a>
+                                 @endcan
+                                 @role('admin')
+                                     <div class="dropdown-divider"></div>
+                                     <a href="#" role="menuitem"
+                                        data-bs-target="#addCardModal"
+                                        data-bs-toggle="modal">
+                                         Create Cards
+                                     </a>
+                                 @endrole
+                                 <a href="#" role="menuitem"
+                                    data-bs-target="#assignCardModal"
+                                    data-bs-toggle="modal">
+                                     Assign Card
+                                 </a>
+                             </div>
+                         </div>
+     
+                         <a href="{{ route('settings.index') }}"
+                            class="nav-link-custom {{ request()->routeIs('settings.index') ? 'active' : '' }}">
+                             Settings
+                         </a>
+     
+                         {{-- Logout --}}
+                         <a href="{{ route('logout') }}" class="nav-link-custom filled"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                             Logout
+                         </a>
+                         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                             @csrf
+                         </form>
+     
+                     @else
+                         {{-- Guest login --}}
+                         <a href="{{ route('login') }}" class="nav-link-custom filled">Login</a>
+                     @endauth
+     
+                 </nav>
+             </div>
+         </div>
+     </header>
 
     <main>
         @yield('content')
 
         @stack('modals')
         @include('card.create')
-        @include('card.assign-card-modal',[
-            'cards' => \App\Models\Card::all()
+        @include('card.assign-card-modal', [
+            'cards' => \App\Models\Card::all(),
         ])
         @include('card.assign-script')
         @include('events.modals.create-event', [
-            'steamCategories' => \App\Models\SteamCategory::all()
+            'steamCategories' => \App\Models\SteamCategory::all(),
         ])
-        @include('students.modals.create-students',[
-              'organizations' => \App\Models\Organization::all()
+        @include('students.modals.create-students', [
+            'organizations' => \App\Models\Organization::all(),
         ])
 
     </main>
@@ -235,23 +302,23 @@
             "showMethod": "fadeIn",
             "hideMethod": "fadeOut"
         };
-         // SweetAlert popup for backend errors
-    @if(session('popup_error'))
-    Swal.fire({
-            icon: 'error',
-            title: 'Warning!',
-            text: '{{ session("popup_error") }}',
-            confirmButtonText: 'OK',
+        // SweetAlert popup for backend errors
+        @if (session('popup_error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Warning!',
+                text: '{{ session('popup_error') }}',
+                confirmButtonText: 'OK',
 
-            // Custom styling
-            background: '#000000', // popup background black
-            color: '#ffffff',      // text color white
-            confirmButtonColor: '#000000', // button background black
-            customClass: {
-                confirmButton: 'swal2-confirm-custom' // custom class for border
-            }
-        });
-    @endif
+                // Custom styling
+                background: '#000000', // popup background black
+                color: '#ffffff', // text color white
+                confirmButtonColor: '#000000', // button background black
+                customClass: {
+                    confirmButton: 'swal2-confirm-custom' // custom class for border
+                }
+            });
+        @endif
 
         @if (session('success'))
             toastr.success(@json(session('success')));
@@ -317,9 +384,89 @@
             }, 400);
         });
     </script>
+    <script>
+        /* ================================================================
+   HEADER JS — Dropdowns + Hamburger + Lucide icons
+   Place this before </body>, after Lucide CDN script tag
+   ================================================================ */
+
+document.addEventListener('DOMContentLoaded', function () {
+
+/* ── Lucide icons ───────────────────────────── */
+if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+}
+
+/* ── Dropdown toggle ────────────────────────── */
+window.toggleDropdown = function (id) {
+    const item = document.getElementById(id);
+    if (!item) return;
+    const isOpen = item.classList.contains('open');
+    closeAllDropdowns();
+    if (!isOpen) {
+        item.classList.add('open');
+        const btn = item.querySelector('.dropdown-toggle');
+        if (btn) btn.setAttribute('aria-expanded', 'true');
+    }
+};
+
+function closeAllDropdowns() {
+    document.querySelectorAll('.nav-item.open').forEach(function (el) {
+        el.classList.remove('open');
+        const btn = el.querySelector('.dropdown-toggle');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    });
+}
+
+/* ── Close on outside click ─────────────────── */
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.nav-item')) {
+        closeAllDropdowns();
+    }
+});
+
+/* ── Hamburger ──────────────────────────────── */
+var hamburger = document.getElementById('hamburger');
+var navMenu   = document.getElementById('nav-menu');
+
+if (hamburger && navMenu) {
+    hamburger.addEventListener('click', function () {
+        var open = navMenu.classList.toggle('open');
+        hamburger.classList.toggle('open', open);
+        hamburger.setAttribute('aria-expanded', String(open));
+        if (!open) closeAllDropdowns();
+    });
+}
+
+/* ── Close mobile menu on plain link click ───── */
+document.querySelectorAll('#nav-menu .nav-link-custom:not(.dropdown-toggle)').forEach(function (link) {
+    link.addEventListener('click', function () {
+        if (navMenu) navMenu.classList.remove('open');
+        if (hamburger) {
+            hamburger.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+        }
+        closeAllDropdowns();
+    });
+});
+
+/* ── Escape key closes everything ───────────── */
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeAllDropdowns();
+        if (navMenu)   navMenu.classList.remove('open');
+        if (hamburger) {
+            hamburger.classList.remove('open');
+            hamburger.setAttribute('aria-expanded', 'false');
+        }
+    }
+});
+
+});
+    </script>
     @stack('scripts')
 
-    
+
 </body>
 
 </html>

@@ -1,0 +1,63 @@
+/* MOBILE DEVICES (phones) */
+@media (max-width: 767px) {
+    .section .form-select{
+        width: 100% !important;
+    }
+    .section-title{
+        flex-wrap:wrap;
+    }
+    .section .section-header{
+        flex-wrap: wrap;
+    }
+    .dashboard-activity-filter-wrapper{
+        flex-wrap: wrap;
+    }
+    .notification-item {
+        flex-wrap: wrap;
+    }
+    .notification-text {
+        font-size: 0.7rem;
+    }
+    .notification-time {
+        font-size: 0.7rem;
+    }
+    .notification-title {
+        font-size: 0.9rem;
+    }
+    .lb-legend-dot {
+        font-size: 0.7rem !important;
+    }
+    .lb-legend-dot span {
+        height: 10px !important;
+        width: 10px !important;
+    }
+    #selectEvent{
+        font-size: 0.7rem !important;
+    }
+    #lb-table thead tr.row-cols th {
+        font-size: 0.8rem !important;
+    }
+    #lb-table thead tr.row-cols th {
+        font-size: 0.9rem !important;
+    }
+    #lb-table tbody td {
+        font-size: 0.8rem !important;
+    }
+    #lb-table tbody tr.tr-student td {
+        font-size: 0.8rem !important;
+    }
+}
+
+
+/* TABLET DEVICES (iPads, tablets) */
+@media (min-width: 768px) and (max-width: 1024px) {
+.section .form-select{
+    width: 100% !important;
+}
+.section-title{
+    flex-wrap:wrap;
+}
+.section .section-header{
+    flex-wrap: wrap;
+}
+}

@@ -88,5 +88,17 @@ public function update(Request $request, $id)
 
     return back()->with('success', 'Organization updated successfully!');
 }
+public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
+
+    Organization::whereIn('id', $ids)->delete();
+
+    return response()->json(['success' => true]);
+}   
 }
 

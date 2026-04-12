@@ -26,14 +26,35 @@
                                     {{ ucfirst($allevent->event_type) }}
                                 </p>
                             </div>
-                            <div class="d-flex ">
-                                <span class="badge me-2 badge-{{ $allevent->status }}">
-                                    {{ ucfirst($allevent->status) }}
-                                </span>
+                            <div class="d-flex align-items-center gap-1">
+                                {{-- Status badge + inline edit --}}
+                                <div class="ec-status-wrap" style="position:relative;">
+                                    <span id="ec-badge-{{ $allevent->id }}"
+                                        class="badge me-1 badge-{{ $allevent->status }}">
+                                        {{ ucfirst($allevent->status) }}
+                                    </span>
+                                    @can('edit_event')
+                                        <button type="button" class="btn btn-link p-0 m-0 align-baseline ec-status-btn"
+                                            title="Change status" onclick="toggleStatusDrop({{ $allevent->id }}, this)">
+                                            <i data-lucide="pencil" style="height: 13px;width:20px;color:#000"></i>
+                                        </button>
+                                        <div id="ec-drop-{{ $allevent->id }}" class="ec-status-drop d-none">
+                                            @foreach (['draft', 'live', 'closed'] as $s)
+                                                <button type="button"
+                                                    class="ec-status-opt {{ $allevent->status === $s ? 'active' : '' }}"
+                                                    data-event="{{ $allevent->id }}" data-status="{{ $s }}"
+                                                    onclick="setEventStatus({{ $allevent->id }}, '{{ $s }}', this)">
+                                                    <span class="ec-status-dot ec-dot-{{ $s }}"></span>
+                                                    {{ ucfirst($s) }}
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endcan
+                                </div>
 
                                 @can('delete_event')
                                     <form action="{{ route('events.destroy', $allevent->id) }}" method="POST"
-                                        style="display:inline; height:0"
+                                        style="display:inline-flex; align-items:center; margin:0; padding:0;"
                                         onsubmit="return confirm('Are you sure you want to delete this event?');">
                                         @csrf
                                         @method('DELETE')
@@ -89,11 +110,19 @@
                             </div>
 
                         </div>
-
+                        <div class="events_results_preview" id="event-results-{{ $allevent->id }}"></div>
                         <div class="events_card-actions">
-                            <button class="btn btn-primary" style="flex:1;" onclick="openEventModal({{ $allevent->id }})">
+                            <button class="btn btn-primary btn-main" onclick="openEventModal({{ $allevent->id }})">
                                 View Event
                             </button>
+
+                            <div class="action-icons">
+                                <button class="btn btn-icon btn-view" title="Tournament Bracket"
+                                    onclick="openBracketModal({{ $allevent->id }})">
+                                    <i data-lucide="trophy"></i>
+                                </button>
+                                
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -161,6 +190,11 @@
                                 <i data-lucide="plus"></i> Add Event
                             </button>
                         @endcan
+                        @can('delete_event')
+                        <button class="btn btn-danger" id="deleteSelectedEventsBtn" onclick="deleteSelectedEvents()">
+                            Delete Selected (0)
+                        </button>
+                    @endcan
 
                     </div>
 
@@ -168,6 +202,9 @@
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllEvents">
+                                </th>
                                 <th>ID</th>
 
                                 <th>Event Name</th>
@@ -188,7 +225,9 @@
                         <tbody id="eventTableBody">
                             @forelse($allevents as $allevent)
                                 <tr>
-
+                                    <td>
+                                        <input type="checkbox" class="event-checkbox" value="{{ $allevent->id }}">
+                                    </td>
                                     <td>
                                         {{ $allevent->id ?: 'N/A' }}
                                     </td>
@@ -209,14 +248,15 @@
                                     <td>{{ $allevent->end_date ?: 'N/A' }}</td>
                                     <td>
                                         @php
-                                            $status = $allevent->status;
+                                            $status = strtolower(trim($allevent->status)); 
+                                    
                                             $map = [
-                                                'live' => ['label' => 'LIVE', 'class' => 'badge-live'],
-                                                'close' => ['label' => 'CLOSED', 'class' => 'badge-close'],
-                                                'draft' => ['label' => 'DRAFT', 'class' => 'badge-draft'],
+                                                'live'   => ['label' => 'LIVE', 'class' => 'badge-live'],
+                                                'closed' => ['label' => 'CLOSED', 'class' => 'badge-closed'], 
+                                                'draft'  => ['label' => 'DRAFT', 'class' => 'badge-draft'],
                                             ];
                                         @endphp
-
+                                    
                                         @if ($status && isset($map[$status]))
                                             <span class="badge {{ $map[$status]['class'] }}">
                                                 {{ $map[$status]['label'] }}
@@ -225,7 +265,6 @@
                                             N/A
                                         @endif
                                     </td>
-
 
                                     {{-- Game Settings --}}
                                     <td>
@@ -291,6 +330,12 @@
                                                 onclick="openBracketModal({{ $allevent->id }})">
                                                 <i data-lucide="trophy"></i>
                                             </button>
+                                            {{-- @if ($allevent->status === 'closed')
+                                                <button class="btn btn-icon btn-summary" title="Event Summary"
+                                                    onclick="openEventSummary({{ $allevent->id }})">
+                                                    <i data-lucide="file-text"></i>
+                                                </button>
+                                            @endif --}}
                                         </div>
                                     </td>
 
@@ -307,6 +352,7 @@
                     </table>
                     <!-- Modal -->
                     @push('scripts')
+                    @include("events.scripts.bulk-delete")
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
                                 // Simple search by Team Name
@@ -343,12 +389,20 @@
                                 <i data-lucide="plus"></i> Add Organization
                             </button>
                         @endcan
+                        @can('delete_organization')
+                        <button class="btn btn-danger" id="deleteSelectedOrgsBtn" onclick="deleteSelectedOrganizations()">
+                            Delete Selected (0)
+                        </button>
+                    @endcan
                     </div>
 
 
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllOrgs">
+                                </th>
                                 <th>Profile</th>
                                 <th>Name</th>
                                 <th>Type</th>
@@ -361,7 +415,9 @@
                             @forelse($organizations as $org)
                                 <tr>
 
-
+                                    <td>
+                                        <input type="checkbox" class="org-checkbox" value="{{ $org->id }}">
+                                    </td>
                                     <td>
                                         <img src="{{ $org->profile ? asset('storage/' . $org->profile) : asset('assets/avatar-default.png') }}"
                                             height="40" width="40" class="rounded-circle"
@@ -386,7 +442,7 @@
                                                     <i data-lucide="edit-2"></i>
                                                 </button>
                                             @endcan
-                                            @can('delete_oraganization')
+                                            @can('delete_organization')
                                                 <form action="{{ route('organizations.destroy', $org->id) }}" method="POST"
                                                     onsubmit="return confirm('Are you sure you want to delete this organization?')">
                                                     @csrf
@@ -413,6 +469,7 @@
                         </tbody>
                     </table>
                     @push('scripts')
+                    @include('organization.script')
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
                                 // Simple search by Team Name
@@ -449,6 +506,11 @@
                                 <i data-lucide="plus"></i> Add Group
                             </button>
                         @endcan
+                        @can('delete_group')
+                        <button class="btn btn-danger" id="deleteSelectedGroupsBtn" onclick="deleteSelectedGroups()">
+                            Delete Selected (0)
+                        </button>
+                    @endcan
                         {{-- <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="group">
                             <i data-lucide="club"></i> Assign Cards
                         </a> --}}
@@ -458,6 +520,10 @@
                     <table class="data-table">
                         <thead>
                             <tr>
+
+                                <th>
+                                    <input type="checkbox" id="selectAllGroups">
+                                </th>
                                 <th>ID</th>
                                 <th>Organization</th>
                                 <th>Group Name</th>
@@ -469,6 +535,10 @@
                         <tbody id="groupTableBody">
                             @forelse($groups as $group)
                                 <tr>
+                                    <td>
+                                        <input type="checkbox" class="group-checkbox" value="{{ $group->id }}">
+                                    </td>
+                                
                                     <td>{{ $group->id ?? 'N/A' }}</td>
                                     <td>
                                         {{ optional($organizations->firstWhere('id', $group->organization_id))->name ?? 'N/A' }}
@@ -517,6 +587,7 @@
                 </div>
             </div>
             @push('scripts')
+            @include('groups.script')
                 <script>
                     document.addEventListener('DOMContentLoaded', () => {
                         // Simple search by Team Name
@@ -547,11 +618,21 @@
                                 <i data-lucide="plus"></i> Add Sub Group
                             </button>
                         @endcan
+
+    @can('delete_subgroup')
+    <button class="btn btn-danger" id="deleteSelectedSubGroupsBtn" onclick="deleteSelectedSubGroups()">
+        Delete Selected (0)
+    </button>
+@endcan
+
                     </div>
 
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllSubGroups">
+                                </th>
                                 <th>ID</th>
                                 <th>Group Name</th>
                                 <th>Sub Group Name</th>
@@ -563,6 +644,9 @@
                         <tbody>
                             @forelse($subgroups as $subgrp)
                                 <tr>
+                                    <td>
+                                        <input type="checkbox" class="subgroup-checkbox" value="{{ $subgrp->id }}">
+                                    </td>
                                     <td>{{ $subgrp->id ?? 'N/A' }}</td>
                                     <td>{{ $subgrp->group->group_name ?? 'N/A' }}</td>
                                     <td>{{ $subgrp->name ?? 'N/A' }}</td>
@@ -600,6 +684,10 @@
                             @endforelse
                         </tbody>
                     </table>
+                    @push('scripts')
+                    @include('subgroups.scripts.bulk-edit')
+                        
+                    @endpush
                 </div>
             </div>
 
@@ -673,6 +761,11 @@
                                 <i data-lucide="plus"></i> Add New Player
                             </button>
                         @endcan
+                        @can('delete_player')
+                        <button class="btn btn-danger" id="deleteSelectedPlayersBtn" onclick="deleteSelectedPlayers()">
+                            Delete Selected (0)
+                        </button>
+                        @endcan
 
                         <button class="btn btn-secondary" onclick="loadLeaderboard()">
                             <i data-lucide="refresh-cw"></i> Refresh
@@ -707,6 +800,9 @@
                         <table class="data-table">
                             <thead>
                                 <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAllPlayers">
+                                    </th>
                                     <th>Player</th>
                                     <th>Team</th>
                                     <th>Activity</th>
@@ -717,7 +813,7 @@
                             </thead>
                             <tbody id="playersTableBody">
                                 <tr>
-                                    <td colspan="6" class="text-center">Select event to load data</td>
+                                    <td colspan="7" class="text-center">Select event to load data</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -754,7 +850,7 @@
     @include('events.modals.view-event')
     @include('events.modals.edit-event')
     @include('events.modals.bracket')
-
+    @include('events.modals.choose-winner')
 
 
     {{-- Matches Modals --}}
@@ -779,13 +875,16 @@
     {{-- Card Modal --}}
     @include('card.assign-card-modal')
 @endpush
-
+@push('styles')
+    @include('events.style')
+@endpush
 @push('scripts')
     {{-- Event Scripts --}}
     @include('events.scripts.bracket-script')
     @include('events.scripts.edit-event-script')
     @include('events.scripts.duplicate-event-script')
-    {{-- @include('events.matches-script') --}} {{-- Disabled/commented out --}}
+
+    @include('events.scripts.winner-script')
 
     {{-- Team Scripts --}}
     @include('teams.scripts.team-script')

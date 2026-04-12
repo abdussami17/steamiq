@@ -2,6 +2,9 @@
 @section('title', 'Scoring - SteamIQ')
 
 @section('content')
+@push('styles')
+    @include('scores.style')
+@endpush
 <div class="container-fluid px-3">
 
     <section class="section">
@@ -11,12 +14,15 @@
                 Scoring
             </h2>
             <div class="ms-auto d-flex gap-2 flex-wrap">
+               
+            @can("create_score")
                 <button class="btn btn-sm btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#scoreModal">
-                    <i data-lucide="plus" ></i> Add Score
+                    <i data-lucide="plus"></i> Add Score
                 </button>
                 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#assignBonusModal">
                     <i data-lucide="plus"></i> Bonus
                 </button>
+            @endcan
             </div>
         </div>
 
@@ -42,8 +48,18 @@
                 </div>
 
                 <div class="lb-actions">
-                    <button id="bulkEditBtn" class="lb-btn lb-btn-bulk">⊞ Bulk Edit</button>
-                    <button id="openBulkModalBtn" class="lb-btn lb-btn-bulk-go" style="display:none;">✎ Edit Selected</button>
+                    <button id="exportXlsxBtn" class="lb-btn" style="background:#1a3a1a;color:#56d364;border:1px solid #238636;">
+                        <i data-lucide="download"></i> Export XLSX
+                    </button>
+                    
+                    <button id="bulkEditBtn" class="lb-btn lb-btn-bulk">
+                        <i data-lucide="plus-square"></i> Bulk Edit
+                    </button>
+                    
+                    <button id="openBulkModalBtn" class="lb-btn lb-btn-bulk-go" style="display:none;">
+                        <i data-lucide="edit"></i> Edit Selected
+                    </button>
+               
                 </div>
             </div>
 
@@ -51,12 +67,12 @@
             <div id="bulk-bar">
                 <span style="font-weight:900;color:#f5c518;font-size:12px;letter-spacing:.08em;">BULK EDIT MODE</span>
                 <span style="color:#3a4454;">|</span>
-                <span><span id="bulk-count" style="font-weight:900;color:#f5c518;font-size:16px;">0</span> selected</span>
-                <span style="color:#484f58;font-size:11px;">Click score cells to select / deselect</span>
+                <span><span id="bulk-count" style="font-weight:900;color:#f5c518;font-size:1.4rem;">0</span> selected</span>
+                <span style="color:#fff;font-size:11px;">Click score cells to select / deselect</span>
                 <button class="lb-btn lb-btn-bulk-go ms-auto" style="padding:5px 12px;font-size:12px;"
-                        onclick="document.getElementById('openBulkModalBtn').click()">
-                    Open Edit Panel →
-                </button>
+                onclick="document.getElementById('openBulkModalBtn').click()">
+                Open Edit Panel <i data-lucide="arrow-right"></i>
+            </button>
             </div>
 
             {{-- Table --}}
@@ -78,6 +94,8 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
     @include('scores.scripts.score-script')
 @endpush
 @endsection

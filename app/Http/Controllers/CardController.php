@@ -161,14 +161,14 @@ class CardController extends Controller
             if (!empty($teamIds)) {
                 Score::whereIn('team_id', $teamIds)
                     ->update([
-                        'points' => DB::raw("GREATEST(points + ($points), 0)")
+                        'points' => DB::raw("points + ($points)")
                     ]);
             }
-    
+
             if (!empty($studentIds)) {
                 Score::whereIn('student_id', $studentIds)
                     ->update([
-                        'points' => DB::raw("GREATEST(points + ($points), 0)")
+                        'points' => DB::raw("points + ($points)")
                     ]);
             }
         }

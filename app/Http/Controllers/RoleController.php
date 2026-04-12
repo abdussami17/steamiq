@@ -1,10 +1,12 @@
 <?php
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Models\User;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -72,6 +74,34 @@ class RoleController extends Controller
 
     } catch (\Exception $e) {
         return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+    }
+}
+
+
+
+public function destroy($id)
+{
+    try {
+        return DB::transaction(function () use ($id) {
+
+            $role = Role::findOrFail($id);
+
+            if ($role->name === 'admin') {
+                return back()->with('error', 'Admin role cannot be deleted.');
+            }
+
+            User::role($role->name)->get()->each(function ($user) use ($role) {
+                $user->removeRole($role->name);
+            });
+
+            $role->syncPermissions([]);
+            $role->delete();
+
+            return back()->with('success', 'Role deleted successfully.');
+        });
+
+    } catch (\Throwable $e) {
+        return back()->with('error', 'Something went wrong.');
     }
 }
 }

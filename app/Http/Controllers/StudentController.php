@@ -45,11 +45,16 @@ class StudentController extends Controller
            
             // Current players
             $currentCount = $team->students()->count();
-            $addingCount = count($request->students);
+            $addingCount = collect($request->students)
+            ->filter(fn($s) => !empty($s['name']))
+            ->count();
 
             
             if ($currentCount + $addingCount > $maxPlayers) {
-                return back()->with('popup_error', "Cannot add more than {$maxPlayers} players per team.");
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot add more than {$maxPlayers} players per team."
+                ], 422);
             }
     
             foreach ($request->students as $studentData) {
@@ -76,7 +81,11 @@ class StudentController extends Controller
             }
     
             DB::commit();
-            return back()->with('success', 'Player added successfully.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Player added successfully.'
+            ]);
+
         } catch (\Throwable $e) {
             DB::rollBack();
             \Log::error($e->getMessage());
@@ -197,7 +206,7 @@ public function destroy($id)
 }
 public function edit($id)
 {
-    $player = Student::find($id);
+    $player = Student::with('team.group.organization')->find($id);
 
     if (!$player) {
         return response()->json([
@@ -206,19 +215,21 @@ public function edit($id)
         ], 404);
     }
 
-    $teams = Team::select('id', 'name')->get();
+    $teams = Team::with('group.organization')
+        ->select('id', 'name', 'group_id')
+        ->get();
 
     return response()->json([
         'success' => true,
         'data' => [
             'id' => $player->id,
             'name' => $player->name,
-            'team_id' => $player->team_id
+            'team_id' => $player->team_id,
+            'organization_name' => optional($player->team->group->organization)->name
         ],
         'teams' => $teams
     ]);
 }
-
 public function update(Request $request, $id)
 {
     $request->validate([
@@ -245,5 +256,19 @@ public function update(Request $request, $id)
         'message' => 'Player updated successfully'
     ]);
 }
+
+public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
+
+    Student::whereIn('id', $ids)->delete();
+
+    return response()->json(['success' => true]);
+}
+
 
 }

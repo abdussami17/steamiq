@@ -58,4 +58,16 @@ public function subgroups($groupId)
     return response()->json($subgroups);
 }
 
+public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
+
+    Group::whereIn('id', $ids)->delete();
+
+    return response()->json(['success' => true]);
+}
 }

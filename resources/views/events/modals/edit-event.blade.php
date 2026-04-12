@@ -173,9 +173,9 @@
      data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,#fef9c3,#fde68a); border-bottom:2px solid #f59e0b;">
-                <h5 class="modal-title" style="color:#92400e; font-weight:700;">
-                    🏆 Select Event Winner
+            <div class="modal-header" >
+                <h5 class="modal-title" >
+                    Select Event Winner
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                         onclick="location.reload()"></button>

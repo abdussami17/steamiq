@@ -68,4 +68,28 @@ class SettingController extends Controller
         // Return JSON
         return response()->json($activities);
     }
+    public function destroyUser($id)
+{
+    try {
+        $user = \App\Models\User::findOrFail($id);
+
+        // ❌ Admin delete na ho
+        if ($user->hasRole('admin')) {
+            return redirect()->back()->with('error', 'Admin user cannot be deleted.');
+        }
+
+        // ✅ Delete user roles first (if using spatie)
+        if (method_exists($user, 'roles')) {
+            $user->roles()->detach();
+        }
+
+        // ✅ Delete user
+        $user->delete();
+
+        return redirect()->back()->with('success', 'User deleted successfully.');
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Something went wrong.');
+    }
+}
 }

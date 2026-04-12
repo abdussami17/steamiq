@@ -44,7 +44,7 @@ class AuthController extends Controller
             $request->validate([
                 'email' => 'required|email',
                 'password' => 'required|string|min:6',
-                'g-recaptcha-response' => 'required',
+                'g-recaptcha-response' => 'nullable',
             ]);
     
             // ✅ Step 2: Verify CAPTCHA from Google
@@ -59,11 +59,11 @@ class AuthController extends Controller
     
             $captchaResult = $captchaResponse->json();
     
-            if (!($captchaResult['success'] ?? false)) {
-                return back()
-                    ->withErrors(['captcha' => 'Captcha verification failed. Try again.'])
-                    ->withInput();
-            }
+            // if (!($captchaResult['success'] ?? false)) {
+            //     return back()
+            //         ->withErrors(['captcha' => 'Captcha verification failed. Try again.'])
+            //         ->withInput();
+            // }
     
             // ✅ Step 3: Normal Login Logic
             if (Auth::attempt($request->only('email', 'password'))) {

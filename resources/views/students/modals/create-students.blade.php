@@ -7,7 +7,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="studentForm" method="POST" action="{{ route('student.store') }}" enctype="multipart/form-data">
+            <form id="addStudentForm" method="POST" action="{{ route('student.store') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
 
@@ -79,53 +79,58 @@
     </div>
 </div>
 @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', function(){
+<script>
+    (function () {
     
-    let studentIndex = 1;
-    const container = document.getElementById('studentsContainer');
+        let studentIndex = 1;
+        const container = document.getElementById('studentsContainer');
+        const addBtn = document.getElementById('addMoreBtn');
     
-    document.getElementById('addMoreBtn').addEventListener('click', function(){
+        if (!container || !addBtn) return;
     
-        const row = document.createElement('div');
-        row.classList.add('student-row','row','g-3','mb-2','align-items-center');
+       
+        if (addBtn.dataset.bound) return;
+        addBtn.dataset.bound = true;
     
-        row.innerHTML = `
-            <div class="col-md-4">
-                <input type="text" class="form-input" name="students[${studentIndex}][name]" placeholder="Player Name" required>
-            </div>
+        addBtn.addEventListener('click', function () {
     
-            <div class="col-md-4">
-                <input type="email" class="form-input" name="students[${studentIndex}][email]" placeholder="Email">
-            </div>
+            const row = document.createElement('div');
+            row.classList.add('student-row','row','g-3','mb-2','align-items-center');
     
-            <div class="col-md-3">
-                <input type="file" class="form-input" name="students[${studentIndex}][profile]" accept="image/*">
-            </div>
+            row.innerHTML = `
+                <div class="col-md-4">
+                    <input type="text" class="form-input" name="students[${studentIndex}][name]" placeholder="Player Name" required>
+                </div>
     
-            <div class="col-md-1">
-                <button type="button" class="btn btn-icon btn-delete removeRow">
-                    <i data-lucide="trash-2"></i>
-                </button>
-            </div>
-        `;
+                <div class="col-md-4">
+                    <input type="email" class="form-input" name="students[${studentIndex}][email]" placeholder="Email">
+                </div>
     
-        container.appendChild(row);
-        studentIndex++;
+                <div class="col-md-3">
+                    <input type="file" class="form-input" name="students[${studentIndex}][profile]" accept="image/*">
+                </div>
     
-        if (window.lucide) {
-            lucide.createIcons();
-        }
-    });
+                <div class="col-md-1">
+                    <button type="button" class="btn btn-icon btn-delete removeRow">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                </div>
+            `;
     
-    container.addEventListener('click', function(e){
-        const btn = e.target.closest('.removeRow');
-        if(btn){
-            btn.closest('.student-row').remove();
-        }
-    });
+            container.appendChild(row);
+            studentIndex++;
     
-    });
+            if (window.lucide) lucide.createIcons();
+        });
+    
+        container.addEventListener('click', function(e){
+            const btn = e.target.closest('.removeRow');
+            if(btn){
+                btn.closest('.student-row').remove();
+            }
+        });
+    
+    })();
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

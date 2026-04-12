@@ -157,14 +157,14 @@ public function getTeams($groupId)
                 ];
             });
     
-            // =============================
-            // 5) Sort by total_points DESC
-            // =============================
-            $rows = $rows->sortByDesc('total_points')->values();
-    
-            // =============================
-            // 6) Assign rank
-            // =============================
+            $rows = $rows->sort(function ($a, $b) {
+                if ($b['total_points'] != $a['total_points']) {
+                    return $b['total_points'] <=> $a['total_points'];
+                }
+            
+                return strtolower($a['name']) <=> strtolower($b['name']);
+            })->values();
+            
             $rows = $rows->map(function ($row, $index) {
                 $row['rank'] = $index + 1;
                 return $row;

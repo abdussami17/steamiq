@@ -71,7 +71,7 @@ body{
 .pg-titlebar{background:var(--pg-hdr-bg);border-bottom:2px solid var(--pg-border);padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .pg-board-name{font-size:1.6rem;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;}
 .pg-board-badge{background:var(--pg-surface2);border:1.5px solid var(--pg-border-lit);border-radius:5px;padding:4px 14px;font-size:.82rem;font-weight:700;letter-spacing:2px;color:var(--pg-lime);white-space:nowrap;}
-.pg-count{background:var(--pg-surface);border-bottom:1px solid var(--pg-border);padding:6px 20px;font-size:.72rem;font-weight:700;letter-spacing:2px;color:var(--pg-gray-dim);text-transform:uppercase;}
+.pg-count{background:var(--pg-surface);border-bottom:1px solid var(--pg-border);padding:6px 20px;font-size:1.1rem;font-weight:700;letter-spacing:2px;color:var(--pg-gray-dim);text-transform:uppercase;}
 
 .pg-scroll{overflow-x:auto;}
 
@@ -81,7 +81,7 @@ body{
 /* Column headers */
 .pg-table thead tr{background:var(--pg-hdr-bg);border-bottom:2px solid var(--pg-border-lit);}
 .pg-table thead th{
-    padding:10px 14px;font-size:.7rem;font-weight:700;letter-spacing:1.5px;
+    padding:10px 14px;font-size:1.2rem;font-weight:700;letter-spacing:1.5px;
     text-transform:uppercase;color:var(--pg-lime);text-align:center;
     border-right:1px solid var(--pg-border);white-space:nowrap;
 }
@@ -106,14 +106,22 @@ body{
     text-align:center;vertical-align:middle;white-space:nowrap;
 }
 .td-no {color:var(--pg-gray);font-weight:700;font-size:.85rem;min-width:68px;width:68px;}
-.td-name{text-align:left;font-weight:700;font-size:1rem;letter-spacing:.3px;min-width:160px;}
-.td-mem {text-align:left;font-size:.8rem;color:var(--pg-gray);min-width:110px;white-space:normal;}
-.td-div {font-size:.75rem;font-weight:700;letter-spacing:1px;color:var(--pg-lime);}
-.td-pts {font-weight:700;font-size:.92rem;color:var(--pg-lime);min-width:90px;}
+.td-name{text-align:left;font-weight:700;font-size:1.5rem;letter-spacing:.3px;min-width:160px;}
+.td-mem {text-align:left;font-size:1.1rem;color:var(--pg-gray);min-width:110px;white-space:normal;}
+.td-div {font-size:1rem;font-weight:700;letter-spacing:1px;color:var(--pg-lime);}
+.td-pts {font-weight:700;font-size:1.3rem;color:var(--pg-lime);min-width:90px;}
 .td-pts0{color:var(--pg-gray-dim)!important;font-weight:400;}
 .td-flg {font-weight:700;color:var(--pg-yellow-dim);min-width:68px;}
-.td-org {text-align:left;font-size:.8rem;font-weight:600;color:var(--pg-gray);min-width:110px;white-space:normal;}
+.td-org {text-align:left;font-size:1rem;font-weight:600;color:var(--pg-gray);min-width:110px;white-space:normal;}
 .td-rank{background:var(--pg-rank-col)!important;border-left:2px solid var(--pg-border-lit)!important;padding:8px 10px!important;width:76px;min-width:76px;}
+
+/* CARD BADGES (match Scores view) */
+.card-badges{display:inline-flex;gap:6px;align-items:center;justify-content:center;margin-left:8px}
+.card-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:4px;font-family:var(--pg-font);font-weight:900;font-size:12px;color:#fff}
+.card-red{background:#ef4444}
+.card-yellow{background:#facc15;color:#000}
+.card-orange{background:#f97316}
+.card-unknown{background:#6b7280}
 
 /* Rank pill */
 .rk-pill{
@@ -222,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var divUp  = division.toUpperCase();
         var ageStr = division === 'Junior'  ? '11–14 YRS'
                    : division === 'Primary' ? '7–10 YRS' : '';
-        var totalCols = 5 + acts.length + 2 + 1 + 1; // no+name+mem+div + acts + flags+org + rank
+        var totalCols = 5 + acts.length + 2 + 1 + 1 + 1; // no+name+mem+div + acts + total + flags+org + rank
 
         /* group rows */
         var groups = {}, groupOrder = [];
@@ -231,9 +239,12 @@ document.addEventListener('DOMContentLoaded', function () {
             groups[r.group_id].rows.push(r);
         });
 
-        var actTH = acts.length
-            ? acts.map(function(a){ return '<th>' + esc(trunc(a.name,13)) + '</th>'; }).join('')
-            : '<th>YOUR POINTS</th>';
+        var actTH = '';
+        if (acts.length) {
+            actTH = acts.map(function(a){ return '<th>' + esc(trunc(a.name,13)) + '</th>'; }).join('');
+        }
+        // Always include a total column
+        actTH += '<th>Total</th>';
 
         var h = '<div class="pg-board">'
             + '<div class="pg-titlebar">'
@@ -258,12 +269,17 @@ document.addEventListener('DOMContentLoaded', function () {
             g.rows.forEach(function(row) {
                 var rk = row.rank;
                 var rkCls = rk === 1 ? 'r1' : rk === 2 ? 'r2' : rk === 3 ? 'r3' : '';
-                var actTD = acts.length
-                    ? acts.map(function(a){
-                        var pts = (row.activity_scores && row.activity_scores[a.id]) || 0;
-                        return '<td class="td-pts' + (pts > 0 ? '' : ' td-pts0') + '">' + (pts > 0 ? fmt(pts) : '&mdash;') + '</td>';
-                      }).join('')
-                    : '<td class="td-pts">' + fmt(row.total_points) + '</td>';
+                                var actTD = '';
+                                if (acts.length) {
+                                        actTD = acts.map(function(a){
+                                                var pts = (row.activity_scores && row.activity_scores[a.id]) || 0;
+                                                return '<td class="td-pts' + (pts > 0 ? '' : ' td-pts0') + '">' + (pts > 0 ? fmt(pts) : '&mdash;') + '</td>';
+                                            }).join('');
+                                        // append total cell
+                                        actTD += '<td class="td-pts">' + fmt(row.total_points) + '</td>';
+                                } else {
+                                        actTD = '<td class="td-pts">' + fmt(row.total_points) + '</td>';
+                                }
 
                 h += '<tr class="pg-dr">'
                     + '<td class="td-no">' + row.team_no + '</td>'
@@ -271,7 +287,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     + '<td class="td-mem">'  + esc(row.members || '&mdash;') + '</td>'
                     + '<td class="td-div">'  + esc((row.division||'').toUpperCase()) + '</td>'
                     + actTD
-                    + '<td class="td-flg">'  + (row.flag_totals || 0) + '</td>'
+                    + '<td class="td-flg">'  + (row.flag_totals || 0);
+                // show card badges if present (render as colored numeric badges)
+                if (row.cards && row.cards.length) {
+                    h += renderCardBadges(row.cards);
+                }
+                h += '</td>'
                     + '<td class="td-org">'  + esc(row.org_name) + '</td>'
                     + '<td class="td-rank"><span class="rk-pill ' + rkCls + '">' + rk + '</span></td>'
                     + '</tr>';
@@ -288,6 +309,22 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     function fmt(n){ return Number(n).toLocaleString(); }
     function trunc(s,n){ return s && s.length > n ? s.slice(0,n)+'…' : (s||''); }
+
+    // Render colored numeric badges for card assignments (counts by type)
+    function renderCardBadges(cards) {
+        if (!cards || !cards.length) return '';
+        var counts = {};
+        cards.forEach(function(c){
+            var t = (c && c.type) ? c.type : 'unknown';
+            counts[t] = (counts[t] || 0) + 1;
+        });
+        var map = { red: 'card-red', yellow: 'card-yellow', orange: 'card-orange', unknown: 'card-unknown' };
+        var parts = Object.keys(counts).map(function(t){
+            var cls = map[t] || 'card-unknown';
+            return '<span class="card-badge '+cls+'">' + counts[t] + '</span>';
+        });
+        return '<span class="card-badges">' + parts.join('') + '</span>';
+    }
 });
 </script>
 @endpush

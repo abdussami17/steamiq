@@ -1,220 +1,238 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+    
         const assignedToSelect = document.getElementById('assignedToSelect');
         const assignableTypeInput = document.getElementById('assignable_type');
         const finalAssignableId = document.getElementById('final_assignable_id');
-        
-        // Containers
+    
         const firstLevelContainer = document.getElementById('firstLevelContainer');
         const secondLevelContainer = document.getElementById('secondLevelContainer');
         const directContainer = document.getElementById('directContainer');
-        
-        // Dropdowns
+    
         const firstLevelDropdown = document.getElementById('firstLevelDropdown');
         const secondLevelDropdown = document.getElementById('secondLevelDropdown');
         const directDropdown = document.getElementById('directDropdown');
-        
-        // Labels
+    
         const firstLevelLabel = document.getElementById('firstLevelLabel');
         const secondLevelLabel = document.getElementById('secondLevelLabel');
         const directLabel = document.getElementById('directLabel');
-
-        // Hide all containers initially
+    
         function hideAllContainers() {
             firstLevelContainer.style.display = 'none';
             secondLevelContainer.style.display = 'none';
             directContainer.style.display = 'none';
         }
-
-        // Reset all dropdowns
+    
         function resetDropdowns() {
             firstLevelDropdown.innerHTML = '<option value="">-- Choose --</option>';
             secondLevelDropdown.innerHTML = '<option value="">-- Choose --</option>';
             directDropdown.innerHTML = '<option value="">-- Choose --</option>';
             finalAssignableId.value = '';
         }
-
-        // Handle main Assign To change
+    
         assignedToSelect.addEventListener('change', async function() {
             const type = this.value;
             assignableTypeInput.value = type;
             finalAssignableId.value = '';
-            
+    
             hideAllContainers();
             resetDropdowns();
-
+    
             if (!type) return;
-
+    
+            // ================= ORGANIZATION =================
             if (type === 'organization') {
-                // Direct selection for organization
                 directLabel.textContent = 'Select Organization';
                 directContainer.style.display = 'block';
                 await loadOrganizations();
-                
-                // When organization is selected, set final value
+    
                 directDropdown.onchange = function() {
                     finalAssignableId.value = this.value;
                 };
-            } 
+            }
+    
+            // ================= GROUP =================
             else if (type === 'group') {
-                // Direct selection for group
-                directLabel.textContent = 'Select Group';
-                directContainer.style.display = 'block';
-                await loadGroups();
-                
-                directDropdown.onchange = function() {
-                    finalAssignableId.value = this.value;
+                firstLevelLabel.textContent = 'Select Organization';
+                secondLevelLabel.textContent = 'Select Group';
+    
+                firstLevelContainer.style.display = 'block';
+                await loadOrganizationsInto(firstLevelDropdown);
+    
+                firstLevelDropdown.onchange = async function() {
+                    const orgId = this.value;
+                    if (!orgId) return;
+    
+                    secondLevelContainer.style.display = 'block';
+                    await loadGroupsByOrganization(orgId);
+    
+                    secondLevelDropdown.onchange = function() {
+                        finalAssignableId.value = this.value;
+                    };
                 };
-            } 
+            }
+    
+            // ================= TEAM =================
             else if (type === 'team') {
-                // For Team: First show Groups, then Teams
-                firstLevelLabel.textContent = 'Select Group';
-                secondLevelLabel.textContent = 'Select Team';
-                
+                firstLevelLabel.textContent = 'Select Organization';
+                secondLevelLabel.textContent = 'Select Group';
+    
                 firstLevelContainer.style.display = 'block';
-                await loadGroupsIntoFirstLevel();
-                
-                // When group is selected, load teams
+                await loadOrganizationsInto(firstLevelDropdown);
+    
                 firstLevelDropdown.onchange = async function() {
-                    const groupId = this.value;
-                    if (!groupId) {
-                        secondLevelContainer.style.display = 'none';
-                        finalAssignableId.value = '';
-                        return;
-                    }
-                    
+                    const orgId = this.value;
+                    if (!orgId) return;
+    
                     secondLevelContainer.style.display = 'block';
-                    secondLevelDropdown.innerHTML = '<option value="">-- Loading Teams --</option>';
-                    
-                    try {
-                        const res = await fetch('/api/teams/by-group/' + groupId);
-                        const teams = await res.json();
-                        
-                        let options = '<option value="">-- Choose Team --</option>';
-                        teams.forEach(team => {
-                            options += `<option value="${team.id}">${team.name}</option>`;
-                        });
-                        secondLevelDropdown.innerHTML = options;
-                        
-                        // When team is selected, set final value
-                        secondLevelDropdown.onchange = function() {
+                    await loadGroupsByOrganization(orgId);
+    
+                    secondLevelDropdown.onchange = async function() {
+                        const groupId = this.value;
+                        if (!groupId) return;
+    
+                        // create third dropdown dynamically
+                        createThirdDropdown('Select Team');
+    
+                        await loadTeamsByGroup(groupId, 'thirdLevelDropdown');
+    
+                        document.getElementById('thirdLevelDropdown').onchange = function() {
                             finalAssignableId.value = this.value;
                         };
-                    } catch(err) {
-                        secondLevelDropdown.innerHTML = '<option value="">-- Error Loading Teams --</option>';
-                        console.error('Error:', err);
-                    }
+                    };
                 };
-            } 
+            }
+    
+            // ================= STUDENT =================
             else if (type === 'student') {
-                // For Student: First show Teams, then Students
-                firstLevelLabel.textContent = 'Select Team';
-                secondLevelLabel.textContent = 'Select Player';
-                
+                firstLevelLabel.textContent = 'Select Organization';
+                secondLevelLabel.textContent = 'Select Group';
+    
                 firstLevelContainer.style.display = 'block';
-                await loadTeamsIntoFirstLevel();
-                
-                // When team is selected, load students
+                await loadOrganizationsInto(firstLevelDropdown);
+    
                 firstLevelDropdown.onchange = async function() {
-                    const teamId = this.value;
-                    if (!teamId) {
-                        secondLevelContainer.style.display = 'none';
-                        finalAssignableId.value = '';
-                        return;
-                    }
-                    
+                    const orgId = this.value;
+                    if (!orgId) return;
+    
                     secondLevelContainer.style.display = 'block';
-                    secondLevelDropdown.innerHTML = '<option value="">-- Loading Players --</option>';
-                    
-                    try {
-                        const res = await fetch('/api/students/by-team/' + teamId);
-                        const students = await res.json();
-                        
-                        let options = '<option value="">-- Choose Player --</option>';
-                        students.forEach(student => {
-                            options += `<option value="${student.id}">${student.name}</option>`;
-                        });
-                        secondLevelDropdown.innerHTML = options;
-                        
-                        // When student is selected, set final value
-                        secondLevelDropdown.onchange = function() {
-                            finalAssignableId.value = this.value;
+                    await loadGroupsByOrganization(orgId);
+    
+                    secondLevelDropdown.onchange = async function() {
+                        const groupId = this.value;
+                        if (!groupId) return;
+    
+                        createThirdDropdown('Select Team');
+                        await loadTeamsByGroup(groupId, 'thirdLevelDropdown');
+    
+                        document.getElementById('thirdLevelDropdown').onchange = async function() {
+                            const teamId = this.value;
+                            if (!teamId) return;
+    
+                            createFourthDropdown('Select Player');
+    
+                            await loadStudentsByTeam(teamId, 'fourthLevelDropdown');
+    
+                            document.getElementById('fourthLevelDropdown').onchange = function() {
+                                finalAssignableId.value = this.value;
+                            };
                         };
-                    } catch(err) {
-                        secondLevelDropdown.innerHTML = '<option value="">-- Error Loading Players --</option>';
-                        console.error('Error:', err);
-                    }
+                    };
                 };
             }
         });
-
-        // Helper functions
+    
+        // ================= HELPERS =================
         async function loadOrganizations() {
-            directDropdown.innerHTML = '<option value="">-- Loading Organizations --</option>';
-            try {
-                const res = await fetch('{{ route("api.organizations.list") }}');
-                const organizations = await res.json();
-                
-                let options = '<option value="">-- Choose Organization --</option>';
-                organizations.forEach(org => {
-                    options += `<option value="${org.id}">${org.name}</option>`;
-                });
-                directDropdown.innerHTML = options;
-            } catch(err) {
-                directDropdown.innerHTML = '<option value="">-- Error Loading Organizations --</option>';
-                console.error('Error:', err);
-            }
-        }
+    directDropdown.innerHTML = '<option>Loading...</option>';
 
-        async function loadGroups() {
-            directDropdown.innerHTML = '<option value="">-- Loading Groups --</option>';
-            try {
-                const res = await fetch('{{ route("api.groups.list") }}');
-                const groups = await res.json();
-                
-                let options = '<option value="">-- Choose Group --</option>';
-                groups.forEach(group => {
-                    options += `<option value="${group.id}">${group.group_name}</option>`;
-                });
-                directDropdown.innerHTML = options;
-            } catch(err) {
-                directDropdown.innerHTML = '<option value="">-- Error Loading Groups --</option>';
-                console.error('Error:', err);
-            }
-        }
+    try {
+        const res = await fetch('{{ route("api.organizations.list") }}');
+        const data = await res.json();
 
-        async function loadGroupsIntoFirstLevel() {
-            firstLevelDropdown.innerHTML = '<option value="">-- Loading Groups --</option>';
-            try {
-                const res = await fetch('{{ route("api.groups.list") }}');
-                const groups = await res.json();
-                
-                let options = '<option value="">-- Choose Group --</option>';
-                groups.forEach(group => {
-                    options += `<option value="${group.id}">${group.group_name}</option>`;
-                });
-                firstLevelDropdown.innerHTML = options;
-            } catch(err) {
-                firstLevelDropdown.innerHTML = '<option value="">-- Error Loading Groups --</option>';
-                console.error('Error:', err);
-            }
-        }
+        let opt = '<option value="">-- Choose Organization --</option>';
+        data.forEach(i => {
+            opt += `<option value="${i.id}">${i.name}</option>`;
+        });
 
-        async function loadTeamsIntoFirstLevel() {
-            firstLevelDropdown.innerHTML = '<option value="">-- Loading Teams --</option>';
-            try {
-                const res = await fetch('{{ route("api.teams.list") }}');
-                const teams = await res.json();
-                
-                let options = '<option value="">-- Choose Team --</option>';
-                teams.forEach(team => {
-                    options += `<option value="${team.id}">${team.name}</option>`;
-                });
-                firstLevelDropdown.innerHTML = options;
-            } catch(err) {
-                firstLevelDropdown.innerHTML = '<option value="">-- Error Loading Teams --</option>';
-                console.error('Error:', err);
-            }
+        directDropdown.innerHTML = opt;
+
+    } catch (err) {
+        directDropdown.innerHTML = '<option value="">-- Error Loading --</option>';
+        console.error(err);
+    }
+}
+        async function loadOrganizationsInto(dropdown) {
+            dropdown.innerHTML = '<option>Loading...</option>';
+            const res = await fetch('{{ route("api.organizations.list") }}');
+            const data = await res.json();
+    
+            let opt = '<option value="">-- Choose Organization --</option>';
+            data.forEach(i => opt += `<option value="${i.id}">${i.name}</option>`);
+            dropdown.innerHTML = opt;
         }
+    
+        async function loadGroupsByOrganization(orgId) {
+            const res = await fetch('{{ route("api.groups.list") }}');
+            const data = await res.json();
+    
+            let opt = '<option value="">-- Choose Group --</option>';
+            data.filter(g => g.organization_id == orgId)
+                .forEach(g => opt += `<option value="${g.id}">${g.group_name}</option>`);
+    
+            secondLevelDropdown.innerHTML = opt;
+        }
+    
+        async function loadTeamsByGroup(groupId, dropdownId) {
+            const res = await fetch('/api/teams/by-group/' + groupId);
+            const data = await res.json();
+    
+            let opt = '<option value="">-- Choose Team --</option>';
+            data.forEach(t => opt += `<option value="${t.id}">${t.name}</option>`);
+    
+            document.getElementById(dropdownId).innerHTML = opt;
+        }
+    
+        async function loadStudentsByTeam(teamId, dropdownId) {
+            const res = await fetch('/api/students/by-team/' + teamId);
+            const data = await res.json();
+    
+            let opt = '<option value="">-- Choose Player --</option>';
+            data.forEach(s => opt += `<option value="${s.id}">${s.name}</option>`);
+    
+            document.getElementById(dropdownId).innerHTML = opt;
+        }
+    
+        function createThirdDropdown(labelText) {
+            removeExtraDropdowns();
+    
+            const div = document.createElement('div');
+            div.className = 'mb-3 col-md-6';
+            div.innerHTML = `
+                <label class="form-label">${labelText}</label>
+                <select class="form-select" id="thirdLevelDropdown">
+                    <option>Loading...</option>
+                </select>
+            `;
+            secondLevelContainer.after(div);
+        }
+    
+        function createFourthDropdown(labelText) {
+            const div = document.createElement('div');
+            div.className = 'mb-3 col-md-6';
+            div.innerHTML = `
+                <label class="form-label">${labelText}</label>
+                <select class="form-select" id="fourthLevelDropdown">
+                    <option>Loading...</option>
+                </select>
+            `;
+            document.getElementById('thirdLevelDropdown').parentElement.after(div);
+        }
+    
+        function removeExtraDropdowns() {
+            document.getElementById('thirdLevelDropdown')?.parentElement.remove();
+            document.getElementById('fourthLevelDropdown')?.parentElement.remove();
+        }
+    
     });
-</script>
+    </script>

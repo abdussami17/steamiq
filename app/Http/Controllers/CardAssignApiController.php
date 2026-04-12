@@ -18,17 +18,30 @@ class CardAssignApiController extends Controller
 
     public function groups()
     {
-        return response()->json(Group::select('id','group_name')->get());
+        return response()->json(
+            Group::with('organization')
+                ->select('id','group_name','organization_id')
+                ->get()
+        );
     }
 
     public function teams()
     {
-        return response()->json(Team::select('id','name')->get());
+        return response()->json(
+            Team::with('group.organization')
+                ->select('id','name','group_id')
+                ->get()
+        );
     }
 
     public function teamsByGroup($groupId)
     {
-        return response()->json(Team::where('group_id', $groupId)->select('id','name')->get());
+        return response()->json(
+            Team::with('group.organization')
+                ->where('group_id', $groupId)
+                ->select('id','name','group_id')
+                ->get()
+        );
     }
 
     public function studentsByTeam($teamId)

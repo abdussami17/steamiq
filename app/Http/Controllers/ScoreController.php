@@ -8,6 +8,8 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Organization;
 use App\Models\Score;
+use App\Models\CardAssignment;
+use App\Models\Card;
 use App\Models\SteamCategory;
 use App\Models\Student;
 use App\Models\SubGroup;
@@ -18,6 +20,8 @@ use Illuminate\Support\Facades\Log;
 
 class ScoreController extends Controller
 {
+    // Map of team_id => array of card metadata (prepared per-request)
+    protected $teamCardMap = [];
     /* =========================================================
        INDEX
     ========================================================= */
@@ -37,7 +41,7 @@ class ScoreController extends Controller
             'challenge_activity_id' => 'required|exists:challenge_activities,id',
             'student_id' => 'nullable|exists:students,id',
             'team_id' => 'nullable|exists:teams,id',
-            'points' => 'required|numeric|min:0',
+            'points' => 'required|numeric',
         ]);
 
         if (!$request->student_id && !$request->team_id) {
@@ -101,16 +105,14 @@ class ScoreController extends Controller
             'challenge_activity_id' => 'required|integer|exists:challenge_activities,id',
             'team_id' => 'nullable|integer|exists:teams,id',
             'student_id' => 'nullable|integer|exists:students,id',
-            'points' => 'required|numeric|min:0',
+            'points' => 'required|numeric',
         ]);
 
         if (!$request->team_id && !$request->student_id) {
             return response()->json(['success' => false, 'message' => 'team_id or student_id required.'], 422);
         }
 
-        if (!auth()->check() || auth()->user()->role != 1) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
-        }
+        
 
         $activity = ChallengeActivity::find($request->challenge_activity_id);
         if (!$activity) {
@@ -157,7 +159,7 @@ class ScoreController extends Controller
         $request->validate([
             'event_id' => 'required|integer|exists:events,id',
             'target_type' => 'required|in:organization,group,subgroup,team,player',
-            'bonus_points' => 'required|integer|min:1',
+            'bonus_points' => 'required|integer',
             'organization_id' => 'nullable|integer',
             'group_id' => 'nullable|integer',
             'sub_group_id' => 'nullable|integer',
@@ -165,9 +167,7 @@ class ScoreController extends Controller
             'student_id' => 'nullable|integer',
         ]);
 
-        if (!auth()->check() || auth()->user()->role != 1) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
-        }
+       
 
         $eventId = $request->event_id;
         $bonusPts = $request->bonus_points;
@@ -396,9 +396,157 @@ class ScoreController extends Controller
             ->pluck('total', 'assignable_id')
             ->toArray();
 
+            // Build maps to resolve group/org/student -> team relationships
+            $groupTeamsMap = [];
+            $orgTeamsMap = [];
+            $studentTeamMap = [];
+            foreach ($event->organizations as $org) {
+                $orgTeamsMap[$org->id] = [];
+                foreach ($org->groups as $group) {
+                    $groupTeamsMap[$group->id] = [];
+                    // teams directly under group
+                    foreach ($group->teams as $team) {
+                        $orgTeamsMap[$org->id][] = $team->id;
+                        $groupTeamsMap[$group->id][] = $team->id;
+                        foreach ($team->students as $student) {
+                            $studentTeamMap[$student->id] = $team->id;
+                        }
+                    }
+                    // teams under subgroups
+                    foreach ($group->subgroups as $subgroup) {
+                        foreach ($subgroup->teams as $team) {
+                            $orgTeamsMap[$org->id][] = $team->id;
+                            $groupTeamsMap[$group->id][] = $team->id;
+                            foreach ($team->students as $student) {
+                                $studentTeamMap[$student->id] = $team->id;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Card assignments affecting these teams (team, student, group, organization)
+            $cardAssignments = CardAssignment::with('card')
+                ->where(function ($q) use ($allTeamIds, $allStudentIds, $groupTeamsMap, $orgTeamsMap) {
+                    if (!empty($allTeamIds)) {
+                        $q->orWhere(function ($q2) use ($allTeamIds) {
+                            $q2->where('assignable_type', 'team')->whereIn('assignable_id', $allTeamIds);
+                        });
+                    }
+                    if (!empty($allStudentIds)) {
+                        $q->orWhere(function ($q3) use ($allStudentIds) {
+                            $q3->where('assignable_type', 'student')->whereIn('assignable_id', $allStudentIds);
+                        });
+                    }
+                    if (!empty($groupTeamsMap)) {
+                        $groupIds = array_keys($groupTeamsMap);
+                        $q->orWhere(function ($q4) use ($groupIds) {
+                            $q4->where('assignable_type', 'group')->whereIn('assignable_id', $groupIds);
+                        });
+                    }
+                    if (!empty($orgTeamsMap)) {
+                        $orgIds = array_keys($orgTeamsMap);
+                        $q->orWhere(function ($q5) use ($orgIds) {
+                            $q5->where('assignable_type', 'organization')->whereIn('assignable_id', $orgIds);
+                        });
+                    }
+                })->get();
+
+            // Build team -> cards map
+            $teamCardMap = [];
+            foreach ($allTeamIds as $tid) $teamCardMap[$tid] = [];
+
+            foreach ($cardAssignments as $ca) {
+                $atype = $ca->assignable_type;
+                $aid = $ca->assignable_id;
+                $cardMeta = $ca->card ? ['assignment_id' => $ca->id, 'card_id' => $ca->card->id, 'type' => $ca->card->type, 'negative_points' => $ca->card->negative_points] : ['assignment_id' => $ca->id, 'card_id' => null, 'type' => 'unknown', 'negative_points' => 0];
+
+                if ($atype === 'team' && isset($teamCardMap[$aid])) {
+                    // avoid duplicate assignment entries
+                    $exists = false;
+                    foreach ($teamCardMap[$aid] as $ex) {
+                        if (($ex['assignment_id'] ?? null) === $ca->id) { $exists = true; break; }
+                    }
+                    if (!$exists) $teamCardMap[$aid][] = $cardMeta;
+                } elseif ($atype === 'student') {
+                    $tid = $studentTeamMap[$aid] ?? null;
+                    if ($tid) {
+                        $exists = false;
+                        foreach ($teamCardMap[$tid] as $ex) {
+                            if (($ex['assignment_id'] ?? null) === $ca->id) { $exists = true; break; }
+                        }
+                        if (!$exists) $teamCardMap[$tid][] = $cardMeta;
+                    }
+                } elseif ($atype === 'group') {
+                    foreach ($groupTeamsMap[$aid] ?? [] as $tid) {
+                        $exists = false;
+                        foreach ($teamCardMap[$tid] as $ex) {
+                            if (($ex['assignment_id'] ?? null) === $ca->id) { $exists = true; break; }
+                        }
+                        if (!$exists) $teamCardMap[$tid][] = $cardMeta;
+                    }
+                } elseif ($atype === 'organization') {
+                    foreach ($orgTeamsMap[$aid] ?? [] as $tid) {
+                        $exists = false;
+                        foreach ($teamCardMap[$tid] as $ex) {
+                            if (($ex['assignment_id'] ?? null) === $ca->id) { $exists = true; break; }
+                        }
+                        if (!$exists) $teamCardMap[$tid][] = $cardMeta;
+                    }
+                }
+            }
+
+            // expose to buildBlock via controller property
+            $this->teamCardMap = $teamCardMap;
+
+            // Also include bonus assignments applied at group or organization level
+            $groupBonusMap = [];
+            $orgBonusMap = [];
+            if (!empty($groupTeamsMap)) {
+                $groupIds = array_keys($groupTeamsMap);
+                $groupBonusMap = BonusAssignment::where('assignable_type', 'group')
+                    ->whereIn('assignable_id', $groupIds)
+                    ->selectRaw('assignable_id, SUM(points) as total')
+                    ->groupBy('assignable_id')
+                    ->pluck('total', 'assignable_id')
+                    ->toArray();
+            }
+            if (!empty($orgTeamsMap)) {
+                $orgIds = array_keys($orgTeamsMap);
+                $orgBonusMap = BonusAssignment::where('assignable_type', 'organization')
+                    ->whereIn('assignable_id', $orgIds)
+                    ->selectRaw('assignable_id, SUM(points) as total')
+                    ->groupBy('assignable_id')
+                    ->pluck('total', 'assignable_id')
+                    ->toArray();
+            }
+
+            // Fold group/org-level bonuses into per-team totals
+            $finalTeamBonusMap = [];
+            foreach ($event->organizations as $org) {
+                foreach ($org->groups as $group) {
+                    $allTeams = $group->teams->merge($group->subgroups->flatMap(fn($sg) => $sg->teams));
+                    foreach ($allTeams as $team) {
+                        $tid = $team->id;
+                        $finalTeamBonusMap[$tid] = (int) ($teamBonusMap[$tid] ?? 0)
+                            + (int) ($groupBonusMap[$group->id] ?? 0)
+                            + (int) ($orgBonusMap[$org->id] ?? 0);
+                    }
+                }
+            }
+
+            $teamBonusMap = $finalTeamBonusMap;
+
             
             // Build activity map: display_name => ['slug'=>..., 'id'=>..., 'max_score'=>...]
             $activityMap = [];
+
+            // Include any ChallengeActivity records defined for this event so that
+            // activity columns show up even when no scores have been entered yet.
+            $allActivities = ChallengeActivity::where('event_id', $event->id)->get();
+            foreach ($allActivities as $act) {
+                $this->registerActivity($activityMap, $act);
+            }
 
             foreach ($event->organizations as $org) {
                 foreach ($org->groups as $group) {
@@ -419,6 +567,12 @@ class ScoreController extends Controller
                     }
                 }
             }
+
+            // Sort activityMap by type so same-category columns sit together → banner groups merge correctly
+            $slugOrder = ['science'=>0,'technology'=>1,'engineering'=>2,'art'=>3,'math'=>4,'egaming'=>5,'esports'=>6,'playground'=>7,'mission'=>8,'other'=>9];
+            uasort($activityMap, function ($a, $b) use ($slugOrder) {
+                return ($slugOrder[$a['slug']] ?? 99) <=> ($slugOrder[$b['slug']] ?? 99);
+            });
 
             $categoryNames = array_keys($activityMap);
 
@@ -686,6 +840,10 @@ class ScoreController extends Controller
 
         $grandTotal = $teamPoints + $teamBonusTot + $playerPoints + $playerBonus + $teamBonusAssignment;
 
+        // Cards for this team (from precomputed map)
+        $cardList = $this->teamCardMap[$team->id] ?? [];
+        $flagCount = count($cardList);
+
         return [
             'team' => [
                 'type' => 'team',
@@ -706,6 +864,8 @@ class ScoreController extends Controller
                 'total_bonus' => $teamBonusTot + $playerBonus,
                 'bonus_assignment' => $teamBonusAssignment,
                 'grand_total' => $grandTotal,
+                'flag_totals' => $flagCount,
+                'cards' => $cardList,
                 'rank' => null,
             ],
             'students' => $studentRows,

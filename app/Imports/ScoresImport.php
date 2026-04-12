@@ -28,8 +28,8 @@ class ScoresImport implements ToModel
                                ->first();
         if (!$challenge) return null; // Skip if challenge doesn't belong to the player's event
 
-        // Points validation
-        if (!is_numeric($points) || $points < 0 || $points > $challenge->max_points) {
+        // Points validation - allow negative values but still enforce upper bound
+        if (!is_numeric($points) || $points > $challenge->max_points) {
             return null; // Skip invalid points
         }
 

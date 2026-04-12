@@ -68,4 +68,16 @@ class SubGroupController extends Controller
 
     return response()->json($groups);
 }
+public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
+
+    SubGroup::whereIn('id', $ids)->delete();
+
+    return response()->json(['success' => true]);
+}   
 }

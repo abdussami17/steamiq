@@ -1,0 +1,368 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Anton&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .aqb-root {
+    background: #c8001a;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(255,255,255,0.04) 38px, rgba(255,255,255,0.04) 39px),
+      repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(255,255,255,0.04) 38px, rgba(255,255,255,0.04) 39px);
+    min-height: 580px;
+    padding: 10px 12px 16px;
+    font-family: 'Anton', 'Arial Black', sans-serif;
+    position: relative;
+    overflow: hidden;
+  }
+  .aqb-root::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,80,80,0.35) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  /* Sunburst rays */
+  .aqb-rays {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .aqb-rays svg { width: 100%; height: 100%; }
+
+  .aqb-header {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 8px;
+  }
+  .aqb-title-main {
+    font-family: 'Bangers', 'Anton', sans-serif;
+    font-size: 36px;
+    letter-spacing: 4px;
+    color: #fff;
+    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000;
+    line-height: 1;
+  }
+  .aqb-title-sub {
+    font-family: 'Bangers', 'Anton', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: #ff3c3c;
+    text-shadow: 2px 2px 0 #000;
+    margin-top: 2px;
+  }
+  .aqb-logos-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 6px;
+    padding: 0 2px;
+  }
+  .aqb-logo-badge {
+    background: #1a1a2e;
+    border: 2px solid #fff;
+    border-radius: 6px;
+    padding: 3px 7px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    min-width: 80px;
+  }
+  .aqb-logo-badge.fulton {
+    background: #fff;
+    color: #1a1a2e;
+    min-width: 90px;
+    justify-content: center;
+  }
+  .aqb-logo-badge.games4 {
+    background: #1a1a2e;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 2px 6px;
+  }
+  .games4-top { color: #4fc3f7; font-size: 8px; letter-spacing: 1px; }
+  .games4-num { color: #fff; font-size: 20px; font-family: 'Bangers', sans-serif; line-height: 1; }
+  .games4-bot { color: #aaa; font-size: 7px; letter-spacing: 1px; }
+
+  /* BRACKET LAYOUT */
+  .aqb-bracket {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    justify-content: center;
+  }
+  .aqb-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 0;
+  }
+  .aqb-round-r1 { flex: 0 0 130px; justify-content: space-evenly; }
+  .aqb-round-r2 { flex: 0 0 130px; }
+  .aqb-round-r3 { flex: 0 0 130px; }
+  .aqb-round-final { flex: 0 0 150px; }
+
+  .aqb-matchup {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin: 3px 0;
+  }
+
+  .aqb-team {
+    background: #fff;
+    border: 2px solid #b0001a;
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-size: 8.5px;
+    font-family: 'Anton', 'Arial Black', sans-serif;
+    color: #111;
+    text-align: left;
+    line-height: 1.25;
+    white-space: nowrap;
+    min-width: 120px;
+    min-height: 22px;
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.5px;
+  }
+  .aqb-team.winner {
+    background: #fff;
+    border-color: #ff2200;
+    font-weight: 700;
+  }
+  .aqb-team.highlighted {
+    background: #ff2200;
+    color: #fff;
+    border-color: #ff2200;
+  }
+  .aqb-team.clawbacks-win {
+    background: #cc0000;
+    color: #fff;
+    border-color: #ff0000;
+    font-size: 9px;
+  }
+  .aqb-vs {
+    font-family: 'Bangers', sans-serif;
+    font-size: 9px;
+    color: #ff4444;
+    text-align: center;
+    padding: 1px 0;
+    letter-spacing: 1px;
+  }
+  .aqb-team span.sub { display: block; font-size: 7.5px; letter-spacing: 0.3px; }
+
+  /* CONNECTORS */
+  .aqb-conn-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 16px;
+    position: relative;
+    align-self: stretch;
+  }
+
+  /* CHAMPION BOX */
+  .aqb-champion-box {
+    background: #9b0000;
+    border: 3px solid #ff2200;
+    border-radius: 5px;
+    width: 148px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .aqb-champion-label {
+    font-family: 'Bangers', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  /* BOTTOM LOGO */
+  .aqb-bottom-logo {
+    position: absolute;
+    right: 16px;
+    bottom: 10px;
+    z-index: 3;
+  }
+  .aqb-bottom-logo-text {
+    font-family: 'Bangers', sans-serif;
+    font-size: 28px;
+    color: #fff;
+    text-shadow: 2px 2px 0 #000;
+    letter-spacing: 2px;
+    line-height: 1;
+    text-align: right;
+  }
+  .aqb-bottom-logo-ball {
+    width: 64px;
+    height: 64px;
+    float: right;
+    margin-top: 4px;
+  }
+
+  /* SVG connector paths */
+  .bracket-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+</style>
+
+<div class="aqb-root" id="aqb-root">
+  <div class="aqb-rays">
+    <svg viewBox="0 0 700 560" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.13" fill="#fff">
+        <polygon points="350,280 370,0 330,0"/>
+        <polygon points="350,280 560,80 530,50"/>
+        <polygon points="350,280 700,200 700,160"/>
+        <polygon points="350,280 700,350 700,310"/>
+        <polygon points="350,280 560,480 590,510"/>
+        <polygon points="350,280 370,560 330,560"/>
+        <polygon points="350,280 140,480 110,510"/>
+        <polygon points="350,280 0,350 0,310"/>
+        <polygon points="350,280 0,200 0,160"/>
+        <polygon points="350,280 140,80 170,50"/>
+        <polygon points="350,280 460,0 420,0"/>
+        <polygon points="350,280 640,110 620,80"/>
+        <polygon points="350,280 700,270 700,230"/>
+        <polygon points="350,280 620,450 650,480"/>
+        <polygon points="350,280 440,560 400,560"/>
+        <polygon points="350,280 260,560 220,560"/>
+        <polygon points="350,280 80,450 50,480"/>
+        <polygon points="350,280 0,270 0,230"/>
+        <polygon points="350,280 80,110 60,80"/>
+        <polygon points="350,280 240,0 200,0"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="aqb-header">
+    <div class="aqb-title-main">AQUABALL CLASH</div>
+    <div class="aqb-title-sub">RED POD_P</div>
+  </div>
+
+  <div class="aqb-logos-row">
+    <div class="aqb-logo-badge games4">
+      <span class="games4-top">OCEAN BOWL</span>
+      <span class="games4-num">4</span>
+      <span class="games4-bot">GAMES</span>
+    </div>
+    <div style="flex:1"></div>
+    <div class="aqb-logo-badge fulton">
+      <span style="font-family:'Anton',sans-serif;font-size:13px;color:#1a1a2e;letter-spacing:1px;">Fulton Bank</span>
+    </div>
+  </div>
+
+  <div class="aqb-bracket" id="aqb-bracket-content">
+    <!-- ROUND 1 -->
+    <div class="aqb-round aqb-round-r1" id="r1">
+      <!-- M1 -->
+      <div class="aqb-matchup">
+        <div class="aqb-team" style="font-size:7.5px;">SILENT<br><span style="font-size:9px;font-family:'Anton',sans-serif;">STINGRAYS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team winner" style="font-size:7.5px;">BLAZING<br><span style="font-size:9px;">BARRACUDAS</span></div>
+      </div>
+      <!-- M2 -->
+      <div class="aqb-matchup">
+        <div class="aqb-team winner" style="font-size:7.5px;">GOLDEN<br><span style="font-size:9px;">GUPPIES</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team" style="font-size:7.5px;">CORAL<br><span style="font-size:9px;">SAVIORS</span></div>
+      </div>
+      <!-- M3 -->
+      <div class="aqb-matchup">
+        <div class="aqb-team" style="font-size:7.5px;">REEF<br><span style="font-size:9px;">RIDERS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team winner" style="font-size:7.5px;">SILVERFIN<br><span style="font-size:9px;">SHARKS</span></div>
+      </div>
+      <!-- M4 -->
+      <div class="aqb-matchup">
+        <div class="aqb-team" style="font-size:7.5px;">NEON<br><span style="font-size:9px;">NARWHALS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team winner" style="font-size:7.5px;">BLUE<br><span style="font-size:9px;">BARRACUDAS</span></div>
+      </div>
+      <!-- M5 -->
+      <div class="aqb-matchup">
+        <div class="aqb-team highlighted" style="font-size:7.5px;">CLAW<br><span style="font-size:9px;">BACKS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team" style="font-size:7.5px;">TRIDENTS</div>
+      </div>
+    </div>
+
+    <!-- connector svg placeholder width -->
+    <div style="width:18px;flex-shrink:0;"></div>
+
+    <!-- ROUND 2 -->
+    <div class="aqb-round aqb-round-r2" id="r2" style="gap:0; justify-content:space-evenly;">
+      <div class="aqb-matchup">
+        <div class="aqb-team winner" style="font-size:7.5px;">BLAZING<br><span style="font-size:9px;">BARRACUDAS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team" style="font-size:7.5px;">GOLDEN<br><span style="font-size:9px;">GUPPIES</span></div>
+      </div>
+      <div class="aqb-matchup">
+        <div class="aqb-team winner" style="font-size:7.5px;">SILVERFIN<br><span style="font-size:9px;">SHARKS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team" style="font-size:7.5px;" style="font-size:9px;">LBT</div>
+      </div>
+      <div class="aqb-matchup">
+        <div class="aqb-team" style="font-size:7.5px;">BLUE<br><span style="font-size:9px;">BARRACUDAS</span></div>
+        <div class="aqb-vs">VS</div>
+        <div class="aqb-team highlighted" style="font-size:8px;">CLAWBACKS</div>
+      </div>
+    </div>
+
+    <div style="width:18px;flex-shrink:0;"></div>
+
+    <!-- ROUND 3 (Semis) -->
+    <div class="aqb-round aqb-round-r3" id="r3" style="justify-content:space-evenly;">
+      <div class="aqb-matchup">
+        <div class="aqb-team winner" style="font-size:8px;">BLAZING<br><span style="font-size:9px;">BARRACUDAS</span></div>
+        <div class="aqb-vs" style="color:#ff8800;">VS</div>
+        <div class="aqb-team winner" style="font-size:8px;">SILVERFIN<br><span style="font-size:9px;">SHARKS</span></div>
+      </div>
+      <div class="aqb-matchup" style="margin-top:12px;">
+        <div class="aqb-team clawbacks-win" style="font-size:8.5px;">CLAWBACKS</div>
+      </div>
+    </div>
+
+    <div style="width:18px;flex-shrink:0;"></div>
+
+    <!-- FINAL -->
+    <div class="aqb-round aqb-round-final" id="rfinal" style="justify-content:center; align-items:center;">
+      <div class="aqb-champion-box">
+        <div class="aqb-champion-label">CLAWBACKS</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Logo -->
+  <div class="aqb-bottom-logo">
+    <div style="display:flex;flex-direction:column;align-items:flex-end;">
+      <span style="font-family:'Bangers',sans-serif;font-size:22px;color:#fff;text-shadow:2px 2px 0 #000;letter-spacing:2px;line-height:1;">Aquaball</span>
+      <span style="font-family:'Bangers',sans-serif;font-size:22px;color:#ffcc00;text-shadow:2px 2px 0 #000;letter-spacing:2px;line-height:1;">Clash</span>
+      <svg width="54" height="54" viewBox="0 0 54 54">
+        <circle cx="27" cy="27" r="25" fill="#1a6bbf" stroke="#fff" stroke-width="2"/>
+        <ellipse cx="27" cy="27" rx="25" ry="10" fill="none" stroke="#fff" stroke-width="1.5"/>
+        <ellipse cx="27" cy="27" rx="10" ry="25" fill="none" stroke="#fff" stroke-width="1.5"/>
+        <circle cx="27" cy="27" r="6" fill="#fff" opacity="0.25"/>
+      </svg>
+    </div>
+  </div>
+</div>

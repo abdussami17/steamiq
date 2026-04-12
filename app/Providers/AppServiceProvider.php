@@ -10,6 +10,7 @@ use App\Observers\EventObserver;
 use App\Observers\OrganizationObserver;
 
 use App\Observers\StudentObserver;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $compiledViewsPath = storage_path('framework/views_runtime');
+
+        if (! File::exists($compiledViewsPath)) {
+            File::makeDirectory($compiledViewsPath, 0755, true);
+        }
+
+        config(['view.compiled' => $compiledViewsPath]);
+
         Schema::defaultStringLength(191);
         Student::observe(StudentObserver::class);
         Organization::observe(OrganizationObserver::class);

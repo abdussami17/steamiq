@@ -42,6 +42,9 @@ Route::get('/',           [DashboardController::class,  'index'])->name('dashboa
 Route::get('/scoreboard', [ScoreboardController::class, 'index'])->name('scoreboard.index');
 Route::get('/scoreboard/data', [ScoreboardController::class, 'getData'])->name('scoreboard.data');
 
+Route::get('/bracket', [EventController::class, 'bracketBoard'])->name('bracket.index');
+Route::get('/events/{event}/bracket', [EventController::class, 'bracket'])->name('events.bracket');
+
 Route::get('/leaderboard/top-teams',   [LeaderboardController::class, 'fetchTopThreeTeams'])->name('leaderboard.fetchTopThreeTeams');
 Route::get('/leaderboard/top-players', [LeaderboardController::class, 'fetchTopThreePlayers'])->name('leaderboard.fetchTopThreePlayers');
 
@@ -72,7 +75,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/scores/create', [ScoreController::class, 'store']);   // alias kept for backward compat
 
         // Inline & bulk edit — update by activity ID
-        Route::post('/scores/update-by-id', [ScoreController::class, 'updateById'])->name('scores.updateById');
+        Route::post('/scores/update-by-id',   [ScoreController::class, 'updateById'])->name('scores.updateById');
 
         // Pre-fill existing score
         Route::get('/scores/existing', [ScoreController::class, 'getExistingScore'])->name('scores.existing');
@@ -138,7 +141,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/roles/{id}',          [RoleController::class,      'update'])->name('roles.update');
         Route::post('/permissions',        [PermissionController::class, 'store'])->name('permissions.store');
         Route::delete('/permissions/{id}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
-
+        Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
         Route::prefix('api')->group(function() {
             Route::get('organizations/list', [CardAssignApiController::class, 'organizations'])->name('api.organizations.list');
@@ -157,7 +160,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/players/{player}/edit',        [StudentController::class, 'edit'])->name('student.edit');
         Route::post('/players/{player}/update',     [StudentController::class, 'update'])->name('student.update');
         Route::delete('/player-destroy/{player}',          [StudentController::class, 'destroy'])->name('student.destroy');
-
+        Route::post('/players/bulk-delete', [StudentController::class, 'bulkDelete'])->name('students.bulk.delete');
         // ---------------------------------------------------------------------
         // Team Management
         // ---------------------------------------------------------------------
@@ -180,13 +183,17 @@ Route::middleware('auth')->group(function () {
         // Event Management
         // ---------------------------------------------------------------------
         Route::get('/events',                    [EventController::class, 'index'])->name('events.index');
-        Route::get('/events/{event}/bracket',    [EventController::class, 'bracket'])->name('events.bracket');
+        Route::post('/events/{event}/bracket/init',           [EventController::class, 'bracketInit'])->name('events.bracket.init');
+        Route::post('/events/{event}/bracket/matches/{match}',[EventController::class, 'bracketUpdateMatch'])->name('events.bracket.match.update');
         Route::post('/events/store',             [EventController::class, 'store'])->name('events.store');
         Route::get('/events/{event}',            [EventController::class, 'show'])->name('events.show');
         Route::delete('/events/{event}',         [EventController::class, 'destroy'])->name('events.destroy');
         Route::post('/events/{event}/duplicate', [EventController::class, 'duplicate'])->name('events.duplicate');
         Route::get('/events/{event}/edit',       [EventController::class, 'edit'])->name('events.edit');
         Route::post('/events/{event}/update',    [EventController::class, 'update'])->name('events.update');
+        Route::patch('/events/{event}/status',   [EventController::class, 'updateStatus'])->name('events.updateStatus');
+        Route::post('/events/bulk-delete', [EventController::class, 'bulkDelete'])
+        ->name('events.bulkDelete');    
         Route::get('/events/{event}/players',    [TeamController::class, 'playersByEvent'])->name('teams.get_players');
         Route::get('/events/{event}/teams', function (\App\Models\Event $event) {
             $teams = \App\Models\Team::where('event_id', $event->id)->get(['id', 'team_name']);
@@ -195,6 +202,8 @@ Route::middleware('auth')->group(function () {
         // Add these alongside your existing event routes
 Route::get('/events/{event}/winner-teams', [EventController::class, 'getWinnerTeams']);
 Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']);
+    // Results (summary) for a closed event
+    Route::get('/events/{event}/results', [EventController::class, 'results']);
 
         // ---------------------------------------------------------------------
         // Tournament Management
@@ -243,17 +252,28 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
         Route::post('/organization/store',              [OrganizationController::class, 'store'])->name('organizations.store');
         Route::delete('/organizations/{organization}',  [OrganizationController::class, 'destroy'])->name('organizations.destroy');
         Route::post('/organizations/update/{id}',       [OrganizationController::class, 'update'])->name('organizations.update');
+        Route::post('/organizations/bulk-delete', [OrganizationController::class, 'bulkDelete'])
+        ->name('organizations.bulkDelete');
+
 
         Route::post('/groups',              [GroupController::class, 'store'])->name('groups.store');
         Route::post('/groups/update/{id}',  [GroupController::class, 'update'])->name('groups.update');
         Route::delete('/groups/{group}',    [GroupController::class, 'destroy'])->name('groups.destroy');
         Route::get('/groups/{group}/subgroups', [GroupController::class, 'subgroups']);
+        Route::post('/groups/bulk-delete', [GroupController::class, 'bulkDelete'])
+        ->name('groups.bulkDelete');
+
 
         Route::post('/subgroups/store',        [SubGroupController::class, 'store'])->name('subgroups.store');
         Route::delete('/subgroups/{subgroup}', [SubGroupController::class, 'destroy'])->name('subgroups.destroy');
         Route::get('/subgroup/fetch/{id}',     [SubGroupController::class, 'show'])->name('subgroup.fetch');
         Route::put('/subgroup/update/{subgroup}', [SubGroupController::class, 'update'])->name('subgroup.update');
         Route::get('/get-org-groups/{orgId}', [SubGroupController::class, 'getGroupByOrganization']);
+        Route::post('/subgroups/bulk-delete', [SubGroupController::class, 'bulkDelete'])
+        ->name('subgroups.bulkDelete');
+
+
+
         // ---------------------------------------------------------------------
         // Leaderboard (admin view)
         // ---------------------------------------------------------------------
@@ -267,7 +287,7 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
         Route::get('/settings',                  [SettingController::class, 'index'])->name('settings.index');
         Route::post('/profile/update',           [SettingController::class, 'updateProfile'])->name('profile.update');
         Route::get('/settings/activities/fetch', [SettingController::class, 'fetchChallengeActivities'])->name('settings.activities.fetch');
-
+        Route::delete('/users/{id}', [SettingController::class, 'destroyUser'])->name('setting.users.destroy');
     }); // end admin middleware
 
 }); // end auth middleware
