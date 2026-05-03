@@ -218,7 +218,7 @@ public function getOrganizations($eventId)
             'activities.*.activity_or_mission'        => 'required|in:activity,mission',
             'activities.*.activity_type'              => 'nullable|in:brain,esports,egaming,playground',
             'activities.*.badge_name'                 => 'nullable|string|max:255',
-            'activities.*.max_score'                  => 'nullable|numeric|min:0',
+            'activities.*.max_score'                  => 'required|numeric|min:0',
             'activities.*.point_structure'            => 'nullable|in:per_team,per_player',
             'activities.*.brain_type'                 => 'nullable|string|max:255',
             'activities.*.brain_description'          => 'nullable|string|max:500',
@@ -425,6 +425,13 @@ public function getWinnerTeams(Event $event): JsonResponse
 
 public function setWinner(Request $request, Event $event): JsonResponse
 {
+    if ($event->status === 'closed') {
+        return response()->json([
+            'success' => false,
+            'message' => 'This event is closed. Winner cannot be changed.',
+        ], 423);
+    }
+
     $request->validate(['winner_team_id' => 'required|exists:teams,id']);
 
     try {
@@ -715,6 +722,13 @@ public function setWinner(Request $request, Event $event): JsonResponse
 
     public function bracketInit(Request $request, Event $event): JsonResponse
     {
+        if ($event->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This event is closed. Bracket cannot be re-initialized.',
+            ], 423);
+        }
+
         try {
             BracketMatch::where('event_id', $event->id)->delete();
 
@@ -741,6 +755,13 @@ public function setWinner(Request $request, Event $event): JsonResponse
     {
         if ($match->event_id !== $event->id) {
             return response()->json(['success' => false, 'message' => 'Match not found.'], 404);
+        }
+
+        if ($event->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This event is closed. Match results cannot be updated.',
+            ], 423);
         }
 
         $request->validate([
@@ -857,12 +878,13 @@ public function setWinner(Request $request, Event $event): JsonResponse
             'id'             => $m->id,
             'round_no'       => $m->round_no,
             'match_no'       => $m->match_no,
-            'team_a'         => $ta ? ['id' => $ta->id, 'name' => $ta->name, 'division' => $ta->division] : null,
-            'team_b'         => $tb ? ['id' => $tb->id, 'name' => $tb->name, 'division' => $tb->division] : null,
+            'team_a'         => $ta ? ['id' => $ta->id, 'name' => $ta->name, 'division' => $ta->division, 'logo' => $ta->profile] : null,
+            'team_b'         => $tb ? ['id' => $tb->id, 'name' => $tb->name, 'division' => $tb->division, 'logo' => $tb->profile] : null,
             'team_a_score'   => $m->team_a_score,
             'team_b_score'   => $m->team_b_score,
             'winner_team_id' => $m->winner_team_id,
             'winner_name'    => $m->winner?->name,
+            'winner_logo'    => $m->winner?->profile,
             'status'         => $m->status,
             'next_match_id'  => $m->next_match_id,
             'next_is_team_a' => $m->next_is_team_a,

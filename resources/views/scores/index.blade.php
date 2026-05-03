@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Scoring - SteamIQ')
+@section('title', 'STEAM XRS Manager')
 
 @section('content')
 @push('styles')

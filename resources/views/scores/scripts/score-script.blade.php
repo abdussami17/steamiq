@@ -102,15 +102,46 @@
 
         function renderCardBadges(cards) {
             if (!cards || !cards.length) return '<span class="score-zero">—</span>';
-            const counts = {};
-            cards.forEach(c => {
-                const t = (c.type || 'unknown');
-                counts[t] = (counts[t] || 0) + 1;
-            });
+
             const map = { red: 'card-red', yellow: 'card-yellow', orange: 'card-orange', unknown: 'card-unknown' };
-            return `<span class="card-badges">${Object.keys(counts).map(t =>
-                `<span class="card-badge ${map[t]||'card-unknown'}">${counts[t]}</span>`
+            return `<span class="card-badges">${cards.map(c =>
+                `<span class="card-chip ${map[c.type]||'card-unknown'}" title="${esc((c.type || 'unknown').toUpperCase())} (${esc(c.assignable_type || 'n/a')})">
+                    <span class="card-chip-type">${esc((c.type || 'unknown').charAt(0).toUpperCase())}</span>
+                    <button type="button" class="card-unassign-btn" data-assignment-id="${c.assignment_id}" data-card-type="${esc(c.type || 'unknown')}">x</button>
+                </span>`
             ).join('')}</span>`;
+        }
+
+        async function unassignCard(assignmentId, cardType) {
+            if (!assignmentId) return;
+
+            const ok = confirm(`Unassign this ${String(cardType || 'card').toUpperCase()} card?`);
+            if (!ok) return;
+
+            try {
+                const res = await fetch(`/card-assignments/${assignmentId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken(),
+                    },
+                });
+
+                const json = await res.json();
+
+                if (!res.ok || !json.success) {
+                    throw new Error(json.message || 'Failed to unassign card');
+                }
+
+                toast('Card unassigned Successfully', 'ok');
+                const eventId = $id('selectEvent').value;
+                if (eventId) {
+                    await fetchLeaderboard(eventId);
+                }
+            } catch (err) {
+                console.error(err);
+                toast('Error: ' + err.message, 'err');
+            }
         }
 
         function csrfToken() {
@@ -132,6 +163,20 @@
             return String(str)
                 .replace(/&/g, '&amp;').replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           POINT STRUCTURE VALIDATION
+           Returns true if the row type is allowed to edit this cell.
+           - point_structure 'per_team'   → only team rows can edit
+           - point_structure 'per_player' → only student rows can edit
+           - null / anything else         → both allowed (no restriction)
+        ═══════════════════════════════════════════════════════════ */
+        function isEditAllowed(rowType, pointStructure) {
+            if (!pointStructure) return true;
+            if (pointStructure === 'per_team')   return rowType === 'team';
+            if (pointStructure === 'per_player') return rowType === 'student';
+            return true;
         }
 
         /* ═══════════════════════════════════════════════════════════
@@ -277,10 +322,12 @@
             const cats = data.categories || [];
             const rows = data.rows;
 
-            const catNames     = cats.map(c => c.name);
-            const catSlugs     = cats.map(c => c.type);
-            const catIds       = cats.map(c => c.id);
-            const catMaxScores = cats.map(c => c.max_score || 9999);
+            const catNames        = cats.map(c => c.name);
+            const catSlugs        = cats.map(c => c.type);
+            const catIds          = cats.map(c => c.id);
+            const catMaxScores    = cats.map(c => c.max_score || 9999);
+            // NEW: store point_structure per category column
+            const catPointStructs = cats.map(c => c.point_structure || null);
 
             const hasBonusData = rows.some(r => (r.bonus_assignment ?? 0) > 0);
             const hasFlags     = rows.some(r => (r.cards && r.cards.length > 0));
@@ -510,6 +557,7 @@
                     const slug = catSlugs[i];
                     const actId = catIds[i];
                     const maxSc = catMaxScores[i];
+                    const pointStruct = catPointStructs[i]; // NEW
 
                     td.innerHTML = scorePill(pts, slug);
                     td.dataset.cat = cat;
@@ -517,25 +565,39 @@
                     td.dataset.slug = slug;
                     td.dataset.activityId = actId;
                     td.dataset.maxScore = maxSc;
+                    td.dataset.pointStructure = pointStruct || ''; // NEW
 
-                    td.className = 'score-edit-cell';
+                    // NEW: check if this row type is allowed to edit this cell
+                    const allowed = isEditAllowed(row.type, pointStruct);
 
-                    // Use touchend on mobile to avoid 300ms tap delay
-                    if (isTouchDevice()) {
-                        let touchMoved = false;
-                        td.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
-                        td.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
-                        td.addEventListener('touchend', function(e) {
-                            if (touchMoved) return; // was a scroll gesture, not a tap
-                            e.preventDefault();
-                            if (_bulkMode) { toggleBulkSelect(td, row); }
-                            else { openScoreEditor(td, row); }
-                        });
+                    if (allowed) {
+                        td.className = 'score-edit-cell';
+
+                        // Use touchend on mobile to avoid 300ms tap delay
+                        if (isTouchDevice()) {
+                            let touchMoved = false;
+                            td.addEventListener('touchstart', () => { touchMoved = false; }, { passive: true });
+                            td.addEventListener('touchmove', () => { touchMoved = true; }, { passive: true });
+                            td.addEventListener('touchend', function(e) {
+                                if (touchMoved) return; // was a scroll gesture, not a tap
+                                e.preventDefault();
+                                if (_bulkMode) { toggleBulkSelect(td, row); }
+                                else { openScoreEditor(td, row); }
+                            });
+                        } else {
+                            td.addEventListener('click', function() {
+                                if (_bulkMode) { toggleBulkSelect(td, row); }
+                                else { openScoreEditor(td, row); }
+                            });
+                        }
                     } else {
-                        td.addEventListener('click', function() {
-                            if (_bulkMode) { toggleBulkSelect(td, row); }
-                            else { openScoreEditor(td, row); }
-                        });
+                        // NOT allowed: visually indicate cell is locked for this row type
+                        td.className = 'score-edit-cell score-cell-locked';
+                        td.title = pointStruct === 'per_team'
+                            ? 'This activity only accepts team scores'
+                            : 'This activity only accepts player scores';
+                        td.style.cursor = 'not-allowed';
+                        td.style.opacity = '0.4';
                     }
 
                     tr.appendChild(td);
@@ -559,6 +621,13 @@
                 if (hasFlags) {
                     const tdFlags = document.createElement('td');
                     tdFlags.innerHTML = renderCardBadges(row.cards);
+                    tdFlags.querySelectorAll('.card-unassign-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            unassignCard(this.dataset.assignmentId, this.dataset.cardType);
+                        });
+                    });
                     tr.appendChild(tdFlags);
                 }
 
@@ -609,8 +678,20 @@
             input.value = oldPts;
             input.title = `Max: ${maxScore}`;
 
+            // Zero-out button
+            const zeroBtn = document.createElement('button');
+            zeroBtn.type = 'button';
+            zeroBtn.className = 'score-zero-btn';
+            zeroBtn.title = 'Set to 0';
+            zeroBtn.textContent = '×0';
+
+            const wrap = document.createElement('div');
+            wrap.className = 'score-edit-wrap';
+            wrap.appendChild(input);
+            wrap.appendChild(zeroBtn);
+
             td.innerHTML = '';
-            td.appendChild(input);
+            td.appendChild(wrap);
             input.focus();
             // On iOS, select() may not work perfectly — use setSelectionRange
             try { input.select(); } catch(e) {}
@@ -620,7 +701,10 @@
 
             function commit() {
                 if (committed) return;
-                const newVal = parseInt(input.value, 10);
+
+                // NEW: treat empty/blank input as 0 (remove points)
+                const rawVal = input.value.trim();
+                const newVal = rawVal === '' ? 0 : parseInt(rawVal, 10);
 
                 if (isNaN(newVal)) { cancel(); return; }
                 if (newVal > maxScore) { toast(`Max score is ${maxScore}`, 'warn'); cancel(); return; }
@@ -637,6 +721,13 @@
                 td.innerHTML = scorePill(oldPts, slug);
                 td.dataset.pts = oldPts;
             }
+
+            // Prevent blur on input when clicking the zero button
+            zeroBtn.addEventListener('mousedown', e => e.preventDefault());
+            zeroBtn.addEventListener('click', () => {
+                input.value = 0;
+                commit();
+            });
 
             input.addEventListener('keydown', e => {
                 if (e.key === 'Enter') { e.preventDefault(); commit(); }
@@ -714,6 +805,9 @@
         }
 
         function toggleBulkSelect(td, row) {
+            // NEW: locked cells cannot be bulk-selected
+            if (td.classList.contains('score-cell-locked')) return;
+
             const idx = _bulkSelected.findIndex(s => s.td === td);
             if (idx > -1) {
                 _bulkSelected.splice(idx, 1);
@@ -769,7 +863,8 @@
                     <td>
                         <input type="number" inputmode="numeric" pattern="[0-9]*"
                                max="${sel.maxScore}" min="0" value="${sel.pts}"
-                               class="bulk-pts-input" data-idx="${i}" data-max="${sel.maxScore}">
+                               class="bulk-pts-input" data-idx="${i}" data-max="${sel.maxScore}"
+                               placeholder="0">
                         <div class="err-hint" id="bulk-err-${i}">Exceeds max (${sel.maxScore})</div>
                     </td>
                     <td style="font-size:11px;">${sel.maxScore}</td>
@@ -788,9 +883,11 @@
             tbodyEl.querySelectorAll('.bulk-pts-input').forEach(input => {
                 input.addEventListener('input', function() {
                     const max = parseInt(this.dataset.max);
-                    const val = parseInt(this.value);
+                    // NEW: empty is valid (treated as 0), only flag if a number exceeds max
+                    const rawVal = this.value.trim();
+                    const val = rawVal === '' ? 0 : parseInt(rawVal);
                     const errEl = $id(`bulk-err-${this.dataset.idx}`);
-                    if (val > max) {
+                    if (!isNaN(val) && val > max) {
                         this.style.borderColor = '#f85149';
                         if (errEl) errEl.style.display = 'block';
                     } else {
@@ -823,7 +920,10 @@
 
                 const idx = parseInt(input.dataset.idx);
                 const max = parseInt(input.dataset.max);
-                const newPts = parseInt(input.value);
+
+                // NEW: treat empty as 0
+                const rawVal = input.value.trim();
+                const newPts = rawVal === '' ? 0 : parseInt(rawVal);
 
                 if (isNaN(newPts) || newPts > max) {
                     hasError = true;

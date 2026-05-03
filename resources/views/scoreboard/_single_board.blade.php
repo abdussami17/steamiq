@@ -12,8 +12,7 @@
         default   => '',
     };
     $totalTeams = count($rows);
-    $actCount   = $activities->count();
-    $totalCols  = 5 + $actCount + 2 + 1 + 1 + 1; // no+name+mem+div + acts + total + flags+org + rank
+    $totalCols  = 8; // team no, team name, members, total points, division, flags, org, rank
 
     // Group rows by group_id, preserving the rank-sorted order
     $grouped = collect($rows)->groupBy('group_id');
@@ -40,13 +39,8 @@
                 <th>Team No.</th>
                 <th class="th-l">Team Name</th>
                 <th class="th-l">Members</th>
+                <th>Total Points</th>
                 <th>Division</th>
-                {{-- @if($actCount > 0)
-                    @foreach($activities as $act)
-                        <th>{{ Str::limit($act->display_name, 13) }}</th>
-                    @endforeach
-                @endif --}}
-                <th>Total</th>
                 <th>Flags</th>
                 <th class="th-l">ORG</th>
                 <th class="th-rank">Rank</th>
@@ -61,6 +55,7 @@
                     </td>
                 </tr>
             @else
+                @php $teamCounter = 0; @endphp
                 @foreach($grouped as $groupId => $groupRows)
                     {{-- Group header --}}
                     <tr class="pg-grp">
@@ -72,24 +67,15 @@
                     {{-- Data rows (already rank-sorted) --}}
                     @foreach($groupRows as $row)
                         @php
+                            $teamCounter++;
                             $rkCls = match($row['rank']) { 1 => 'r1', 2 => 'r2', 3 => 'r3', default => '' };
                         @endphp
                         <tr class="pg-dr">
-                            <td class="td-no">{{ $row['team_no'] }}</td>
+                            <td class="td-no">{{ $teamCounter }}</td>
                             <td class="td-name">{{ $row['team_name'] }}</td>
                             <td class="td-mem">{{ $row['members'] ?: '—' }}</td>
-                            <td class="td-div">{{ Str::upper($row['division'] ?? '') }}</td>
-
-                            {{-- @if($actCount > 0)
-                                @foreach($activities as $act)
-                                    @php $pts = $row['activity_scores'][$act->id] ?? 0; @endphp
-                                    <td class="td-pts {{ $pts > 0 ? '' : 'td-pts0' }}">
-                                        {{ $pts > 0 ? number_format($pts) : '—' }}
-                                    </td>
-                                @endforeach
-                            @endif --}}
-
                             <td class="td-pts">{{ number_format($row['total_points'] ?? 0) }}</td>
+                            <td class="td-div">{{ Str::upper($row['division'] ?? '') }}</td>
 
                             <td class="td-flg">
                                 {{ $row['flag_totals'] ?? 0 }}

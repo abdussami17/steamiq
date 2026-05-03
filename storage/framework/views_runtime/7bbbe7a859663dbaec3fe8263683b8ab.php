@@ -116,21 +116,44 @@
         }
 
         teams.forEach(t => {
-            const item = document.createElement('label');
-            item.className = 'd-flex align-items-center gap-3';
-            item.style.padding = '10px 12px';
-            item.style.borderRadius = '8px';
-            item.style.border = `1px solid ${currentWinner==t.id ? '#6366f1' : '#1e2d45'}`;
-            item.style.cursor = 'pointer';
-            item.style.background = currentWinner == t.id ? 'rgba(99,102,241,0.1)' : '#0f1828';
-            item.style.transition = '.15s';
-            item.innerHTML = `
-            <input type="radio" name="cw-winner" value="${t.id}" ${currentWinner==t.id?'checked':''} style="width:16px;height:16px;accent-color:#6366f1;" />
-            <div style="font-weight:700;color:#e2e8f0;">${t.name}</div>
-            ${t.org_name||t.subgroup_name ? `<div style="margin-left:auto;color:#64748b;font-size:12px;">${t.org_name?('Org: '+t.org_name):''}${t.subgroup_name?(' • Sub: '+t.subgroup_name):''}</div>` : ''}
-        `;
-            list.appendChild(item);
-        });
+    const item = document.createElement('label');
+    item.className = 'd-flex align-items-center gap-3';
+    item.style.padding = '10px 12px';
+    item.style.borderRadius = '8px';
+    item.style.cursor = 'pointer';
+    item.style.transition = '.15s';
+
+    const isSelected = currentWinner == t.id;
+
+    item.style.border = `1px solid ${isSelected ? '#ffffff' : '#2a3446'}`;
+    item.style.background = isSelected ? '#1e293b' : '#0f172a';
+
+    item.innerHTML = `
+        <input 
+            type="radio" 
+            name="cw-winner" 
+            value="${t.id}" 
+            ${isSelected ? 'checked' : ''} 
+            style="width:16px;height:16px;accent-color:#ffffff;cursor:pointer;" 
+        />
+
+       
+        <div style="font-weight:600;color:#e2e8f0;">
+            ${t.name}
+        </div>
+
+        ${
+            t.org_name || t.subgroup_name 
+            ? `<div style="margin-left:auto;color:#94a3b8;font-size:12px;">
+                ${t.org_name ? ('Org: ' + t.org_name) : ''}
+                ${t.subgroup_name ? (' • Sub: ' + t.subgroup_name) : ''}
+              </div>` 
+            : ''
+        }
+    `;
+
+    list.appendChild(item);
+});
 
         document.getElementById('cw-finalize-btn').onclick = finalizeWinnerSelection;
         chooseWinnerModal.show();
@@ -161,29 +184,32 @@
                 if (!res.success) throw new Error(res.message || 'Failed to finalize');
                 applyCardStatus(id, 'closed');
                 chooseWinnerModal.hide();
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
 
             })
             .catch(err => alert(err.message || 'Failed to finalize winner'));
     }
 
-    function renderEventResultsInCard(eventId, stats, winner) {
+    // function renderEventResultsInCard(eventId, stats, winner) {
 
-        const container = document.getElementById('event-results-' + eventId);
-        if (!container) return;
+    //     const container = document.getElementById('event-results-' + eventId);
+    //     if (!container) return;
 
-        const badge = document.getElementById('ec-badge-' + eventId);
-        if (!badge) return;
+    //     const badge = document.getElementById('ec-badge-' + eventId);
+    //     if (!badge) return;
 
-        const status = badge.textContent.trim().toLowerCase();
-
-
-        if (status !== 'closed') {
-            container.innerHTML = '';
-            return;
-        }
+    //     const status = badge.textContent.trim().toLowerCase();
 
 
-    }
+    //     if (status !== 'closed') {
+    //         container.innerHTML = '';
+    //         return;
+    //     }
+
+
+    // }
 
     function renderEventResultsInCard(eventId, stats, winner) {
 
@@ -192,22 +218,29 @@ if (!container) return;
 
 container.innerHTML = '';
 
-const makeStat = (label, value) => `
-    <div class="events_stat">
-        <div class="events_stat-label">${label}</div>
-        <div class="events_stat-value">${value ?? 'N/A'}</div>
-    </div>
-`;
+    // Helper to format numbers with thousand separators
+    const fmt = (n) => {
+        if (n === undefined || n === null || n === '') return 'N/A';
+        const num = Number(n);
+        return isNaN(num) ? n : num.toLocaleString();
+    };
 
-const topRow = (arr = []) =>
-    arr.slice(0, 3).map(i => `
-        <div class="row-item">
-            <div class="title">${i.student ?? i.team ?? '—'}</div>
-            <div class="points">
-                <span class="badge badge-live">${i.points ?? 0}</span>
-            </div>
+    const makeStat = (label, value) => `
+        <div class="events_stat">
+            <div class="events_stat-label">${label}</div>
+            <div class="events_stat-value">${value ?? 'N/A'}</div>
         </div>
-    `).join('');
+    `;
+
+    const topRow = (arr = []) =>
+        arr.slice(0, 3).map(i => `
+            <div class="row-item">
+                <div class="title">${i.student ?? i.team ?? '—'}</div>
+                <div class="points">
+                    <span class="badge badge-live">${fmt(i.points ?? 0)}</span>
+                </div>
+            </div>
+        `).join('');
 
 const toggleId = `event_toggle_${eventId}`;
 
@@ -216,10 +249,10 @@ container.innerHTML = `
 
         <!-- TOP STATS -->
         <div class="events_stats-grid">
-            ${makeStat('Winner','🏆 '+winner?.name ?? '—')}
-            ${makeStat('Participants', stats.participants)}
-            ${makeStat('Total Points', stats.total_points)}
-            ${makeStat('Top Score', stats.top_score?.points ?? 0)}
+            ${makeStat('Winner', winner?.name ? '🏆 ' + winner.name : '—')}
+            ${makeStat('Participants', fmt(stats.participants))}
+            ${makeStat('Total Points', fmt(stats.total_points))}
+            ${makeStat('Top Score', fmt(stats.top_score?.points ?? 0))}
         </div>
 
         <!-- TOGGLE HEADER -->
@@ -240,7 +273,7 @@ container.innerHTML = `
                     ${stats.top_score?.student ?? stats.top_score?.team ?? '—'}
                 </div>
                 <div class="points">
-                    <span class="badge badge-live">${stats.top_score?.points ?? 0}</span>
+                    <span class="badge badge-live">${fmt(stats.top_score?.points ?? 0)}</span>
                 </div>
             </div>
 
@@ -286,10 +319,10 @@ function toggleEventDetails(id, btn) {
             if (!badge) return;
 
             const eventId = badge.id.replace('ec-badge-', '');
-            const status = badge.textContent.trim().toLowerCase();
+            // const status = badge.textContent.trim().toLowerCase();
 
 
-            if (status !== 'closed') return;
+            // if (status !== 'closed') return;
 
             fetch(`/events/${eventId}/results`)
                 .then(r => r.json())

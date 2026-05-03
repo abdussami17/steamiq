@@ -198,7 +198,7 @@ window.updatePlayer = async function() {
         <td>${row.student || 'N/A'}</td>
         <td>${row.team || 'N/A'}</td>
         <td>${row.activity || 'N/A'}</td>
-        <td style="font-weight:700">${row.total || 0}</td>
+        <td style="font-weight:700">${Number(row.total || 0).toLocaleString()}</td>
         <td style="font-weight:700;font-size:22px;text-align:center">${renderRank(row.rank)}</td>
 
         <td>
@@ -275,7 +275,7 @@ document.getElementById('playerSearch').addEventListener('input', function(){
     const filter = this.value.toLowerCase();
     const rows = document.querySelectorAll('#playersTableBody tr');
     rows.forEach(row => {
-        const cell = row.cells[0]; // Team Name column
+        const cell = row.cells[1]; // Team Name column
         if (!cell) { row.style.display = 'none'; return; }
         const name = cell.querySelector('input') ? cell.querySelector('input').value.toLowerCase() : cell.textContent.toLowerCase();
         row.style.display = name.includes(filter) ? '' : 'none';
@@ -283,54 +283,7 @@ document.getElementById('playerSearch').addEventListener('input', function(){
 });
     })
     </script>
-
-<script>
-    document.getElementById('addStudentForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-    
-        const form = this;
-        const formData = new FormData(form);
-    
-        try {
-            const res = await fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: formData
-            });
-    
-            const data = await res.json();
-    
-            if (!res.ok) {
-                throw data;
-            }
-    
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                confirmButtonColor: '#000000',
-                text: data.message
-            });
-    
-            form.reset();
-    
-            // optional: close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
-            modal.hide();
-    
-        } catch (err) {
-    
-           
-            Swal.fire({
-                icon: 'error',
-                title: 'Warning!',
-                confirmButtonColor: '#000000',
-                text: err.message || 'Something went wrong'
-            });
-        }
-    });
-    </script>
+{{-- addStudentForm submit handler moved to create-students.blade.php @push('scripts') so it runs on every page --}}
     <script>
     function initPlayerCheckboxes() {
 

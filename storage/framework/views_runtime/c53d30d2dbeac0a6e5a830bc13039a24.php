@@ -90,7 +90,7 @@
     border: 1px solid #1e2d45;
     border-radius: 10px;
     padding: 6px;
-    min-width: 120px;
+    min-width: 140px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, .55);
     animation: ec-fadein .15s ease;
 }
@@ -116,7 +116,7 @@
     border: none;
     background: transparent;
     border-radius: 7px;
-    font-size: 12px;
+    font-size: 1rem;
     font-weight: 600;
     color: #94a3b8;
     cursor: pointer;
@@ -134,8 +134,8 @@
 }
 
 .ec-status-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     flex-shrink: 0;
 }

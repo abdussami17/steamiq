@@ -54,6 +54,14 @@ class ScoreController extends Controller
             );
         }
 
+        $event = Event::find($request->event_id);
+        if ($event && $event->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This event is closed. Scores can no longer be updated.',
+            ], 423);
+        }
+
         $activity = ChallengeActivity::find($request->challenge_activity_id);
         if (!$activity) {
             return response()->json(['success' => false, 'message' => 'Invalid activity.'], 404);
@@ -110,6 +118,14 @@ class ScoreController extends Controller
 
         if (!$request->team_id && !$request->student_id) {
             return response()->json(['success' => false, 'message' => 'team_id or student_id required.'], 422);
+        }
+
+        $event = Event::find($request->event_id);
+        if ($event && $event->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This event is closed. Scores can no longer be updated.',
+            ], 423);
         }
 
         
@@ -171,6 +187,14 @@ class ScoreController extends Controller
 
         $eventId = $request->event_id;
         $bonusPts = $request->bonus_points;
+
+        $event = Event::find($eventId);
+        if ($event && $event->status === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This event is closed. Bonus points can no longer be assigned.',
+            ], 423);
+        }
 
         // Resolve team IDs and student IDs in scope
         $teamIds = collect();
@@ -302,14 +326,23 @@ class ScoreController extends Controller
     }
 
     /**
-     * Get all activities for an event
+     * Get all activities for an event.
+     * NOTE: point_structure is included so the frontend can enforce
+     * per_team / per_player restrictions on score cells.
      */
     public function getEventActivities(Event $event)
     {
         return response()->json(
             $event
                 ->activities()
-                ->select(['id', 'event_id', 'name', 'max_score', 'activity_or_mission', 'activity_type', 'badge_name', 'brain_type', 'brain_description', 'point_structure', 'esports_type', 'esports_players', 'esports_structure', 'esports_description', 'egaming_type', 'egaming_mode', 'egaming_structure', 'egaming_description', 'playground_description', 'created_at', 'updated_at'])
+                ->select([
+                    'id', 'event_id', 'name', 'max_score', 'activity_or_mission',
+                    'activity_type', 'badge_name', 'brain_type', 'brain_description',
+                    'point_structure',                          // ← included for frontend validation
+                    'esports_type', 'esports_players', 'esports_structure', 'esports_description',
+                    'egaming_type', 'egaming_mode', 'egaming_structure', 'egaming_description',
+                    'playground_description', 'created_at', 'updated_at',
+                ])
                 ->orderBy('id')
                 ->get(),
         );
@@ -452,14 +485,32 @@ class ScoreController extends Controller
                     }
                 })->get();
 
-            // Build team -> cards map
+            // Build team -> cards map (aggregate: team + student + group + org level)
+            // and student -> direct cards map (only cards assigned to that student)
             $teamCardMap = [];
             foreach ($allTeamIds as $tid) $teamCardMap[$tid] = [];
+            $studentDirectCardMap = [];
 
             foreach ($cardAssignments as $ca) {
                 $atype = $ca->assignable_type;
                 $aid = $ca->assignable_id;
-                $cardMeta = $ca->card ? ['assignment_id' => $ca->id, 'card_id' => $ca->card->id, 'type' => $ca->card->type, 'negative_points' => $ca->card->negative_points] : ['assignment_id' => $ca->id, 'card_id' => null, 'type' => 'unknown', 'negative_points' => 0];
+                $cardMeta = $ca->card
+                    ? [
+                        'assignment_id' => $ca->id,
+                        'card_id' => $ca->card->id,
+                        'type' => $ca->card->type,
+                        'negative_points' => $ca->card->negative_points,
+                        'assignable_type' => $ca->assignable_type,
+                        'assignable_id' => $ca->assignable_id,
+                    ]
+                    : [
+                        'assignment_id' => $ca->id,
+                        'card_id' => null,
+                        'type' => 'unknown',
+                        'negative_points' => 0,
+                        'assignable_type' => $ca->assignable_type,
+                        'assignable_id' => $ca->assignable_id,
+                    ];
 
                 if ($atype === 'team' && isset($teamCardMap[$aid])) {
                     // avoid duplicate assignment entries
@@ -469,6 +520,9 @@ class ScoreController extends Controller
                     }
                     if (!$exists) $teamCardMap[$aid][] = $cardMeta;
                 } elseif ($atype === 'student') {
+                    // Track on student directly
+                    $studentDirectCardMap[$aid][] = $cardMeta;
+                    // Also aggregate into the team total
                     $tid = $studentTeamMap[$aid] ?? null;
                     if ($tid) {
                         $exists = false;
@@ -498,6 +552,7 @@ class ScoreController extends Controller
 
             // expose to buildBlock via controller property
             $this->teamCardMap = $teamCardMap;
+            $this->studentDirectCardMap = $studentDirectCardMap;
 
             // Also include bonus assignments applied at group or organization level
             $groupBonusMap = [];
@@ -538,7 +593,7 @@ class ScoreController extends Controller
             $teamBonusMap = $finalTeamBonusMap;
 
             
-            // Build activity map: display_name => ['slug'=>..., 'id'=>..., 'max_score'=>...]
+            // Build activity map: display_name => ['slug'=>..., 'id'=>..., 'max_score'=>..., 'point_structure'=>...]
             $activityMap = [];
 
             // Include any ChallengeActivity records defined for this event so that
@@ -632,14 +687,15 @@ class ScoreController extends Controller
                 }
             }
 
-            // Categories payload — include activity id and max_score
+            // Categories payload — include activity id, max_score, and point_structure
             $categories = array_values(
                 array_map(
                     fn($name, $meta) => [
-                        'name' => $name,
-                        'type' => $meta['slug'],
-                        'id' => $meta['id'],
-                        'max_score' => $meta['max_score'],
+                        'name'            => $name,
+                        'type'            => $meta['slug'],
+                        'id'              => $meta['id'],
+                        'max_score'       => $meta['max_score'],
+                        'point_structure' => $meta['point_structure'], // ← 'per_team' or 'per_player'
                     ],
                     array_keys($activityMap),
                     array_values($activityMap),
@@ -696,9 +752,10 @@ class ScoreController extends Controller
             return;
         }
         $map[$dn] = [
-            'slug' => $this->activitySlug($activity),
-            'id' => $activity->id,
-            'max_score' => $activity->max_score ?? 9999,
+            'slug'            => $this->activitySlug($activity),
+            'id'              => $activity->id,
+            'max_score'       => $activity->max_score ?? 9999,
+            'point_structure' => $activity->point_structure ?? 'per_team', // ← default to per_team if null
         ];
     }
 
@@ -834,6 +891,7 @@ class ScoreController extends Controller
                 'total_bonus' => $studentBonusT,
                 'bonus_assignment' => $studentBonusAssignment,
                 'total_points' => $studentTotal + $studentBonusT + $studentBonusAssignment,
+                'cards' => $this->studentDirectCardMap[$student->id] ?? [],
                 'rank' => null,
             ];
         }

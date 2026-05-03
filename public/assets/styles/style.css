@@ -71,7 +71,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .container {
-    max-width: 1600px;
+    /* max-width: 1600px; */
+    max-width: 100%;
     margin: 0 auto;
     padding: 0 2rem;
     position: relative;
@@ -389,8 +390,8 @@ h1, h2, h3, h4, h5, h6 {
     .logo img { width: 50px; height: 50px; }
 }
 /* Main Content */
-main {
-    padding: 3rem 0;
+main{
+    padding: 2rem 0;
 }
 
 .section {
@@ -651,7 +652,7 @@ main {
 .badge {
     padding: 0.25rem 0.75rem;
     border-radius: 20px;
-    font-size: 10px;
+    font-size: 1rem;
     font-weight: 600;
     font-family: 'Poppins', sans-serif;
     text-transform: uppercase;
@@ -1522,13 +1523,6 @@ main {
     background-color: transparent !important;
 }
 
-/* Container for all event cards */
-.events_grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* Always 2 cards per row on desktop/tablet */
-    gap: 1rem;
-    width: 100%;
-}
 
 /* Individual card */
 .events_card {
@@ -1553,7 +1547,7 @@ main {
     margin-bottom: 0.75rem;
 }
 .events_card-title {
-    font-size: 0.9rem;
+    font-size: 1.3rem;
     font-weight: 600;
     margin: 0;
 }
@@ -1582,14 +1576,14 @@ main {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 .events_stat-label {
-    font-size: 10px;
+    font-size: 0.7rem;
     text-transform: uppercase;
     color: var(--text-dim);
     margin-bottom: 0.25rem;
     letter-spacing: 0.5px;
 }
 .events_stat-value {
-    font-size: 13px;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--primary);
 }
@@ -1646,31 +1640,75 @@ main {
     color: #000;
     margin: 8px 0 5px;
 }
-/* Responsive tweaks */
-@media (max-width: 992px) {
-    .events_grid {
-        grid-template-columns: repeat(2, 1fr); /* still 3 per row for tablets */
-    }
-    .events_stats-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 stats per row */
-    }
+
+/* Container for all event cards */
+.events_grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 1rem;
+    width: 100%;
 }
 
-@media (max-width: 576px) {
-    .events_grid {
-        grid-template-columns: 1fr; /* 1 card per row on mobile */
+/* iPad Air + Tablets + Mobile */
+@media (max-width: 1300px) {
+    .events_results_preview .points span{
+        font-size: 1.4rem;
     }
+    .events_stat-label {
+        font-size: 1.2rem !important;
+    }
+    .events_stat-value{
+        font-size: 1.4rem !important;
+    }
+
+    .events_card-actions button{
+        font-size: 1.1rem !important;
+    }
+    .events_grid {
+        grid-template-columns: repeat(1, 1fr); /* force 1 per row */
+    }
+
     .events_stats-grid {
-        grid-template-columns: repeat(2, 1fr); /* 2 stats per row for mobile */
+        grid-template-columns: repeat(2, 1fr);
+    }
+    #eventTabs .tab {
+        font-size: 1.3rem;
+    }
+    .data-table th {
+        font-size: 16px;
+    }
+    .data-table td {
+        font-size: 18px;
+    }
+    .events_results_preview .section-title {
+        font-size: 1.3rem;
+    }
+    .events_results_preview .title {
+        font-size: 1.4rem;
+    }
+    .events_results_preview .text-muted{font-size: 1.2rem;}
+    .ec-status-wrap {gap: 10px !important;}
+}
+
+/* Small mobile */
+@media (max-width: 576px) {
+    .badge {
+        font-size: 0.8rem !important;
+    }
+    .events_card-actions button {
+        font-size: 12px !important;
     }
     .events_card-title {
         font-size: 0.95rem;
     }
+    .events_stat-label{
+        font-size: 0.8rem !important;
+    }
     .events_stat-value {
-        font-size: 1rem;
+        font-size: 1rem !important;
     }
 }
 .events_card-header svg{
-    height: 14px;
-    width: 14px;
+    height: 26px !important;
+    width: 20px !important;
 }

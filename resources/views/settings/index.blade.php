@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Settings - SteamIQ')
+@section('title', 'STEAM XRS Manager')
 
 
 @section('content')
@@ -22,7 +22,7 @@
     @role('admin')
     <button class="tab active" onclick="switchTab('users', event)">Users</button>
     <button class="tab" onclick="switchTab('roles', event)">Roles</button>
-    <button class="tab" onclick="switchTab('permissions', event)">Permission</button>
+    {{-- <button class="tab" onclick="switchTab('permissions', event)">Permission</button> --}}
     <button class="tab" onclick="switchTab('activities', event)">Activities</button>
     <button class="tab" onclick="switchTab('cards', event)">Cards</button>
     <button class="tab" onclick="switchTab('cards-history', event)">Cards History</button>
@@ -41,10 +41,16 @@
                     <div class="spreadsheet-toolbar">
                         <input type="text" id="userSearch" class="form-input" placeholder="Search User..."
                             style="width:300px;">
+                            <button class="btn btn-danger" id="deleteSelectedUsersBtn" onclick="deleteSelectedUsers()">
+                                Delete Selected (0)
+                            </button>
                     </div>
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllUsers">
+                                </th>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Username</th>
@@ -58,6 +64,11 @@
                         <tbody id="userTableBody">
                             @forelse ($users as $us)
                                 <tr>
+                                    <td>
+                                        @if(!$us->hasRole('admin'))
+                                            <input type="checkbox" class="user-checkbox" value="{{ $us->id }}">
+                                        @endif
+                                    </td>
                                     <td>{{ $us->id ?? 'N/A' }}</td>
                                     <td>{{ $us->name ?? 'N/A' }}</td>
                                     <td>{{ $us->username ?? 'N/A' }}</td>
@@ -108,6 +119,7 @@
                         </tbody>
                     </table>
                     @push('scripts')
+                    @include('settings.scripts.users-bulk')
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                         
@@ -185,20 +197,21 @@
                                 <th>Activity Type</th>
                                 <th>Activity Name</th>
                                 <th>Max Score</th>
+                                <th>Point Structure</th>
                                 <th>Created At</th>
 
                             </tr>
                         </thead>
                         <tbody id="activities-data-table-body">
                             <tr>
-                                <td colspan="7" class="text-center">Loading activities...</td>
+                                <td colspan="8" class="text-center">Loading activities...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="tab-content" id="permissions-tab">
+            {{-- <div class="tab-content" id="permissions-tab">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermissionModal"><i
@@ -239,18 +252,24 @@
                 @push('modals')
                     @include('settings.modals.create-permission')
                 @endpush
-            </div>
+            </div> --}}
 
             <div class="tab-content" id="roles-tab">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal"><i
                                 data-lucide="plus"></i>Add Role</button>
+                                <button class="btn btn-danger" id="deleteSelectedRolesBtn" onclick="deleteSelectedRoles()">
+                                    Delete Selected (0)
+                                </button>
                     </div>
 
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllRoles">
+                                </th>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Permissions</th>
@@ -260,6 +279,11 @@
                         <tbody>
                             @forelse ($roles as $role)
                                 <tr>
+                                    <td>
+                                        @if($role->name !== 'admin')
+                                            <input type="checkbox" class="role-checkbox" value="{{ $role->id }}">
+                                        @endif
+                                    </td>
                                     <td>{{ $role->id }}</td>
                                     <td>{{ $role->name }}</td>
                                     <td>
@@ -312,6 +336,7 @@
                         </tbody>
                     </table>
                     @push('scripts')
+                    @include('settings.scripts.roles-bulk')
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                         
@@ -444,8 +469,14 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>
-                                            <span
-                                                class="badge bg-{{ $log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info') }}">
+                                            <span class="badge
+                                                {{ $log->card->type == 'red' ? 'bg-danger' : '' }}
+                                                {{ $log->card->type == 'yellow' ? 'bg-warning text-dark' : '' }}
+                                                {{ $log->card->type == 'orange' ? 'text-dark' : '' }}
+                                                {{ !in_array($log->card->type, ['red','yellow','orange']) ? 'bg-secondary' : '' }}"
+                                                
+                                                style="{{ $log->card->type == 'orange' ? 'background-color: #fd7e14;color:#fff !important' : '' }}">
+                                                
                                                 {{ strtoupper($log->card->type) }}
                                             </span>
                                         </td>

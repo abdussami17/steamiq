@@ -321,7 +321,7 @@
             esports: `<div class="row g-3">
                 <div class="col-md-3"><label class="form-label">Esports Type</label>
                 <select class="form-select" name="activities[${i}][esports_type]">
-                    <option value="aquaball_league">Aquaball League</option><option value="mario_kart">Mario Kart</option>
+                    <option value="aquaball_league">AquaBall League</option><option value="mario_kart">Mario Kart</option>
                     <option value="rocket_league">Rocket League</option><option value="nba_2k">NBA 2K</option>
                 </select></div>
                 <div class="col-md-2"><label class="form-label">Players</label>

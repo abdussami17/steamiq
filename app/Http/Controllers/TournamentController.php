@@ -69,7 +69,15 @@ class TournamentController extends Controller
 
     public function setWinner(Request $request, $matchId)
     {
-        $match = TournamentMatch::findOrFail($matchId);
+        $match = TournamentMatch::with('tournament.event')->findOrFail($matchId);
+
+        if (($match->tournament?->event?->status ?? null) === 'closed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This event is closed. Match winner cannot be updated.',
+            ], 423);
+        }
+
         $match->winner_team_id = $request->winner_team_id;
         $match->status = 'completed';
         $match->save();

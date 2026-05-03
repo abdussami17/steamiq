@@ -1,5 +1,5 @@
 @extends('layouts.auth-layout')
-@section('title', 'Register & Login')
+@section('title', 'STEAM XRS Manager')
 @section('content')
 
 

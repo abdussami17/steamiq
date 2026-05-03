@@ -52,7 +52,7 @@
                     const division = safe(team.division);
                     const pod = safe(team.pod);
                     const members = safe(team.members_count ?? 0);
-                    const points = safe(team.total_points ?? 0);
+                    const points = Number(safe(team.total_points ?? 0)).toLocaleString();
                     const rank = safe(team.rank ?? 0);
 
                     const img = team.profile ?

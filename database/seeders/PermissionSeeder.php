@@ -29,6 +29,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'create_player', 'label' => 'Create Player'],
 
             ['name' => 'delete_player', 'label' => 'Delete Player'],
+  ['name' => 'edit_player', 'label' => 'Edit Player'],
+
 
             ['name' => 'create_score', 'label' => 'Create Score'],
             ['name' => 'edit_score', 'label' => 'Edit Score'],

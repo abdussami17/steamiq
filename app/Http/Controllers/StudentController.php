@@ -51,10 +51,15 @@ class StudentController extends Controller
 
             
             if ($currentCount + $addingCount > $maxPlayers) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Cannot add more than {$maxPlayers} players per team."
-                ], 422);
+                $msg = "Cannot add more than {$maxPlayers} players per team.";
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $msg,
+                        'errors' => ['team' => [$msg]]
+                    ], 422);
+                }
+                return redirect()->back()->with('error', $msg);
             }
     
             foreach ($request->students as $studentData) {
@@ -81,15 +86,27 @@ class StudentController extends Controller
             }
     
             DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Player added successfully.'
-            ]);
+            $successMsg = 'Player added successfully.';
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $successMsg
+                ]);
+            }
+            return redirect()->back()->with('success', $successMsg);
 
         } catch (\Throwable $e) {
             DB::rollBack();
             \Log::error($e->getMessage());
-            return back()->with('error', 'Failed to add Players.');
+            $errMsg = 'Failed to add Players.';
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errMsg,
+                    'errors' => ['server' => [$errMsg]]
+                ], 500);
+            }
+            return redirect()->back()->with('error', $errMsg);
         }
     }
     public function leaderboard(Request $request, $eventId)

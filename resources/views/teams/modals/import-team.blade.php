@@ -303,6 +303,9 @@
         color: #842029;
         margin-bottom: 2px;
     }
+    code{
+        font-size: 1.1rem
+    }
     </style>
     
     

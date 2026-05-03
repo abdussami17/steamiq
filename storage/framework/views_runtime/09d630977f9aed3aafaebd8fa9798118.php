@@ -1,4 +1,4 @@
-<?php $__env->startSection('title', 'Register & Login'); ?>
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
 <?php $__env->startSection('content'); ?>
 
 

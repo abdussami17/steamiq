@@ -320,7 +320,9 @@
                     : a.egaming_description || '';
 
                 sc_activitySelect.innerHTML +=
-                    `<option value="${a.id}">${desc ? name + ' - ' + desc : name}</option>`;
+                `<option value="${a.id}">
+    ${desc ? name.toUpperCase() + ' - ' + desc.toUpperCase() : name.toUpperCase()}
+</option>`;
             });
 
             if (sc_activitySelect.options.length === 1) {

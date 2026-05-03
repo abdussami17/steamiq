@@ -1,14 +1,15 @@
 @extends('layouts.app')
-@section('title', 'Dashboard - SteamIQ')
+@section('title', 'STEAM XRS Manager')
 
 
 @section('content')
-    <div class="container">
-
 
         @guest
             @include('dashboard.welcome')
         @endguest
+    <div class="container">
+
+
 
 
 
@@ -190,10 +191,10 @@
                                             {{ ucfirst(str_replace('_', ' ', $activity->type ?? 'N/A')) }}
                                         </h6>
 
-                                        <p class="notification-text">
+                                        <p class="notification-text" style="text-transform: capitalize">
                                             {{ $activity->description ?? 'N/A' }}
                                             <br>
-                                            <small class="text-muted">
+                                            <small class="text-muted" style="font-size:1rem;text-transform:capitalize">
                                                 By {{ $activity->user->name ?? 'System' }}
                                             </small>
                                         </p>

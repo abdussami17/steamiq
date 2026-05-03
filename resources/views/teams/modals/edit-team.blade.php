@@ -77,12 +77,35 @@ document.addEventListener('DOMContentLoaded', function() {
   const orgSelect = document.getElementById('editTeamOrganization');
   const groupSelect = document.getElementById('editTeamGroup');
   const subgroupSelect = document.getElementById('editTeamSubgroup');
+  
+  
+  document.getElementById('editTeamModal')
+.addEventListener('hidden.bs.modal', function () {
+  document.getElementById('editTeamForm').reset();
+  resetFileInput();
+});
 
+  function resetFileInput() {
+  const input = document.querySelector('#editTeamForm input[type="file"]');
+  if (!input) return;
+
+  input.value = '';
+
+  // fallback (important)
+  if (input.value) {
+    const newInput = input.cloneNode(true);
+    input.parentNode.replaceChild(newInput, input);
+  }
+}
   // Open Edit Modal
   window.openEditTeamModal = function(teamId){
+    const form = document.getElementById('editTeamForm');
+  form.reset();
+  resetFileInput();
+
     const modalEl = document.getElementById('editTeamModal');
     const modal = new bootstrap.Modal(modalEl);
-
+    resetFileInput(); 
     fetch(`/teams/${teamId}`)
       .then(res => res.json())
       .then(data => {
@@ -109,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
 
+ 
   // When organization changes, load corresponding groups
   orgSelect.addEventListener('change', function() {
     const orgId = this.value;
@@ -182,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       if(data.success){
         bootstrap.Modal.getInstance(document.getElementById('editTeamModal')).hide();
+        resetFileInput();
         fetchTeams(); // Refresh table
         toastr.success(data.message);
       } else {

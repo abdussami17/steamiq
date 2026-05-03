@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Scoreboard - SteamIQ')
+@section('title', 'STEAM XRS Manager')
 
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -91,7 +91,7 @@ body{
 /* Group row */
 .pg-grp td{
     background:var(--pg-surface2);padding:7px 20px;
-    font-size:.7rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;
+    font-size:1.3rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;
     color:var(--pg-lime);border-top:1.5px solid var(--pg-border-lit);border-bottom:1px solid var(--pg-border);
 }
 
@@ -142,6 +142,32 @@ body{
     .pg-select{min-width:100%;}
     .pg-table{font-size:.78rem;}
     .pg-table thead th,.pg-table tbody td{padding:6px 8px;}
+}
+
+/* ── Sticky columns ── */
+
+/* First column (Team No.) */
+.pg-table th:first-child,
+.pg-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--pg-panel);
+}
+
+/* Second column (Team Name) */
+.pg-table th:nth-child(2),
+.pg-table td:nth-child(2) {
+    position: sticky;
+    left: 68px; /* MUST match width of Team No column */
+    z-index: 3;
+    background: var(--pg-panel);
+}
+
+/* Optional: add shadow divider for better UX */
+.pg-table th:nth-child(2),
+.pg-table td:nth-child(2) {
+    box-shadow: 2px 0 6px rgba(0,0,0,0.4);
 }
 </style>
 @endpush
@@ -226,11 +252,57 @@ document.addEventListener('DOMContentLoaded', function () {
         return h;
     }
 
+    function formatText(str) {
+    if (!str) return '';
+    return str
+        .replace(/_/g, ' ')
+        .toLowerCase()
+        .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function getActivityDisplayName(a) {
+    let name = '';
+    let description = '';
+
+    if (a.activity_or_mission === 'mission') {
+        name = a.badge_name;
+    } else {
+        switch(a.activity_type) {
+            case 'brain':
+                name = a.brain_type;
+                description = a.brain_description;
+                break;
+
+            case 'egaming':
+                name = a.egaming_type;
+                description = a.egaming_description;
+                break;
+
+            case 'esports':
+                name = a.esports_type;
+                description = a.esports_description;
+                break;
+
+            case 'playground':
+                name = 'Playground';
+                description = a.playground_description;
+                break;
+
+            default:
+                name = a.name;
+        }
+    }
+
+    name = formatText(name);
+    description = formatText(description);
+
+    return description ? `${name} - ${description}` : name || 'N/A';
+}
     function renderBoard(evName, division, rows, acts) {
         var divUp  = division.toUpperCase();
         var ageStr = division === 'Junior'  ? '11–14 YRS'
                    : division === 'Primary' ? '7–10 YRS' : '';
-        var totalCols = 5 + acts.length + 2 + 1 + 1 + 1; // no+name+mem+div + acts + total + flags+org + rank
+        var totalCols = 8; // team no, team name, members, total points, division, flags, org, rank
 
         /* group rows */
         var groups = {}, groupOrder = [];
@@ -238,13 +310,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!groups[r.group_id]) { groups[r.group_id] = { name: r.group_name, rows: [] }; groupOrder.push(r.group_id); }
             groups[r.group_id].rows.push(r);
         });
-
-        var actTH = '';
-        if (acts.length) {
-            actTH = acts.map(function(a){ return '<th>' + esc(trunc(a.name,13)) + '</th>'; }).join('');
-        }
-        // Always include a total column
-        actTH += '<th>Total</th>';
 
         var h = '<div class="pg-board">'
             + '<div class="pg-titlebar">'
@@ -256,37 +321,28 @@ document.addEventListener('DOMContentLoaded', function () {
             + '<th>Team No.</th>'
             + '<th class="th-l">Team Name</th>'
             + '<th class="th-l">Members</th>'
+            + '<th>Total Points</th>'
             + '<th>Division</th>'
-            + actTH
             + '<th>Flags</th>'
             + '<th class="th-l">ORGANIZATION</th>'
             + '<th class="th-rank">Rank</th>'
             + '</tr></thead><tbody>';
 
+        var teamCounter = 0;
         groupOrder.forEach(function(gid) {
             var g = groups[gid];
             h += '<tr class="pg-grp"><td colspan="' + totalCols + '">' + esc(g.name) + '</td></tr>';
             g.rows.forEach(function(row) {
+            teamCounter++;
                 var rk = row.rank;
                 var rkCls = rk === 1 ? 'r1' : rk === 2 ? 'r2' : rk === 3 ? 'r3' : '';
-                                var actTD = '';
-                                if (acts.length) {
-                                        actTD = acts.map(function(a){
-                                                var pts = (row.activity_scores && row.activity_scores[a.id]) || 0;
-                                                return '<td class="td-pts' + (pts > 0 ? '' : ' td-pts0') + '">' + (pts > 0 ? fmt(pts) : '&mdash;') + '</td>';
-                                            }).join('');
-                                        // append total cell
-                                        actTD += '<td class="td-pts">' + fmt(row.total_points) + '</td>';
-                                } else {
-                                        actTD = '<td class="td-pts">' + fmt(row.total_points) + '</td>';
-                                }
 
                 h += '<tr class="pg-dr">'
-                    + '<td class="td-no">' + row.team_no + '</td>'
+                    + '<td class="td-no">' + teamCounter + '</td>'
                     + '<td class="td-name">' + esc(row.team_name) + '</td>'
                     + '<td class="td-mem">'  + esc(row.members || '&mdash;') + '</td>'
+                    + '<td class="td-pts">'  + fmt(row.total_points) + '</td>'
                     + '<td class="td-div">'  + esc((row.division||'').toUpperCase()) + '</td>'
-                    + actTD
                     + '<td class="td-flg">'  + (row.flag_totals || 0);
                 // show card badges if present (render as colored numeric badges)
                 if (row.cards && row.cards.length) {

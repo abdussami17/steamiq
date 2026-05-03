@@ -29,4 +29,20 @@ class UserController extends Controller
 
         return redirect()->back()->with('success','User Updated Successfully');
     }
+    public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
+
+    User::whereIn('id', $ids)
+        ->whereDoesntHave('roles', function ($q) {
+            $q->where('name', 'admin');
+        })
+        ->delete();
+
+    return response()->json(['success' => true]);
+}
 }

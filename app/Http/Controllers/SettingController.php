@@ -63,9 +63,10 @@ class SettingController extends Controller
     // Fetch activities via JS
     public function fetchChallengeActivities(Request $request)
     {
-        $activities = ChallengeActivity::with('event')->get();
-
-        // Return JSON
+        $activities = ChallengeActivity::with([
+            'event.tournamentSetting'
+        ])->get();
+    
         return response()->json($activities);
     }
     public function destroyUser($id)

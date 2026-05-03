@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Events - SteamIQ')
+@section('title', 'STEAM XRS Manager')
 
 
 @section('content')
@@ -81,7 +81,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Teams</div>
                                 <div class="events_stat-value">
-                                    {{ $allTeams->count() ?: 'N/A' }}
+                                    {{ $allTeams->count() ? number_format($allTeams->count()) : 'N/A' }}
                                 </div>
                             </div>
 
@@ -89,7 +89,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Players</div>
                                 <div class="events_stat-value">
-                                    {{ $allTeams->flatMap->students->count() ?: 'N/A' }}
+                                    {{ ($allTeams->flatMap->students->count()) ? number_format($allTeams->flatMap->students->count()) : 'N/A' }}
                                 </div>
                             </div>
 
@@ -97,7 +97,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Groups</div>
                                 <div class="events_stat-value">
-                                    {{ $allevent->organizations->flatMap->groups->count() ?: 'N/A' }}
+                                    {{ $allevent->organizations->flatMap->groups->count() ? number_format($allevent->organizations->flatMap->groups->count()) : 'N/A' }}
                                 </div>
                             </div>
 
@@ -105,7 +105,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Sub Groups</div>
                                 <div class="events_stat-value">
-                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A' }}
+                                    {{ $allevent->organizations->flatMap->groups->flatMap->subgroups->count() ? number_format($allevent->organizations->flatMap->groups->flatMap->subgroups->count()) : 'N/A' }}
                                 </div>
                             </div>
 
@@ -230,7 +230,7 @@
                                         <input type="checkbox" class="event-checkbox" value="{{ $allevent->id }}">
                                     </td>
                                     <td>
-                                        {{ $allevent->id ?: 'N/A' }}
+                                        {{ $allevent->id ? number_format($allevent->id) : 'N/A' }}
                                     </td>
                                     {{-- <td>{{ $allevent->organization->name ?: 'N/A' }}</td> --}}
                                     <td>{{ $allevent->name ?: 'N/A' }}</td>
@@ -270,12 +270,12 @@
                                     {{-- Game Settings --}}
                                     <td>
                                         @if ($allevent->tournamentSetting)
-                                            Game: {{ $allevent->tournamentSetting->game ?? '-' }}<br>
-                                            Players/Team: {{ $allevent->tournamentSetting->players_per_team ?? '-' }}<br>
-                                            Match Rule: {{ $allevent->tournamentSetting->match_rule ?? '-' }}<br>
-                                            Points Win: {{ $allevent->tournamentSetting->points_win ?? '-' }}<br>
-                                            Points Draw: {{ $allevent->tournamentSetting->points_draw ?? '-' }}
-                                        @else
+                                                Game: {{ $allevent->tournamentSetting->game ?? '-' }}<br>
+                                                Players/Team: {{ is_numeric($allevent->tournamentSetting->players_per_team) ? number_format($allevent->tournamentSetting->players_per_team) : ($allevent->tournamentSetting->players_per_team ?? '-') }}<br>
+                                                Match Rule: {{ $allevent->tournamentSetting->match_rule ?? '-' }}<br>
+                                                Points Win: {{ is_numeric($allevent->tournamentSetting->points_win) ? number_format($allevent->tournamentSetting->points_win) : ($allevent->tournamentSetting->points_win ?? '-') }}<br>
+                                                Points Draw: {{ is_numeric($allevent->tournamentSetting->points_draw) ? number_format($allevent->tournamentSetting->points_draw) : ($allevent->tournamentSetting->points_draw ?? '-') }}
+                                            @else
                                             N/A
                                         @endif
                                     </td>
@@ -284,7 +284,7 @@
                                     <td>
                                         @if ($allevent->tournamentSetting)
                                             Type: {{ $allevent->tournamentSetting->tournament_type ?? '-' }}<br>
-                                            Teams: {{ $allevent->tournamentSetting->number_of_teams ?? '-' }}
+                                            Teams: {{ is_numeric($allevent->tournamentSetting->number_of_teams) ? number_format($allevent->tournamentSetting->number_of_teams) : ($allevent->tournamentSetting->number_of_teams ?? '-') }}
                                         @else
                                             N/A
                                         @endif
@@ -362,7 +362,7 @@
                                     const filter = this.value.toLowerCase();
                                     const rows = document.querySelectorAll('#eventTableBody tr');
                                     rows.forEach(row => {
-                                        const cell = row.cells[1]; // Team Name column
+                                        const cell = row.cells[2]; // Team Name column
                                         if (!cell) {
                                             row.style.display = 'none';
                                             return;
@@ -481,7 +481,7 @@
                                     const filter = this.value.toLowerCase();
                                     const rows = document.querySelectorAll('#orgTableBody tr');
                                     rows.forEach(row => {
-                                        const cell = row.cells[1]; // Team Name column
+                                        const cell = row.cells[2]; // Team Name column
                                         if (!cell) {
                                             row.style.display = 'none';
                                             return;
@@ -601,7 +601,7 @@
                             const filter = this.value.toLowerCase();
                             const rows = document.querySelectorAll('#groupTableBody tr');
                             rows.forEach(row => {
-                                const cell = row.cells[2]; // Team Name column
+                                const cell = row.cells[3]; // Team Name column
                                 if (!cell) {
                                     row.style.display = 'none';
                                     return;

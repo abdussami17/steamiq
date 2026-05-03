@@ -609,6 +609,42 @@
     .card-orange  { background: #f97316; }
     .card-unknown { background: #6b7280; }
 
+    .card-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 4px;
+        padding: 2px 4px;
+        color: #fff;
+    }
+
+    .card-chip-type {
+        font-family: var(--font-head);
+        font-weight: 900;
+        font-size: .95rem;
+        line-height: 1;
+    }
+
+    .card-unassign-btn {
+        border: 0;
+        background: rgba(0, 0, 0, .35);
+        color: inherit;
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+        text-align: center;
+        border-radius: 50%;
+        font-family: var(--font-head);
+        font-size: 11px;
+        font-weight: 900;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    .card-unassign-btn:hover {
+        background: rgba(0, 0, 0, .55);
+    }
+
     td.td-rank-end {
         font-family: var(--font-head);
         font-weight: 900;
@@ -670,6 +706,32 @@
         outline: none;
         /* iOS zoom prevention — min 16px triggers no zoom */
         font-size: 16px;
+    }
+
+    .score-edit-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .score-zero-btn {
+        padding: 2px 7px;
+        background: rgba(239, 68, 68, .12);
+        border: 1px solid rgba(239, 68, 68, .35);
+        border-radius: 4px;
+        color: #f87171;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .5px;
+        cursor: pointer;
+        white-space: nowrap;
+        line-height: 1.6;
+        transition: background .15s, border-color .15s;
+    }
+    .score-zero-btn:hover {
+        background: rgba(239, 68, 68, .25);
+        border-color: rgba(239, 68, 68, .6);
+        color: #fca5a5;
     }
 
     /* ── BULK EDIT MODAL ── */

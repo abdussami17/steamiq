@@ -1,5 +1,5 @@
 
-<?php $__env->startSection('title', 'Leaderboard - SteamIQ'); ?>
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
 
 
 <?php $__env->startSection('content'); ?>

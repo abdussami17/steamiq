@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Card;
+use App\Models\CardAssignment;
 use App\Models\Event;
 use App\Models\Organization;
-
 use App\Models\Student;
+use App\Observers\CardAssignmentObserver;
 use App\Observers\EventObserver;
 use App\Observers\OrganizationObserver;
-
 use App\Observers\StudentObserver;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -41,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         Student::observe(StudentObserver::class);
         Organization::observe(OrganizationObserver::class);
         Event::observe(EventObserver::class);
+        CardAssignment::observe(CardAssignmentObserver::class);
         
     }
 }

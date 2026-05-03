@@ -1,14 +1,15 @@
 
-<?php $__env->startSection('title', 'Dashboard - SteamIQ'); ?>
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
 
 
 <?php $__env->startSection('content'); ?>
-    <div class="container">
-
 
         <?php if(auth()->guard()->guest()): ?>
             <?php echo $__env->make('dashboard.welcome', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
         <?php endif; ?>
+    <div class="container">
+
+
 
 
 
@@ -192,11 +193,11 @@
 
                                         </h6>
 
-                                        <p class="notification-text">
+                                        <p class="notification-text" style="text-transform: capitalize">
                                             <?php echo e($activity->description ?? 'N/A'); ?>
 
                                             <br>
-                                            <small class="text-muted">
+                                            <small class="text-muted" style="font-size:1rem;text-transform:capitalize">
                                                 By <?php echo e($activity->user->name ?? 'System'); ?>
 
                                             </small>

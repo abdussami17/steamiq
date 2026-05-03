@@ -192,24 +192,24 @@
             .catch(err => alert(err.message || 'Failed to finalize winner'));
     }
 
-    function renderEventResultsInCard(eventId, stats, winner) {
+    // function renderEventResultsInCard(eventId, stats, winner) {
 
-        const container = document.getElementById('event-results-' + eventId);
-        if (!container) return;
+    //     const container = document.getElementById('event-results-' + eventId);
+    //     if (!container) return;
 
-        const badge = document.getElementById('ec-badge-' + eventId);
-        if (!badge) return;
+    //     const badge = document.getElementById('ec-badge-' + eventId);
+    //     if (!badge) return;
 
-        const status = badge.textContent.trim().toLowerCase();
-
-
-        if (status !== 'closed') {
-            container.innerHTML = '';
-            return;
-        }
+    //     const status = badge.textContent.trim().toLowerCase();
 
 
-    }
+    //     if (status !== 'closed') {
+    //         container.innerHTML = '';
+    //         return;
+    //     }
+
+
+    // }
 
     function renderEventResultsInCard(eventId, stats, winner) {
 
@@ -218,22 +218,29 @@ if (!container) return;
 
 container.innerHTML = '';
 
-const makeStat = (label, value) => `
-    <div class="events_stat">
-        <div class="events_stat-label">${label}</div>
-        <div class="events_stat-value">${value ?? 'N/A'}</div>
-    </div>
-`;
+    // Helper to format numbers with thousand separators
+    const fmt = (n) => {
+        if (n === undefined || n === null || n === '') return 'N/A';
+        const num = Number(n);
+        return isNaN(num) ? n : num.toLocaleString();
+    };
 
-const topRow = (arr = []) =>
-    arr.slice(0, 3).map(i => `
-        <div class="row-item">
-            <div class="title">${i.student ?? i.team ?? '—'}</div>
-            <div class="points">
-                <span class="badge badge-live">${i.points ?? 0}</span>
-            </div>
+    const makeStat = (label, value) => `
+        <div class="events_stat">
+            <div class="events_stat-label">${label}</div>
+            <div class="events_stat-value">${value ?? 'N/A'}</div>
         </div>
-    `).join('');
+    `;
+
+    const topRow = (arr = []) =>
+        arr.slice(0, 3).map(i => `
+            <div class="row-item">
+                <div class="title">${i.student ?? i.team ?? '—'}</div>
+                <div class="points">
+                    <span class="badge badge-live">${fmt(i.points ?? 0)}</span>
+                </div>
+            </div>
+        `).join('');
 
 const toggleId = `event_toggle_${eventId}`;
 
@@ -242,10 +249,10 @@ container.innerHTML = `
 
         <!-- TOP STATS -->
         <div class="events_stats-grid">
-            ${makeStat('Winner','🏆 '+winner?.name ?? '—')}
-            ${makeStat('Participants', stats.participants)}
-            ${makeStat('Total Points', stats.total_points)}
-            ${makeStat('Top Score', stats.top_score?.points ?? 0)}
+            ${makeStat('Winner', winner?.name ? '🏆 ' + winner.name : '—')}
+            ${makeStat('Participants', fmt(stats.participants))}
+            ${makeStat('Total Points', fmt(stats.total_points))}
+            ${makeStat('Top Score', fmt(stats.top_score?.points ?? 0))}
         </div>
 
         <!-- TOGGLE HEADER -->
@@ -266,7 +273,7 @@ container.innerHTML = `
                     ${stats.top_score?.student ?? stats.top_score?.team ?? '—'}
                 </div>
                 <div class="points">
-                    <span class="badge badge-live">${stats.top_score?.points ?? 0}</span>
+                    <span class="badge badge-live">${fmt(stats.top_score?.points ?? 0)}</span>
                 </div>
             </div>
 
@@ -312,10 +319,10 @@ function toggleEventDetails(id, btn) {
             if (!badge) return;
 
             const eventId = badge.id.replace('ec-badge-', '');
-            const status = badge.textContent.trim().toLowerCase();
+            // const status = badge.textContent.trim().toLowerCase();
 
 
-            if (status !== 'closed') return;
+            // if (status !== 'closed') return;
 
             fetch(`/events/${eventId}/results`)
                 .then(r => r.json())

@@ -108,39 +108,34 @@ class CardController extends Controller
     
         return back()->with('success', 'Card assigned successfully!');
     }
+
+    public function unassignCard(Request $request, CardAssignment $assignment)
+    {
+        DB::transaction(function () use ($assignment) {
+            $card = $assignment->card;
+
+            if ($card) {
+                $this->removeCardEffect($card, $assignment->assignable_type, $assignment->assignable_id);
+            }
+
+            $assignment->delete();
+        });
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Card unassigned successfully!',
+            ]);
+        }
+
+        return back()->with('success', 'Card unassigned successfully!');
+    }
+
     private function applyCardEffect($card, $type, $id)
     {
         $points = $card->type === 'red' ? 0 : -abs($card->negative_points);
-    
-        // Resolve affected IDs
-        $teamIds = [];
-        $studentIds = [];
-    
-        if ($type === 'organization') {
-    
-            $teamIds = Team::whereIn('group_id', function ($q) use ($id) {
-                $q->select('id')->from('groups')->where('organization_id', $id);
-            })->pluck('id')->toArray();
-    
-            $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id')->toArray();
-        }
-    
-        elseif ($type === 'group') {
-    
-            $teamIds = Team::where('group_id', $id)->pluck('id')->toArray();
-            $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id')->toArray();
-        }
-    
-        elseif ($type === 'team') {
-    
-            $teamIds = [$id];
-            $studentIds = Student::where('team_id', $id)->pluck('id')->toArray();
-        }
-    
-        elseif ($type === 'student') {
-    
-            $studentIds = [$id];
-        }
+
+        [$teamIds, $studentIds] = $this->resolveAffectedIds($type, $id);
     
         // ✅ APPLY EFFECT
     
@@ -173,6 +168,64 @@ class CardController extends Controller
             }
         }
     }
+
+    private function removeCardEffect($card, $type, $id)
+    {
+        $points = $card->type === 'red' ? 0 : abs((int) $card->negative_points);
+
+        [$teamIds, $studentIds] = $this->resolveAffectedIds($type, $id);
+
+        if ($points !== 0) {
+            if (!empty($teamIds)) {
+                Score::whereIn('team_id', $teamIds)
+                    ->update([
+                        'points' => DB::raw("points + ($points)")
+                    ]);
+            }
+
+            if (!empty($studentIds)) {
+                Score::whereIn('student_id', $studentIds)
+                    ->update([
+                        'points' => DB::raw("points + ($points)")
+                    ]);
+            }
+        }
+    }
+
+    private function resolveAffectedIds($type, $id)
+    {
+        $teamIds = [];
+        $studentIds = [];
+
+        if ($type === 'organization') {
+
+            $teamIds = Team::whereIn('group_id', function ($q) use ($id) {
+                $q->select('id')->from('groups')->where('organization_id', $id);
+            })->pluck('id')->toArray();
+
+            $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id')->toArray();
+        }
+
+        elseif ($type === 'group') {
+
+            $teamIds = Team::where('group_id', $id)->pluck('id')->toArray();
+            $studentIds = Student::whereIn('team_id', $teamIds)->pluck('id')->toArray();
+        }
+
+        elseif ($type === 'team') {
+
+            $teamIds = [$id];
+            $studentIds = Student::where('team_id', $id)->pluck('id')->toArray();
+        }
+
+        elseif ($type === 'student') {
+
+            $studentIds = [$id];
+        }
+
+        return [$teamIds, $studentIds];
+    }
+
 private function getTableName($type)
 {
     $map = [

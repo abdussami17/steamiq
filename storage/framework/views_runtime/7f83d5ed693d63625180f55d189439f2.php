@@ -1,5 +1,5 @@
 
-<?php $__env->startSection('title', 'Settings - SteamIQ'); ?>
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
 
 
 <?php $__env->startSection('content'); ?>
@@ -18,19 +18,21 @@
             </div>
 
 
-            <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
-            <button class="tab active" onclick="switchTab('users', event)">Users</button>
-            <button class="tab" onclick="switchTab('roles', event)">Roles</button>
-            <button class="tab" onclick="switchTab('permissions', event)">Permission</button>
-            <button class="tab" onclick="switchTab('activities', event)">Activities</button>
-            <button class="tab" onclick="switchTab('cards', event)">Cards</button>
-            <button class="tab" onclick="switchTab('cards-history', event)">Cards History</button>
-        <?php endif; ?>
-        
-        <button class="tab <?php echo e(!auth()->user()->hasRole('admin') ? 'active' : ''); ?>"
-            onclick="switchTab('profile', event)">
-            Profile
-        </button>
+<div class="tabs-setting-wrappper">
+    <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
+    <button class="tab active" onclick="switchTab('users', event)">Users</button>
+    <button class="tab" onclick="switchTab('roles', event)">Roles</button>
+    
+    <button class="tab" onclick="switchTab('activities', event)">Activities</button>
+    <button class="tab" onclick="switchTab('cards', event)">Cards</button>
+    <button class="tab" onclick="switchTab('cards-history', event)">Cards History</button>
+<?php endif; ?>
+
+<button class="tab <?php echo e(!auth()->user()->hasRole('admin') ? 'active' : ''); ?>"
+    onclick="switchTab('profile', event)">
+    Profile
+</button>
+</div>
 
 <?php if (\Illuminate\Support\Facades\Blade::check('role', 'admin')): ?>
 
@@ -39,10 +41,16 @@
                     <div class="spreadsheet-toolbar">
                         <input type="text" id="userSearch" class="form-input" placeholder="Search User..."
                             style="width:300px;">
+                            <button class="btn btn-danger" id="deleteSelectedUsersBtn" onclick="deleteSelectedUsers()">
+                                Delete Selected (0)
+                            </button>
                     </div>
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllUsers">
+                                </th>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Username</th>
@@ -56,6 +64,11 @@
                         <tbody id="userTableBody">
                             <?php $__empty_1 = true; $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $us): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
+                                    <td>
+                                        <?php if(!$us->hasRole('admin')): ?>
+                                            <input type="checkbox" class="user-checkbox" value="<?php echo e($us->id); ?>">
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?php echo e($us->id ?? 'N/A'); ?></td>
                                     <td><?php echo e($us->name ?? 'N/A'); ?></td>
                                     <td><?php echo e($us->username ?? 'N/A'); ?></td>
@@ -108,6 +121,7 @@
                         </tbody>
                     </table>
                     <?php $__env->startPush('scripts'); ?>
+                    <?php echo $__env->make('settings.scripts.users-bulk', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                         
@@ -185,72 +199,38 @@
                                 <th>Activity Type</th>
                                 <th>Activity Name</th>
                                 <th>Max Score</th>
+                                <th>Point Structure</th>
                                 <th>Created At</th>
 
                             </tr>
                         </thead>
                         <tbody id="activities-data-table-body">
                             <tr>
-                                <td colspan="7" class="text-center">Loading activities...</td>
+                                <td colspan="8" class="text-center">Loading activities...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="tab-content" id="permissions-tab">
-                <div class="spreadsheet-container mt-4">
-                    <div class="spreadsheet-toolbar">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermissionModal"><i
-                                data-lucide="plus"></i>Add Permission</button>
-                    </div>
-
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $__empty_1 = true; $__currentLoopData = $permissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $perms): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                                <tr>
-                                    <td><?php echo e($perms->id); ?></td>
-                                    <td><?php echo e($perms->label); ?></td>
-                                    <td>
-                                        <form action="<?php echo e(route('permissions.destroy', $perms->id)); ?>" method="POST"
-                                            onsubmit="return confirm('Are you sure you want to delete this permission?');">
-                                            <?php echo csrf_field(); ?>
-                                            <?php echo method_field('DELETE'); ?>
-                                            <button type="submit" class="btn btn-icon btn-delete"><i
-                                                    data-lucide="trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                                <tr>
-                                    <td colspan="2">No data</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-                <?php $__env->startPush('modals'); ?>
-                    <?php echo $__env->make('settings.modals.create-permission', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-                <?php $__env->stopPush(); ?>
-            </div>
+            
 
             <div class="tab-content" id="roles-tab">
                 <div class="spreadsheet-container mt-4">
                     <div class="spreadsheet-toolbar">
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRoleModal"><i
                                 data-lucide="plus"></i>Add Role</button>
+                                <button class="btn btn-danger" id="deleteSelectedRolesBtn" onclick="deleteSelectedRoles()">
+                                    Delete Selected (0)
+                                </button>
                     </div>
 
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllRoles">
+                                </th>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Permissions</th>
@@ -260,6 +240,11 @@
                         <tbody>
                             <?php $__empty_1 = true; $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
+                                    <td>
+                                        <?php if($role->name !== 'admin'): ?>
+                                            <input type="checkbox" class="role-checkbox" value="<?php echo e($role->id); ?>">
+                                        <?php endif; ?>
+                                    </td>
                                     <td><?php echo e($role->id); ?></td>
                                     <td><?php echo e($role->name); ?></td>
                                     <td>
@@ -313,6 +298,7 @@
                         </tbody>
                     </table>
                     <?php $__env->startPush('scripts'); ?>
+                    <?php echo $__env->make('settings.scripts.roles-bulk', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                     <script>
                         document.addEventListener('DOMContentLoaded', function () {
                         
@@ -446,8 +432,17 @@
                                     <tr>
                                         <td><?php echo e($loop->iteration); ?></td>
                                         <td>
-                                            <span
-                                                class="badge bg-<?php echo e($log->card->type == 'red' ? 'danger' : ($log->card->type == 'orange' ? 'warning' : 'info')); ?>">
+                                            <span class="badge
+                                                <?php echo e($log->card->type == 'red' ? 'bg-danger' : ''); ?>
+
+                                                <?php echo e($log->card->type == 'yellow' ? 'bg-warning text-dark' : ''); ?>
+
+                                                <?php echo e($log->card->type == 'orange' ? 'text-dark' : ''); ?>
+
+                                                <?php echo e(!in_array($log->card->type, ['red','yellow','orange']) ? 'bg-secondary' : ''); ?>"
+                                                
+                                                style="<?php echo e($log->card->type == 'orange' ? 'background-color: #fd7e14;color:#fff !important' : ''); ?>">
+                                                
                                                 <?php echo e(strtoupper($log->card->type)); ?>
 
                                             </span>

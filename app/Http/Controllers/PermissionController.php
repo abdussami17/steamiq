@@ -36,18 +36,43 @@ class PermissionController extends Controller
     }
 
 
-    public function destroy($id)
-{
-    try {
-        $permission = Permission::findOrFail($id);
+    public function update(Request $request, $id)
+    {
+        try {
+            $permission = Permission::findOrFail($id);
 
-        // Remove permission from all roles and users automatically (Spatie handles via pivot tables)
-        $permission->delete();
+            // Validate the input
+            $request->validate([
+                'name' => 'required|string|max:255|unique:permissions,name,' . $id
+            ]);
 
-        return redirect()->back()->with('success', 'Permission deleted successfully');
+            // Update label (human-friendly name)
+            $label = $request->name;
 
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            // Update the permission
+            $permission->update([
+                'label' => $label
+            ]);
+
+            return redirect()->back()->with('success', 'Permission updated successfully');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+        }
     }
-}
+
+    public function destroy($id)
+    {
+        try {
+            $permission = Permission::findOrFail($id);
+
+            // Remove permission from all roles and users automatically (Spatie handles via pivot tables)
+            $permission->delete();
+
+            return redirect()->back()->with('success', 'Permission deleted successfully');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+        }
+    }
 }

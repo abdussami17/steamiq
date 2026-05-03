@@ -104,4 +104,19 @@ public function destroy($id)
         return back()->with('error', 'Something went wrong.');
     }
 }
+public function bulkDelete(Request $request)
+{
+    $ids = $request->ids;
+
+    if (!is_array($ids) || empty($ids)) {
+        return response()->json(['success' => false]);
+    }
+
+    // Never delete admin role
+    Role::whereIn('id', $ids)
+        ->where('name', '!=', 'admin')
+        ->delete();
+
+    return response()->json(['success' => true]);
+}
 }

@@ -26,6 +26,12 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
+Route::get('/clear-cache', function () {
+    Artisan::call('optimize:clear');
+    return "Cache Cleared!";
+});
+
+
 // =============================================================================
 // GUEST ROUTES (Public / Unauthenticated)
 // =============================================================================
@@ -231,6 +237,7 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
         Route::post('/cards/{card}/update',   [CardController::class, 'update'])->name('cards.update');
         Route::delete('/cards/{card}/delete', [CardController::class, 'destroy'])->name('cards.delete');
         Route::post('/card-assignments',      [CardController::class, 'assignCard'])->name('card.assignments.store');
+        Route::delete('/card-assignments/{assignment}', [CardController::class, 'unassignCard'])->name('card.assignments.destroy');
 
         // ---------------------------------------------------------------------
         // Match Management
@@ -288,6 +295,11 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
         Route::post('/profile/update',           [SettingController::class, 'updateProfile'])->name('profile.update');
         Route::get('/settings/activities/fetch', [SettingController::class, 'fetchChallengeActivities'])->name('settings.activities.fetch');
         Route::delete('/users/{id}', [SettingController::class, 'destroyUser'])->name('setting.users.destroy');
+        Route::post('/roles/bulk-delete', [RoleController::class, 'bulkDelete'])
+        ->name('roles.bulkDelete');
+        Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])
+    ->name('users.bulkDelete');
+   
     }); // end admin middleware
 
 }); // end auth middleware

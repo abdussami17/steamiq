@@ -14,9 +14,16 @@
                             <label class="form-label">Event</label>
                             <select id="sc_eventSelect" class="form-select" required>
                                 <option value="">-- Select Event --</option>
+                        
                                 <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <option value="<?php echo e($event->id); ?>"><?php echo e($event->name); ?></option>
+                                    <?php if(strtolower(trim($event->status)) !== 'closed'): ?>
+                                        <option value="<?php echo e($event->id); ?>">
+                                            <?php echo e($event->name); ?>
+
+                                        </option>
+                                    <?php endif; ?>
                                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                        
                             </select>
                         </div>
 
@@ -61,8 +68,10 @@
 
                         <div class="mb-3 col-md-4 d-none" id="sc_pointsDiv">
                             <label class="form-label">Points</label>
-                            <input type="number" min="0" id="sc_pointsInput" class="form-input"
+                            <input type="number" id="sc_pointsInput" class="form-input"
                                 placeholder="Enter points">
+                                <div class="form-text text-muted" id="maxPointsHint"></div>
+                                <div class="invalid-feedback" id="pointsError"></div>
                         </div>
                     </div>
                 </div>
@@ -99,6 +108,8 @@
 
         let currentEvent = '';
         let selectedEntityType = '';
+        let maxPoints = 0;
+        let activitiesCache = [];
 
         function resetAll() {
             [sc_organizationDiv, sc_groupDiv, sc_subgroupDiv, sc_typeDiv, sc_studentDiv, sc_teamDiv,
@@ -111,6 +122,10 @@
             .forEach(el => el.innerHTML = '');
             sc_submitBtn.disabled = true;
             selectedEntityType = '';
+            maxPoints = 0;
+    activitiesCache = [];
+    document.getElementById('maxPointsHint').innerText = '';
+    document.getElementById('pointsError').innerText = '';
         }
 
         // ===== STEP 1: EVENT SELECTION =====
@@ -278,56 +293,90 @@
 
         // ===== LOAD ACTIVITIES =====
         function loadActivities() {
-            sc_activityDiv.classList.remove('d-none');
+    sc_activityDiv.classList.remove('d-none');
 
-            fetch(`/api/events/${currentEvent}/activities`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_activitySelect.innerHTML = '<option value="">-- Select Activity --</option>';
-                    data.forEach(a => {
-                        let name = a.badge_name || a.brain_type || a.esports_type || a
-                            .egaming_type || a.name || 'Playground';
-                        name = name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                        let desc = ['brain'].includes((a.activity_type || '').toLowerCase()) ? a
-                            .brain_description || '' : a.egaming_description || '';
-                        sc_activitySelect.innerHTML +=
-                            `<option value="${a.id}">${desc ? name + ' - ' + desc : name}</option>`;
-                    });
-                })
-                .catch(err => console.error('Error fetching activities:', err));
-        }
+    fetch(`/api/events/${currentEvent}/activities`)
+        .then(r => r.json())
+        .then(data => {
+            activitiesCache = data;
+            sc_activitySelect.innerHTML = '<option value="">-- Select Activity --</option>';
+
+            if (!selectedEntityType) return;
+
+            data.forEach(a => {
+                const structure = (a.point_structure || '').toLowerCase().trim();
+
+                if (
+                    (selectedEntityType === 'team' && structure !== 'per_team') ||
+                    (selectedEntityType === 'student' && structure !== 'per_player')
+                ) {
+                    return;
+                }
+
+                let name = a.badge_name || a.brain_type || a.esports_type || a.egaming_type || a.name || 'Playground';
+                name = name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                let desc = ['brain'].includes((a.activity_type || '').toLowerCase())
+                    ? a.brain_description || ''
+                    : a.egaming_description || '';
+
+                sc_activitySelect.innerHTML +=
+                `<option value="${a.id}">
+    ${desc ? name.toUpperCase() + ' - ' + desc.toUpperCase() : name.toUpperCase()}
+</option>`;
+            });
+
+            if (sc_activitySelect.options.length === 1) {
+                sc_activitySelect.innerHTML += `<option value="" disabled>No matching activities</option>`;
+            }
+        })
+        .catch(err => console.error('Error fetching activities:', err));
+}
 
         // ===== STEP 8: ACTIVITY SELECTION =====
         sc_activitySelect.addEventListener('change', function() {
-            [sc_pointsDiv].forEach(el => el.classList.add('d-none'));
 
-            if (!this.value) return;
+sc_pointsDiv.classList.add('d-none');
 
-            sc_pointsDiv.classList.remove('d-none');
+if (!this.value) return;
 
-            const params = new URLSearchParams({
-                event_id: sc_eventSelect.value,
-                challenge_activity_id: this.value,
-                student_id: selectedEntityType === 'student' ? sc_studentSelect.value : '',
-                team_id: selectedEntityType === 'team' ? sc_teamSelect.value : ''
-            });
+sc_pointsDiv.classList.remove('d-none');
 
-            fetch(`/scores/existing?${params.toString()}`)
-                .then(r => r.json())
-                .then(data => {
-                    sc_pointsInput.value = data.points ?? '';
-                    sc_submitBtn.disabled = !data.points;
-                })
-                .catch(err => {
-                    console.error('Error fetching existing score:', err);
-                    sc_submitBtn.disabled = true;
-                });
-        });
+
+const selected = activitiesCache.find(a => a.id == this.value);
+
+maxPoints = selected?.max_score || 0;
+
+document.getElementById('maxPointsHint').innerText =
+    maxPoints ? `Max allowed: ${maxPoints}` : 'No limit set';
+
+// optional reset
+sc_pointsInput.value = '';
+sc_submitBtn.disabled = true;
+});
 
         // ===== POINTS INPUT VALIDATION =====
         sc_pointsInput.addEventListener('input', function() {
-            sc_submitBtn.disabled = !this.value || parseFloat(this.value) <= 0;
-        });
+    const value = parseFloat(this.value);
+    const errorDiv = document.getElementById('pointsError');
+
+    if (!value) {
+        errorDiv.innerText = '';
+        this.classList.remove('is-invalid');
+        sc_submitBtn.disabled = true;
+        return;
+    }
+
+    if (value > maxPoints) {
+        errorDiv.innerText = `Points cannot exceed ${maxPoints}`;
+        this.classList.add('is-invalid');
+        sc_submitBtn.disabled = true;
+    } else {
+        errorDiv.innerText = '';
+        this.classList.remove('is-invalid');
+        sc_submitBtn.disabled = false;
+    }
+});
 
         // ===== FORM SUBMISSION =====
         document.getElementById('sc_scoreForm').addEventListener('submit', function(e) {

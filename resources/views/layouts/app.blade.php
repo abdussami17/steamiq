@@ -64,15 +64,15 @@
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/styles/style.css?v=' . time()) }}">
     <link rel="stylesheet" href="{{ asset('assets/styles/responsive.css?v=' . time()) }}">
-
+    <link rel="stylesheet" href="{{ asset('assets/styles/mobile-hint.css') }}">
     <link rel="icon"
-        href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-32x32.png"
+        href="{{ asset('assets/logo.png') }}"
         sizes="32x32">
     <link rel="icon"
-        href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-192x192.png"
+        href="{{ asset('assets/logo.png') }}"
         sizes="192x192">
     <link rel="apple-touch-icon"
-        href="https://steamesports.steamyourdreams.org/wp-content/uploads/2022/09/cropped-SYD_esports_sheild-03-180x180.png">
+        href="{{ asset('assets/logo.png') }}">
     <style>
         /* Improve font and icon visibility */
         .toast {
@@ -343,7 +343,10 @@
 
 
     <!-- Main JavaScript -->
-    <script src="{{ asset('assets/scripts/main.js') }}"></script>
+  <script src="{{ asset('assets/scripts/main.js?v=' . time()) }}"></script>
+  @include('components.mobile-hint')
+  <script src="{{ asset('assets/scripts/mobile-hint.js?v=' . time()) }}"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <script>

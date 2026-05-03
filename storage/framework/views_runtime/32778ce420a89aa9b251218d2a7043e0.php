@@ -8,8 +8,7 @@
         default   => '',
     };
     $totalTeams = count($rows);
-    $actCount   = $activities->count();
-    $totalCols  = 5 + $actCount + 2 + 1 + 1 + 1; // no+name+mem+div + acts + total + flags+org + rank
+    $totalCols  = 8; // team no, team name, members, total points, division, flags, org, rank
 
     // Group rows by group_id, preserving the rank-sorted order
     $grouped = collect($rows)->groupBy('group_id');
@@ -36,9 +35,8 @@
                 <th>Team No.</th>
                 <th class="th-l">Team Name</th>
                 <th class="th-l">Members</th>
+                <th>Total Points</th>
                 <th>Division</th>
-                
-                <th>Total</th>
                 <th>Flags</th>
                 <th class="th-l">ORG</th>
                 <th class="th-rank">Rank</th>
@@ -53,6 +51,7 @@
                     </td>
                 </tr>
             <?php else: ?>
+                <?php $teamCounter = 0; ?>
                 <?php $__currentLoopData = $grouped; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $groupId => $groupRows): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     
                     <tr class="pg-grp">
@@ -65,17 +64,15 @@
                     
                     <?php $__currentLoopData = $groupRows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <?php
+                            $teamCounter++;
                             $rkCls = match($row['rank']) { 1 => 'r1', 2 => 'r2', 3 => 'r3', default => '' };
                         ?>
                         <tr class="pg-dr">
-                            <td class="td-no"><?php echo e($row['team_no']); ?></td>
+                            <td class="td-no"><?php echo e($teamCounter); ?></td>
                             <td class="td-name"><?php echo e($row['team_name']); ?></td>
                             <td class="td-mem"><?php echo e($row['members'] ?: '—'); ?></td>
-                            <td class="td-div"><?php echo e(Str::upper($row['division'] ?? '')); ?></td>
-
-                            
-
                             <td class="td-pts"><?php echo e(number_format($row['total_points'] ?? 0)); ?></td>
+                            <td class="td-div"><?php echo e(Str::upper($row['division'] ?? '')); ?></td>
 
                             <td class="td-flg">
                                 <?php echo e($row['flag_totals'] ?? 0); ?>

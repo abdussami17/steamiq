@@ -1,5 +1,4 @@
-
-<?php $__env->startSection('title', 'Tournament Bracket - SteamIQ'); ?>
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
 
 <?php $__env->startPush('styles'); ?>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -20,12 +19,12 @@
 
 /* ── Full page wrapper ── */
 .bb-page {
-    background: #f1f5f9;
+    /* background: #f1f5f9; */
     min-height: 100vh;
     padding: 28px 0 64px;
     font-family: var(--bb-font);
 }
-.bb-wrap { max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+.bb-wrap { max-width: 100%; margin: 0 auto; padding: 0 24px; }
 
 /* ── Top bar ── */
 .bb-topbar {
@@ -43,7 +42,7 @@
     border: 1.5px solid var(--bb-border-lit);
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    color: var(--bb-cyan);
+    color: #fff;
 }
 .bb-icon svg { width: 22px; height: 22px; }
 .bb-title-main {
@@ -51,14 +50,14 @@
     color: #0f172a; text-transform: uppercase; letter-spacing: 3px;
 }
 .bb-title-sub {
-    font-size: .7rem; font-weight: 700; letter-spacing: 2px;
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 2px;
     color: #64748b; text-transform: uppercase; margin-top: 3px;
 }
 
 /* ── Event selector ── */
-.bb-selector { display: flex; align-items: center; gap: 10px; }
+.bb-selector { display: flex; align-items: center; gap: 10px;flex-wrap:wrap }
 .bb-sel-lbl {
-    font-size: .7rem; font-weight: 700; letter-spacing: 2px;
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 2px;
     color: #64748b; text-transform: uppercase; white-space: nowrap;
 }
 .bb-select {
@@ -109,7 +108,7 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 100px 24px; gap: 16px;
-    color: var(--bb-dimmer);
+    color: #fff;
 }
 .bb-placeholder svg { opacity: .18; }
 .bb-placeholder p {
@@ -205,7 +204,7 @@
             <select id="bb-select-event" class="bb-select" onchange="loadBracketBoard(this.value)">
                 <option value="" hidden>— Select an Event —</option>
                 <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <option value="<?php echo e($event->id); ?>">
+                    <option value="<?php echo e($event->id); ?>" <?php echo e($loop->first ? 'selected' : ''); ?>>
                         <?php echo e($event->name); ?><?php if($event->start_date): ?> (<?php echo e(\Carbon\Carbon::parse($event->start_date)->format('M Y')); ?>)<?php endif; ?>
                     </option>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
@@ -287,7 +286,8 @@
         function loadBracketBoard(eventId) {
             if (!eventId) return;
 
-            _bmEventId = eventId;
+            _bmEventId   = eventId;
+            _bmEventName = '';
 
             document.getElementById('bb-placeholder').classList.add('d-none');
             document.getElementById('bb-content').classList.remove('d-none');
@@ -320,6 +320,12 @@
 
         // After saving a winner/score, reload inline instead of opening the modal
         window.openBracketModal = loadBracketBoard;
+
+        // Auto-load the first event on page load
+        (function () {
+            var firstOption = document.querySelector('#bb-select-event option[selected]');
+            if (firstOption && firstOption.value) loadBracketBoard(firstOption.value);
+        })();
 
         // bmOpenScoreEntry appends the score popup to #bracketModal, which is
         // display:none on this page → the popup is invisible. Patch it to use

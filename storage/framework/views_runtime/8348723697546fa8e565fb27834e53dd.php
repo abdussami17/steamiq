@@ -1,5 +1,4 @@
-
-<?php $__env->startSection('title', 'Events - SteamIQ'); ?>
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
 
 
 <?php $__env->startSection('content'); ?>
@@ -84,7 +83,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Teams</div>
                                 <div class="events_stat-value">
-                                    <?php echo e($allTeams->count() ?: 'N/A'); ?>
+                                    <?php echo e($allTeams->count() ? number_format($allTeams->count()) : 'N/A'); ?>
 
                                 </div>
                             </div>
@@ -93,7 +92,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Players</div>
                                 <div class="events_stat-value">
-                                    <?php echo e($allTeams->flatMap->students->count() ?: 'N/A'); ?>
+                                    <?php echo e(($allTeams->flatMap->students->count()) ? number_format($allTeams->flatMap->students->count()) : 'N/A'); ?>
 
                                 </div>
                             </div>
@@ -102,7 +101,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Groups</div>
                                 <div class="events_stat-value">
-                                    <?php echo e($allevent->organizations->flatMap->groups->count() ?: 'N/A'); ?>
+                                    <?php echo e($allevent->organizations->flatMap->groups->count() ? number_format($allevent->organizations->flatMap->groups->count()) : 'N/A'); ?>
 
                                 </div>
                             </div>
@@ -111,7 +110,7 @@
                             <div class="events_stat">
                                 <div class="events_stat-label">Sub Groups</div>
                                 <div class="events_stat-value">
-                                    <?php echo e($allevent->organizations->flatMap->groups->flatMap->subgroups->count() ?: 'N/A'); ?>
+                                    <?php echo e($allevent->organizations->flatMap->groups->flatMap->subgroups->count() ? number_format($allevent->organizations->flatMap->groups->flatMap->subgroups->count()) : 'N/A'); ?>
 
                                 </div>
                             </div>
@@ -197,13 +196,22 @@
                                 <i data-lucide="plus"></i> Add Event
                             </button>
                         <?php endif; ?>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete_event')): ?>
+                        <button class="btn btn-danger" id="deleteSelectedEventsBtn" onclick="deleteSelectedEvents()">
+                            Delete Selected (0)
+                        </button>
+                    <?php endif; ?>
 
                     </div>
 
 
+                 <div style="width:100%;overflow-x:auto;">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllEvents">
+                                </th>
                                 <th>ID</th>
 
                                 <th>Event Name</th>
@@ -224,9 +232,11 @@
                         <tbody id="eventTableBody">
                             <?php $__empty_1 = true; $__currentLoopData = $allevents; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $allevent): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
-
                                     <td>
-                                        <?php echo e($allevent->id ?: 'N/A'); ?>
+                                        <input type="checkbox" class="event-checkbox" value="<?php echo e($allevent->id); ?>">
+                                    </td>
+                                    <td>
+                                        <?php echo e($allevent->id ? number_format($allevent->id) : 'N/A'); ?>
 
                                     </td>
                                     
@@ -247,14 +257,15 @@
                                     <td><?php echo e($allevent->end_date ?: 'N/A'); ?></td>
                                     <td>
                                         <?php
-                                            $status = $allevent->status;
+                                            $status = strtolower(trim($allevent->status)); 
+                                    
                                             $map = [
-                                                'live' => ['label' => 'LIVE', 'class' => 'badge-live'],
-                                                'close' => ['label' => 'CLOSED', 'class' => 'badge-close'],
-                                                'draft' => ['label' => 'DRAFT', 'class' => 'badge-draft'],
+                                                'live'   => ['label' => 'LIVE', 'class' => 'badge-live'],
+                                                'closed' => ['label' => 'CLOSED', 'class' => 'badge-closed'], 
+                                                'draft'  => ['label' => 'DRAFT', 'class' => 'badge-draft'],
                                             ];
                                         ?>
-
+                                    
                                         <?php if($status && isset($map[$status])): ?>
                                             <span class="badge <?php echo e($map[$status]['class']); ?>">
                                                 <?php echo e($map[$status]['label']); ?>
@@ -265,17 +276,16 @@
                                         <?php endif; ?>
                                     </td>
 
-
                                     
                                     <td>
                                         <?php if($allevent->tournamentSetting): ?>
-                                            Game: <?php echo e($allevent->tournamentSetting->game ?? '-'); ?><br>
-                                            Players/Team: <?php echo e($allevent->tournamentSetting->players_per_team ?? '-'); ?><br>
-                                            Match Rule: <?php echo e($allevent->tournamentSetting->match_rule ?? '-'); ?><br>
-                                            Points Win: <?php echo e($allevent->tournamentSetting->points_win ?? '-'); ?><br>
-                                            Points Draw: <?php echo e($allevent->tournamentSetting->points_draw ?? '-'); ?>
+                                                Game: <?php echo e($allevent->tournamentSetting->game ?? '-'); ?><br>
+                                                Players/Team: <?php echo e(is_numeric($allevent->tournamentSetting->players_per_team) ? number_format($allevent->tournamentSetting->players_per_team) : ($allevent->tournamentSetting->players_per_team ?? '-')); ?><br>
+                                                Match Rule: <?php echo e($allevent->tournamentSetting->match_rule ?? '-'); ?><br>
+                                                Points Win: <?php echo e(is_numeric($allevent->tournamentSetting->points_win) ? number_format($allevent->tournamentSetting->points_win) : ($allevent->tournamentSetting->points_win ?? '-')); ?><br>
+                                                Points Draw: <?php echo e(is_numeric($allevent->tournamentSetting->points_draw) ? number_format($allevent->tournamentSetting->points_draw) : ($allevent->tournamentSetting->points_draw ?? '-')); ?>
 
-                                        <?php else: ?>
+                                            <?php else: ?>
                                             N/A
                                         <?php endif; ?>
                                     </td>
@@ -284,7 +294,7 @@
                                     <td>
                                         <?php if($allevent->tournamentSetting): ?>
                                             Type: <?php echo e($allevent->tournamentSetting->tournament_type ?? '-'); ?><br>
-                                            Teams: <?php echo e($allevent->tournamentSetting->number_of_teams ?? '-'); ?>
+                                            Teams: <?php echo e(is_numeric($allevent->tournamentSetting->number_of_teams) ? number_format($allevent->tournamentSetting->number_of_teams) : ($allevent->tournamentSetting->number_of_teams ?? '-')); ?>
 
                                         <?php else: ?>
                                             N/A
@@ -348,8 +358,10 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                 </div>
                     <!-- Modal -->
                     <?php $__env->startPush('scripts'); ?>
+                    <?php echo $__env->make("events.scripts.bulk-delete", array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
                                 // Simple search by Team Name
@@ -357,7 +369,7 @@
                                     const filter = this.value.toLowerCase();
                                     const rows = document.querySelectorAll('#eventTableBody tr');
                                     rows.forEach(row => {
-                                        const cell = row.cells[1]; // Team Name column
+                                        const cell = row.cells[2]; // Team Name column
                                         if (!cell) {
                                             row.style.display = 'none';
                                             return;
@@ -386,12 +398,21 @@
                                 <i data-lucide="plus"></i> Add Organization
                             </button>
                         <?php endif; ?>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete_organization')): ?>
+                        <button class="btn btn-danger" id="deleteSelectedOrgsBtn" onclick="deleteSelectedOrganizations()">
+                            Delete Selected (0)
+                        </button>
+                    <?php endif; ?>
                     </div>
 
 
+                 <div style="overflow-x: auto;width:100% ">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllOrgs">
+                                </th>
                                 <th>Profile</th>
                                 <th>Name</th>
                                 <th>Type</th>
@@ -404,7 +425,9 @@
                             <?php $__empty_1 = true; $__currentLoopData = $organizations; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $org): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
 
-
+                                    <td>
+                                        <input type="checkbox" class="org-checkbox" value="<?php echo e($org->id); ?>">
+                                    </td>
                                     <td>
                                         <img src="<?php echo e($org->profile ? asset('storage/' . $org->profile) : asset('assets/avatar-default.png')); ?>"
                                             height="40" width="40" class="rounded-circle"
@@ -455,7 +478,9 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
                     <?php $__env->startPush('scripts'); ?>
+                    <?php echo $__env->make('organization.script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
                                 // Simple search by Team Name
@@ -463,7 +488,7 @@
                                     const filter = this.value.toLowerCase();
                                     const rows = document.querySelectorAll('#orgTableBody tr');
                                     rows.forEach(row => {
-                                        const cell = row.cells[1]; // Team Name column
+                                        const cell = row.cells[2]; // Team Name column
                                         if (!cell) {
                                             row.style.display = 'none';
                                             return;
@@ -492,13 +517,23 @@
                                 <i data-lucide="plus"></i> Add Group
                             </button>
                         <?php endif; ?>
+                        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete_group')): ?>
+                        <button class="btn btn-danger" id="deleteSelectedGroupsBtn" onclick="deleteSelectedGroups()">
+                            Delete Selected (0)
+                        </button>
+                    <?php endif; ?>
                         
 
                     </div>
 
+                   <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
+
+                                <th>
+                                    <input type="checkbox" id="selectAllGroups">
+                                </th>
                                 <th>ID</th>
                                 <th>Organization</th>
                                 <th>Group Name</th>
@@ -510,6 +545,10 @@
                         <tbody id="groupTableBody">
                             <?php $__empty_1 = true; $__currentLoopData = $groups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
+                                    <td>
+                                        <input type="checkbox" class="group-checkbox" value="<?php echo e($group->id); ?>">
+                                    </td>
+                                
                                     <td><?php echo e($group->id ?? 'N/A'); ?></td>
                                     <td>
                                         <?php echo e(optional($organizations->firstWhere('id', $group->organization_id))->name ?? 'N/A'); ?>
@@ -557,9 +596,11 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                   </div>
                 </div>
             </div>
             <?php $__env->startPush('scripts'); ?>
+            <?php echo $__env->make('groups.script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                 <script>
                     document.addEventListener('DOMContentLoaded', () => {
                         // Simple search by Team Name
@@ -567,7 +608,7 @@
                             const filter = this.value.toLowerCase();
                             const rows = document.querySelectorAll('#groupTableBody tr');
                             rows.forEach(row => {
-                                const cell = row.cells[2]; // Team Name column
+                                const cell = row.cells[3]; // Team Name column
                                 if (!cell) {
                                     row.style.display = 'none';
                                     return;
@@ -590,11 +631,22 @@
                                 <i data-lucide="plus"></i> Add Sub Group
                             </button>
                         <?php endif; ?>
+
+    <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete_subgroup')): ?>
+    <button class="btn btn-danger" id="deleteSelectedSubGroupsBtn" onclick="deleteSelectedSubGroups()">
+        Delete Selected (0)
+    </button>
+<?php endif; ?>
+
                     </div>
 
+                  <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAllSubGroups">
+                                </th>
                                 <th>ID</th>
                                 <th>Group Name</th>
                                 <th>Sub Group Name</th>
@@ -606,6 +658,9 @@
                         <tbody>
                             <?php $__empty_1 = true; $__currentLoopData = $subgroups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subgrp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                                 <tr>
+                                    <td>
+                                        <input type="checkbox" class="subgroup-checkbox" value="<?php echo e($subgrp->id); ?>">
+                                    </td>
                                     <td><?php echo e($subgrp->id ?? 'N/A'); ?></td>
                                     <td><?php echo e($subgrp->group->group_name ?? 'N/A'); ?></td>
                                     <td><?php echo e($subgrp->name ?? 'N/A'); ?></td>
@@ -643,6 +698,11 @@
                             <?php endif; ?>
                         </tbody>
                     </table>
+                  </div>
+                    <?php $__env->startPush('scripts'); ?>
+                    <?php echo $__env->make('subgroups.scripts.bulk-edit', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                        
+                    <?php $__env->stopPush(); ?>
                 </div>
             </div>
 
@@ -674,6 +734,7 @@
 
 
                     </div>
+                   <div style="overflow-x: auto;width:100%">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -697,6 +758,7 @@
 
 
                     </table>
+                   </div>
                 </div>
             </div>
             <!-- Players Tab -->

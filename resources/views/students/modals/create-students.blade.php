@@ -184,4 +184,92 @@
         
         });
         </script>
+    <script>
+    // addStudentForm submit — lives here so it works on every page (Q-Action, events, etc.)
+    (function () {
+        var form = document.getElementById('addStudentForm');
+        if (!form || form.dataset.handlerBound) return;
+        form.dataset.handlerBound = '1';
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    body: formData
+                });
+
+                // ── Error response ──────────────────────────────────────────
+                if (!res.ok) {
+                    let errData = null;
+                    try { errData = await res.json(); } catch (e) {}
+
+                    if (errData) {
+                        let messages = [];
+                        if (errData.errors) {
+                            const errs = Array.isArray(errData.errors)
+                                ? errData.errors
+                                : Object.values(errData.errors).flat();
+                            messages = messages.concat(errs.filter(Boolean));
+                        }
+                        if (errData.message) messages.push(errData.message);
+
+                        if (messages.length) {
+                            messages.slice(0, 5).forEach(m => {
+                                try { if (window.toastr) toastr.error(m); } catch (ex) {}
+                            });
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Warning!',
+                                confirmButtonColor: '#000000',
+                                text: messages[0]
+                            });
+                            return;
+                        }
+                    }
+
+                    // Fallback: non-JSON or no message — reload to surface server flash
+                    window.location.reload();
+                    return;
+                }
+
+                // ── Success response ─────────────────────────────────────────
+                let data = null;
+                try { data = await res.json(); } catch (ex) {}
+
+                if (!data) {
+                    // HTML redirect — reload so layout flash toasts appear
+                    window.location.reload();
+                    return;
+                }
+
+                try { if (window.toastr && data.message) toastr.success(data.message); } catch (ex) {}
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    confirmButtonColor: '#000000',
+                    text: data.message
+                });
+
+                form.reset();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+                if (modal) modal.hide();
+                loadLeaderboard();
+
+            } catch (err) {
+                let msg = (err && err.message) ? err.message : 'Something went wrong';
+                try { if (window.toastr) toastr.error(msg); } catch (ex) {}
+                Swal.fire({ icon: 'error', title: 'Error', confirmButtonColor: '#000000', text: msg });
+            }
+        });
+    })();
+    </script>
 @endpush

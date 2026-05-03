@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Tournament Bracket - SteamIQ')
+@section('title', 'STEAM XRS Manager')
 
 @push('styles')
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -205,7 +205,7 @@
             <select id="bb-select-event" class="bb-select" onchange="loadBracketBoard(this.value)">
                 <option value="" hidden>— Select an Event —</option>
                 @foreach($events as $event)
-                    <option value="{{ $event->id }}">
+                    <option value="{{ $event->id }}" {{ $loop->first ? 'selected' : '' }}>
                         {{ $event->name }}@if($event->start_date) ({{ \Carbon\Carbon::parse($event->start_date)->format('M Y') }})@endif
                     </option>
                 @endforeach
@@ -287,7 +287,8 @@
         function loadBracketBoard(eventId) {
             if (!eventId) return;
 
-            _bmEventId = eventId;
+            _bmEventId   = eventId;
+            _bmEventName = '';
 
             document.getElementById('bb-placeholder').classList.add('d-none');
             document.getElementById('bb-content').classList.remove('d-none');
@@ -320,6 +321,12 @@
 
         // After saving a winner/score, reload inline instead of opening the modal
         window.openBracketModal = loadBracketBoard;
+
+        // Auto-load the first event on page load
+        (function () {
+            var firstOption = document.querySelector('#bb-select-event option[selected]');
+            if (firstOption && firstOption.value) loadBracketBoard(firstOption.value);
+        })();
 
         // bmOpenScoreEntry appends the score popup to #bracketModal, which is
         // display:none on this page → the popup is invisible. Patch it to use

@@ -539,6 +539,13 @@ function openEventModal(eventId) {
       let totalStudents = allTeams.flatMap(t => t.students || []).length;
       let totalGroups   = (ev.organizations || []).flatMap(o => o.groups || []).length;
 
+      // helper to format numbers with thousand separators for injected HTML
+      const fmt = (n) => {
+        if (n === undefined || n === null || n === '') return 'N/A';
+        const num = Number(n);
+        return isNaN(num) ? n : num.toLocaleString();
+      };
+
       /* ── Status badge ── */
       let statusClass = ev.status === 'live' ? 'evm-badge-live' : ev.status === 'closed' ? 'evm-badge-closed' : ev.status === 'upcoming' ? 'evm-badge-upcoming' : 'evm-badge-draft';
       let statusDot   = ev.status === 'live' ? '<span class="evm-dot"></span>' : '';
@@ -559,7 +566,7 @@ function openEventModal(eventId) {
               <div class="evm-team-name">${team.name}</div>
               <div class="evm-team-count">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                ${count} player${count !== 1 ? 's' : ''}
+                ${fmt(count)} player${count !== 1 ? 's' : ''}
               </div>
             </div>
             <div class="evm-player-chips">${chips}</div>
@@ -591,7 +598,7 @@ function openEventModal(eventId) {
               <div class="evm-group-header">
                 <span class="evm-group-name">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                  ${grp.name || 'Group'}
+                  ${grp.group_name || grp.name || 'Group'}
                 </span>
                 <span class="evm-group-count">${teamCount} teams · ${subCount} subgroups</span>
               </div>
@@ -684,22 +691,22 @@ function openEventModal(eventId) {
             <div class="evm-stats-row">
               <div class="evm-stat-card">
                 <div class="evm-stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                <div class="evm-stat-num">${allTeams.length || 'N/A'}</div>
+                <div class="evm-stat-num">${fmt(allTeams.length)}</div>
                 <div class="evm-stat-lbl">Teams</div>
               </div>
               <div class="evm-stat-card">
                 <div class="evm-stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-                <div class="evm-stat-num">${totalStudents || 'N/A'}</div>
+                <div class="evm-stat-num">${fmt(totalStudents)}</div>
                 <div class="evm-stat-lbl">Players</div>
               </div>
               <div class="evm-stat-card">
                 <div class="evm-stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-                <div class="evm-stat-num">${totalGroups || 'N/A'}</div>
+                <div class="evm-stat-num">${fmt(totalGroups)}</div>
                 <div class="evm-stat-lbl">Groups</div>
               </div>
               <div class="evm-stat-card">
                 <div class="evm-stat-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-                <div class="evm-stat-num">${(ev.activities || []).length || 'N/A'}</div>
+                <div class="evm-stat-num">${fmt((ev.activities || []).length)}</div>
                 <div class="evm-stat-lbl">Activities</div>
               </div>
             </div>
@@ -718,7 +725,7 @@ function openEventModal(eventId) {
               </div>
               <div class="evm-info-box">
                 <div class="evm-info-box-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-                <div><div class="evm-info-box-label">Players per Team</div><div class="evm-info-box-value">${ts.players_per_team ?? 'N/A'}</div></div>
+                <div><div class="evm-info-box-label">Players per Team</div><div class="evm-info-box-value">${fmt(ts.players_per_team)}</div></div>
               </div>
             </div>
           </div>

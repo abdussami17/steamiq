@@ -32,7 +32,55 @@ class ScoreboardController extends Controller
             'primaryData', 'juniorData', 'activities'
         ));
     }
+    private function formatActivityName($a)
+    {
+        $name = '';
+        $description = '';
+    
+        if ($a->activity_or_mission === 'mission') {
+            $name = $a->badge_name;
+        } else {
+            switch ($a->activity_type) {
+                case 'brain':
+                    $name = $a->brain_type;
+                    $description = $a->brain_description;
+                    break;
+    
+                case 'egaming':
+                    $name = $a->egaming_type;
+                    $description = $a->egaming_description;
+                    break;
+    
+                case 'esports':
+                    $name = $a->esports_type;
+                    $description = $a->esports_description;
+                    break;
+    
+                case 'playground':
+                    $name = 'Playground';
+                    $description = $a->playground_description;
+                    break;
+    
+                default:
+                    $name = $a->name;
+            }
+        }
+    
+        // format text
+        $name = $this->formatText($name);
+        $description = $this->formatText($description);
+    
+        return $description ? "{$name} - {$description}" : ($name ?: 'N/A');
+    }
 
+    private function formatText($str)
+{
+    if (!$str) return null;
+
+    return collect(explode(' ', str_replace('_', ' ', strtolower($str))))
+        ->map(fn($w) => ucfirst($w))
+        ->implode(' ');
+}   
     public function getData(Request $request)
     {
         $event = Event::find($request->get('event_id'));
@@ -46,7 +94,12 @@ class ScoreboardController extends Controller
 
         return response()->json([
             'event'      => ['id' => $event->id, 'name' => $event->name, 'type' => $event->type],
-            'activities' => $activities->map(fn($a) => ['id' => $a->id, 'name' => $a->display_name]),
+            'activities' => $activities->map(function($a) {
+                return [
+                    'id'   => $a->id,
+                    'name' => $this->formatActivityName($a),
+                ];
+            }),
             'primary'    => $primaryData,
             'junior'     => $juniorData,
         ]);
@@ -258,7 +311,7 @@ class ScoreboardController extends Controller
                         'division'        => $team->division,
                         'org_name'        => $org->name,
                         'group_id'        => $group->id,
-                        'group_name'      => $group->name ?? ('Group ' . $group->id),
+                        'group_name'      => $group->group_name ?? ('Group ' . $group->id),
                         'activity_scores' => $scoresByActivity,
                         'total_points'    => $grandTotal,
                         'flag_totals'     => $flagCount,

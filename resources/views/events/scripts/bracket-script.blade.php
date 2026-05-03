@@ -3,6 +3,7 @@ const bracketModal = new bootstrap.Modal(document.getElementById('bracketModal')
 let _bmEventId   = null;
 let _bmEditable  = false;
 let _bmEventType = 'esports';
+let _bmEventName = '';
 
 /* ══════════════════════════════════════════════════════════════════
    OPEN / LOAD
@@ -39,6 +40,7 @@ function renderBracketModal(res) {
     const { event, setting, activities, type, editable, pods, grand_final } = res;
     _bmEditable  = !!editable;
     _bmEventType = event.type ?? 'esports';
+    _bmEventName = event.name ?? '';
 
     document.getElementById('bm-loader').classList.add('d-none');
 
@@ -80,33 +82,6 @@ function renderBracketModal(res) {
             </div>`;
     }
 
-    // XR Activities bar
-    if (event.type === 'xr' && activities?.length) {
-        const tagMap = { brain:'🧠 Brain', esports:'🕹 ESports', egaming:'🎮 Gaming', playground:'🏃 Outdoor' };
-        const cards = activities.map(a => {
-            const isMission = a.activity_or_mission === 'mission';
-            const tag = isMission
-                ? `<span class="bm-tag bm-tag-mission">🎖 Mission</span>`
-                : `<span class="bm-tag bm-tag-${a.activity_type ?? 'brain'}">${tagMap[a.activity_type] ?? a.activity_type}</span>`;
-            const sub  = a.brain_type ?? a.esports_type ?? a.egaming_type ?? '';
-            const desc = a.brain_description ?? a.esports_description ?? a.egaming_description ?? a.playground_description ?? '';
-            return `<div class="bm-act-card">
-                ${tag}
-                ${isMission ? `<div style="font-size:1.1rem;text-transform:uppercase;font-weight:700;color:#fff;margin-bottom:4px;">${a.badge_name ?? 'Mission'}</div>` : ''}
-                ${sub  ? `<div style="font-size:1.1rem;text-transform:uppercase;color:#fff;margin-bottom:3px;">${sub.replace(/_/g,' ')}</div>` : ''}
-                ${desc ? `<div style="font-size:1.1rem;text-transform:uppercase;color:#fff;margin-bottom:8px;line-height:1.5;">${desc}</div>` : ''}
-                <div class="bm-act-score">${a.max_score ?? 0}<span>pts</span></div>
-            </div>`;
-        }).join('');
-        bracketEl.innerHTML += `
-            <div class="bm-section-header">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                C.A.M. Activities &amp; Missions
-            </div>
-            <div class="bm-act-grid">${cards}</div>
-            <div class="bm-section-divider"></div>`;
-    }
-
     // Build pods
     if (pods && pods.length > 0) {
         bracketEl.innerHTML += buildPodBracketHtml(pods, grand_final, editable);
@@ -129,6 +104,20 @@ function buildPodBracketHtml(pods, grandFinal, editable) {
     const hasManyPods = pods.length > 1;
 
     if (hasManyPods) {
+        // Extract last-match winner from a pod's final phase
+        const getPodChamp = pod => {
+            if (!pod?.phases?.length) return null;
+            const lp = pod.phases[pod.phases.length - 1];
+            if (!lp?.rounds?.length) return null;
+            const lr = lp.rounds[lp.rounds.length - 1];
+            const lm = lr?.matches?.[lr.matches.length - 1];
+            return lm?.winner_team_id ? { name: lm.winner_name ?? 'TBD', logo: lm.winner_logo ?? null } : null;
+        };
+        const redPod    = pods.find(p => p.name === 'Red');
+        const bluePod   = pods.find(p => p.name === 'Blue');
+        const redChamp  = redPod  ? getPodChamp(redPod)  : null;
+        const blueChamp = bluePod ? getPodChamp(bluePod) : null;
+
         const tabs = pods.map((pod, i) => {
             const pc = podColors[pod.name] ?? podColors.default;
             return `<button class="bm-pod-tab ${i===0?'active':''}"
@@ -138,7 +127,26 @@ function buildPodBracketHtml(pods, grandFinal, editable) {
                 ${pod.label}
             </button>`;
         }).join('');
-        html += `<div class="bm-pod-tabs">${tabs}</div><div class="bm-pod-panels">`;
+
+        const _rcName = redChamp?.name  || 'TBD';
+        const _bcName = blueChamp?.name || 'TBD';
+        const _rcLogo = redChamp?.logo  || '';
+        const _bcLogo = blueChamp?.logo || '';
+        const _rcEsc  = _rcName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const _bcEsc  = _bcName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const _rlEsc  = _rcLogo.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const _blEsc  = _bcLogo.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const vsBtn = (redPod && bluePod)
+            ? `<button class="bm-vs-btn" onclick="bmShowFinalShowdown('${_rcEsc}','${_bcEsc}','${_rlEsc}','${_blEsc}')">
+                   <span class="bm-vs-dot" style="background:#ef4444;box-shadow:0 0 6px #ef4444bb;"></span>
+                   ⚡ FINAL SHOWDOWN
+                   <span class="bm-vs-dot" style="background:#3b82f6;box-shadow:0 0 6px #3b82f6bb;"></span>
+               </button>`
+            : '';
+
+        html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:0;">
+            <div class="bm-pod-tabs">${tabs}</div>${vsBtn}
+        </div><div class="bm-pod-panels">`;
     }
 
     pods.forEach((pod, pi) => {
@@ -256,7 +264,7 @@ function buildMatchCard(match, num, isGrand, editable, accentColor) {
     const isWinnerA = winner_team_id && team_a && winner_team_id === team_a.id;
     const isWinnerB = winner_team_id && team_b && winner_team_id === team_b.id;
 
-    const renderTeam = (team, side, score, isWinner, isByeSelf) => {
+    const renderTeam = (team, side, score, isWinner, isByeSelf, podColor) => {
         const isTbd  = !team;
         const name   = team?.name ?? (isByeSelf ? 'BYE' : 'TBD');
         const divKey = team?.division ? team.division.toLowerCase() : 'null';
@@ -272,24 +280,29 @@ function buildMatchCard(match, num, isGrand, editable, accentColor) {
             scoreEl = `<div class="bm-score">—</div>`;
         }
 
-        const canClick = editable && !isTbd && !isByeSelf ;
-        const clickAttr = canClick && !isWinner
-            ? `onclick="bmSelectWinner(${id},${team?.id??'null'})" title="Set as winner" style="cursor:pointer;"`
+        const col = podColor ?? '#6366f1';
+        const canClick = editable && !isTbd && !isByeSelf;
+        let teamStyle = `border-left:3px solid ${col};`;
+        if (isWinner) teamStyle += `background:${col}18;`;
+        if (canClick) teamStyle += `cursor:pointer;`;
+
+        const clickHandlers = canClick && !isWinner
+            ? `onclick="bmSelectWinner(${id},${team?.id??'null'})" title="Set as winner"`
             : (canClick && isWinner
-                ? `onclick="bmClearWinner(${id})" title="Undo winner" style="cursor:pointer;"`
+                ? `onclick="bmClearWinner(${id})" title="Undo winner"`
                 : '');
 
-        return `<div class="bm-team bm-team-${side}${isWinner?' winner':''}${isByeSelf?' bye':''}" ${clickAttr}>
-            <div class="bm-side-dot bm-side-${side}"></div>
+        return `<div class="bm-team${isWinner?' winner':''}${isByeSelf?' bye':''}" style="${teamStyle}" ${clickHandlers}>
+            <div class="bm-side-dot" style="background:${col};box-shadow:0 0 5px ${col}80;"></div>
             <div class="bm-team-avatar">${init}</div>
             ${divLbl ? `<div class="bm-div-badge bm-div-${divKey}">${divLbl}</div>` : ''}
-            <div class="bm-tname${isTbd?' tbd':''}" title="${name}">${name}</div>
+            <div class="bm-tname${isTbd?' tbd':''}" title="${name}"${isWinner ? ` style="color:${col}cc;"` : ''}>${name}</div>
             ${scoreEl}
         </div>`;
     };
 
-    const teamAHtml = renderTeam(team_a, 'red',  team_a_score, isWinnerA, is_bye_a);
-    const teamBHtml = renderTeam(team_b, 'blue', team_b_score, isWinnerB, is_bye_b);
+    const teamAHtml = renderTeam(team_a, 'a', team_a_score, isWinnerA, is_bye_a, accentColor);
+    const teamBHtml = renderTeam(team_b, 'b', team_b_score, isWinnerB, is_bye_b, accentColor);
 
     const statusBadge = status === 'completed'
         ? `<div class="bm-match-status-done">✓</div>`
@@ -463,6 +476,98 @@ function bmSwitchPhase(btn, targetId) {
     const container = tabs.nextElementSibling;
     if (!container) return;
     container.querySelectorAll('.bm-phase-panel').forEach(p => p.classList.toggle('d-none', p.id !== targetId));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   FINAL SHOWDOWN OVERLAY  (Red Pod Champ  ⚡  vs  ⚡  Blue Pod Champ)
+══════════════════════════════════════════════════════════════════ */
+function bmShowFinalShowdown(redName, blueName, redLogo, blueLogo) {
+    document.getElementById('bm-showdown')?.remove();
+
+    const ri = (redName  || 'TBD').substring(0, 2).toUpperCase();
+    const bi = (blueName || 'TBD').substring(0, 2).toUpperCase();
+
+    const makeAvatar = (name, logo, side) => {
+        const init = (name || 'TBD').substring(0, 2).toUpperCase();
+        const cls  = side === 'red' ? 'bm-sd-avatar-red' : 'bm-sd-avatar-blue';
+        if (logo) {
+            return `<div class="bm-sd-avatar ${cls}" style="padding:0;overflow:hidden;">
+                        <img src="/storage/${logo}" style="width:100%;height:100%;object-fit:cover;" alt="${name}">
+                    </div>`;
+        }
+        return `<div class="bm-sd-avatar ${cls}">${init}</div>`;
+    };
+
+    const _typeMap  = { esports: 'STEAM ESports', xr: 'STEAM XR Sports' };
+    const typeLabel = _typeMap[_bmEventType] ?? (_bmEventType || 'esports').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const eventTitle = _bmEventName || 'STEAM IQ Tournament';
+
+    // Floating particles
+    let particles = '';
+    for (let i = 0; i < 24; i++) {
+        const x = Math.random() * 100, y = Math.random() * 100;
+        const s = 2 + Math.random() * 4, d = (Math.random() * 4).toFixed(2);
+        const col = x < 50 ? '#ef4444' : '#3b82f6';
+        particles += `<div class="bm-sd-particle" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;background:${col};animation-delay:${d}s;"></div>`;
+    }
+
+    // Lightning bolts (decorative)
+    const bolt = `<svg class="bm-sd-bolt" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4.09 12.26A1 1 0 0 0 5 14h6l-1 8 8.91-10.26A1 1 0 0 0 18 10h-6z"/></svg>`;
+
+    document.body.insertAdjacentHTML('beforeend', `
+<div id="bm-showdown" class="bm-sd-overlay" onclick="if(event.target===this)this.remove()">
+    ${particles}
+
+    <!-- ambient lines -->
+    <div class="bm-sd-line bm-sd-line1"></div>
+    <div class="bm-sd-line bm-sd-line2"></div>
+    <div class="bm-sd-divider"></div>
+
+    <button class="bm-sd-close" onclick="document.getElementById('bm-showdown').remove()">✕</button>
+
+    <div class="bm-sd-title-wrap">
+        <div class="bm-sd-event-name">${eventTitle}</div>
+        <div class="bm-sd-supertitle">⚡ FINAL SHOWDOWN ⚡</div>
+    </div>
+
+    <div class="bm-sd-inner">
+
+        <!-- RED SIDE -->
+        <div class="bm-sd-side bm-sd-red">
+            <div class="bm-sd-tag" style="color:#ef4444;background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);">
+                🔴 RED POD
+            </div>
+            <div class="bm-sd-champ-lbl">CHAMPION</div>
+            <div class="bm-sd-aura bm-sd-aura-red"></div>
+            ${makeAvatar(redName, redLogo, 'red')}
+            <div class="bm-sd-name" style="color:#fca5a5;text-shadow:0 0 30px #ef444488;">${redName || 'TBD'}</div>
+            <div class="bm-sd-bolts">${bolt}${bolt}${bolt}</div>
+        </div>
+
+        <!-- VS CENTER -->
+        <div class="bm-sd-center">
+            <div class="bm-sd-vs-ring r1"></div>
+            <div class="bm-sd-vs-ring r2"></div>
+            <div class="bm-sd-vs-ring r3"></div>
+            <div class="bm-sd-vs">VS</div>
+        </div>
+
+        <!-- BLUE SIDE -->
+        <div class="bm-sd-side bm-sd-blue">
+            <div class="bm-sd-tag" style="color:#3b82f6;background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.3);">
+                🔵 BLUE POD
+            </div>
+            <div class="bm-sd-champ-lbl">CHAMPION</div>
+            <div class="bm-sd-aura bm-sd-aura-blue"></div>
+            ${makeAvatar(blueName, blueLogo, 'blue')}
+            <div class="bm-sd-name" style="color:#93c5fd;text-shadow:0 0 30px #3b82f688;">${blueName || 'TBD'}</div>
+            <div class="bm-sd-bolts">${bolt}${bolt}${bolt}</div>
+        </div>
+
+    </div>
+
+    <div class="bm-sd-footer">${typeLabel}</div>
+</div>`);
 }
 </script>
 
