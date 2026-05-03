@@ -1076,4 +1076,4 @@
 
         #lb-wrapper { border: none; }
     }
-</style>
+</style><?php /**PATH C:\Users\PC\Downloads\steamiq (8)\resources\views/scores/style.blade.php ENDPATH**/ ?>

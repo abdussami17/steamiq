@@ -1,4 +1,4 @@
-{{-- Bulk Edit Modal --}}
+
 <div class="modal fade" id="bulkEditModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -43,7 +43,7 @@
 <div id="lb-toast"></div>
 
 <script>
-    window.USER_ROLE = {{ auth()->check() ? auth()->user()->role : 0 }};
+    window.USER_ROLE = <?php echo e(auth()->check() ? auth()->user()->role : 0); ?>;
 </script>
 
 <script>
@@ -1192,4 +1192,4 @@
             if (btn) btn.addEventListener('click', exportLeaderboardExcelJS);
         });
     })();
-</script>
+</script><?php /**PATH C:\Users\PC\Downloads\steamiq (8)\resources\views/scores/scripts/score-script.blade.php ENDPATH**/ ?>
