@@ -167,7 +167,10 @@
                                      <a href="<?php echo e(route('bracket.index')); ?>" role="menuitem">Tournament Bracket</a>
                                  </div>
                              </div>
-     
+                             <a href="<?php echo e(route('rosters.index')); ?>"
+                             class="nav-link-custom <?php echo e(request()->routeIs('rosters.index') ? 'active' : ''); ?>">
+                              Roster
+                          </a>
                              <a href="<?php echo e(route('scoring.index')); ?>"
                                 class="nav-link-custom <?php echo e(request()->routeIs('scoring.index') ? 'active' : ''); ?>">
                                  Scoring

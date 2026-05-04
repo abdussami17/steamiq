@@ -22,6 +22,9 @@ class Organization extends Model
         return $this->hasMany(Group::class);
     }
     
-
+    public function coach()
+    {
+        return $this->belongsTo(User::class, 'coach_id');
+    }
     
 }

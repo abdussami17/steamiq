@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Student extends Model
 {
-    protected $fillable = ['event_id','team_id','name','profile','email'];
+    protected $fillable = ['event_id','team_id','name','profile','email','age','grade','shirt_size',];
 
     public function team() {
         return $this->belongsTo(Team::class);

@@ -15,6 +15,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\RosterController;
 use App\Http\Controllers\ScoreboardController;
 use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\SettingController;
@@ -299,7 +300,23 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
         ->name('roles.bulkDelete');
         Route::post('/users/bulk-delete', [UserController::class, 'bulkDelete'])
     ->name('users.bulkDelete');
-   
+
+
+// Roster management
+Route::prefix('rosters')->name('rosters.')->group(function () {
+    Route::get('/',         [RosterController::class, 'index'])->name('index');
+    Route::get('/list',     [RosterController::class, 'list'])->name('list');   
+    Route::post('/import',  [RosterController::class, 'import'])->name('import'); 
+    Route::get('/{roster}', [RosterController::class, 'show'])->name('show');
+});
+
+// Roster student actions (attendance, etc.) — Phase 2
+// Route::prefix('roster-students')->name('roster-students.')->group(function () {
+//     Route::patch('/{rosterStudent}/attendance', [RosterStudentController::class, 'updateAttendance'])
+//         ->name('attendance');
+// });
+
+
     }); // end admin middleware
 
 }); // end auth middleware

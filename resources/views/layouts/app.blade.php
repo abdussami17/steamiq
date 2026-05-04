@@ -167,7 +167,10 @@
                                      <a href="{{ route('bracket.index') }}" role="menuitem">Tournament Bracket</a>
                                  </div>
                              </div>
-     
+                             <a href="{{ route('rosters.index') }}"
+                             class="nav-link-custom {{ request()->routeIs('rosters.index') ? 'active' : '' }}">
+                              Roster
+                          </a>
                              <a href="{{ route('scoring.index') }}"
                                 class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
                                  Scoring
