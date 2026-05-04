@@ -324,29 +324,27 @@ $group = $this->resolveGroup($row['group'], $organization);
     {
         return Team::firstOrCreate(
             [
-                'name'     => $teamName,
-                'group_id' => $group->id
+                'name'     => trim($teamName),
+                'group_id' => $group->id,
             ],
             [
-                'name'     => $teamName,
-                'group_id' => $group->id
+                'division' => 'primary',
             ]
         );
     }
 
     private function resolveGroup(string $groupName, Organization $organization): Group
-{
-    return Group::firstOrCreate(
-        [
-            'organization_id' => $organization->id,
-            'group_name'      => $groupName
-        ],
-        [
-            'organization_id' => $organization->id,
-            'group_name'      => $groupName
-        ]
-    );
-}
+    {
+        return Group::firstOrCreate(
+            [
+                'organization_id' => $organization->id,
+                'group_name'      => trim($groupName),
+            ],
+            [
+                'pod' => 'red',
+            ]
+        );
+    }
 
 private function resolveRoster(int $eventId, int $organizationId, ?int $coachId = null): Roster
 {

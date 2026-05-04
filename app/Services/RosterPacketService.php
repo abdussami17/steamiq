@@ -137,11 +137,9 @@ class RosterPacketService
 
     private function generateQr(Roster $roster): string
     {
-        $payload = json_encode([
-            'roster_id'       => $roster->id,
-            'event_id'        => $roster->event_id,
-            'organization_id' => $roster->organization_id,
-            'checksum'        => $this->buildChecksum($roster),
+        $payload = url('/rosters/checkin') . '?' . http_build_query([
+            'roster_id' => $roster->id,
+            'checksum'  => $this->buildChecksum($roster),
         ]);
 
         $qrImage = QrCode::format('svg')

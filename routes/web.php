@@ -334,8 +334,8 @@ Route::prefix('rosters')->name('rosters.')->group(function () {
 
     // QR-based check-in (scanner / tablet / kiosk)
     // Payload: { roster_id, checksum }
-    Route::post('/checkin', [RosterController::class, 'checkin'])
-        ->name('checkin');
+    Route::match(['get', 'post'], '/checkin', [RosterController::class, 'checkin'])
+    ->name('checkin');
 });
 
 

@@ -211,40 +211,34 @@ class RosterController extends Controller
      */
     public function checkin(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'roster_id' => ['required', 'integer', 'exists:rosters,id'],
-            'checksum'  => ['required', 'string'],
-        ]);
- 
-        $roster = Roster::findOrFail($validated['roster_id']);
- 
-        if (! $this->packetService->verifyChecksum($roster, $validated['checksum'])) {
+        $data = $request->all();
+    
+        $rosterId = $data['roster_id'] ?? null;
+        $checksum = $data['checksum'] ?? null;
+    
+        if (!$rosterId || !$checksum) {
+            return response()->json(['message' => 'Invalid payload'], 422);
+        }
+    
+        $roster = Roster::findOrFail($rosterId);
+    
+        if (! $this->packetService->verifyChecksum($roster, $checksum)) {
             return response()->json(['message' => 'Invalid QR code.'], 403);
         }
- 
+    
         if ($roster->isCheckedIn()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Already checked in.',
                 'status'  => 'checked-in',
             ]);
         }
- 
-        try {
-            $this->packetService->checkIn($roster);
- 
-            return response()->json([
-                'success'      => true,
-                'message'      => 'Check-in complete.',
-                'status'       => 'checked-in',
-                'organization' => $roster->organization?->name,
-                'event'        => $roster->event?->name,
-            ]);
- 
-        } catch (\Throwable $e) {
-            \Log::error("Check-in failed for roster #{$roster->id}", ['exception' => $e->getMessage()]);
-            return response()->json(['message' => 'Check-in failed.'], 500);
-        }
+    
+        $this->packetService->checkIn($roster);
+    
+        return response()->json([
+            'success' => true,
+            'status'  => 'checked-in',
+        ]);
     }
  
     // =========================================================================
