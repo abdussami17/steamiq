@@ -302,19 +302,52 @@ Route::post('/events/{event}/set-winner',  [EventController::class, 'setWinner']
     ->name('users.bulkDelete');
 
 
-// Roster management
+// ─────────────────────────────────────────────────────────────
+// Roster Management Routes
+// ─────────────────────────────────────────────────────────────
 Route::prefix('rosters')->name('rosters.')->group(function () {
-    Route::get('/',         [RosterController::class, 'index'])->name('index');
-    Route::get('/list',     [RosterController::class, 'list'])->name('list');   
-    Route::post('/import',  [RosterController::class, 'import'])->name('import'); 
+
+    // Get roster listing page (UI)
+    Route::get('/', [RosterController::class, 'index'])->name('index');
+
+    // AJAX: fetch roster list data
+    Route::get('/list', [RosterController::class, 'list'])->name('list');
+
+    // Import roster data (Excel / CSV upload)
+    Route::post('/import', [RosterController::class, 'import'])->name('import');
+
+    // View single roster details
     Route::get('/{roster}', [RosterController::class, 'show'])->name('show');
+
+    // ─────────────────────────────────────────────────────────
+    // Phase 2: Field Operations (Packet + QR + Check-in)
+    // ─────────────────────────────────────────────────────────
+
+    // Generate field packet (PDF + QR)
+    // Changes status: draft → ready
+    Route::post('/{roster}/generate-packet', [RosterController::class, 'generateFieldPacket'])
+        ->name('generate-packet');
+
+    // Get QR code data (returns JSON or image URL)
+    Route::get('/{roster}/qr', [RosterController::class, 'showQr'])
+        ->name('qr');
+
+    // QR-based check-in (scanner / tablet / kiosk)
+    // Payload: { roster_id, checksum }
+    Route::post('/checkin', [RosterController::class, 'checkin'])
+        ->name('checkin');
 });
 
-// Roster student actions (attendance, etc.) — Phase 2
-// Route::prefix('roster-students')->name('roster-students.')->group(function () {
-//     Route::patch('/{rosterStudent}/attendance', [RosterStudentController::class, 'updateAttendance'])
-//         ->name('attendance');
-// });
+
+// ─────────────────────────────────────────────────────────────
+// Roster Student Management (Phase 2)
+// ─────────────────────────────────────────────────────────────
+Route::prefix('roster-students')->name('roster-students.')->group(function () {
+
+    // Update attendance status of a roster student
+    Route::patch('/{rosterStudent}/attendance', [RosterStudentController::class, 'updateAttendance'])
+        ->name('attendance');
+});
 
 
     }); // end admin middleware

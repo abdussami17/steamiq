@@ -64,13 +64,36 @@
 
 </div>
 
+
+
+
+    
+
+ 
+{{-- ═══════════════════════════════════════════════════════════════════════════
+     GENERATE PACKET PROGRESS TOAST (Phase 2)
+══════════════════════════════════════════════════════════════════════════════ --}}
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="packetToast" class="toast align-items-center border-0" role="alert" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <span class="spinner-border spinner-border-sm me-2" id="packetToastSpinner"></span>
+                <span id="packetToastText">Generating PDF...</span>
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+
+@endsection
+
 @push('modals')
     @include('roster.modal.import')
     @include('roster.modal.view')
+    @include('roster.modal.qr-code')
+
 @endpush
-@endsection
-
-
 @push('scripts')
 @include('roster.script.script')
 @endpush
