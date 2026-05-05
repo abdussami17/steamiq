@@ -137,11 +137,10 @@ class RosterPacketService
 
     private function generateQr(Roster $roster): string
     {
-        $payload = url('/rosters/checkin') . '?' . http_build_query([
+        $payload = config('app.url') . '/checkin?' . http_build_query([
             'roster_id' => $roster->id,
             'checksum'  => $this->buildChecksum($roster),
         ]);
-
         $qrImage = QrCode::format('svg')
             ->size(300)
             ->errorCorrection('H')  // High error correction — better for field scanning
@@ -152,7 +151,7 @@ class RosterPacketService
 
         $filePath = public_path('roster/qrcodes/' . $roster->id . '.svg');
 
-        if (!file_exists(dirname($filePath))) {
+        if (!file_exists(dirname($filePath))) { 
             mkdir(dirname($filePath), 0777, true);
         }
         

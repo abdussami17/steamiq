@@ -43,27 +43,27 @@ class AuthController extends Controller
             // ✅ Step 1: Form Validation
             $request->validate([
                 'email' => 'required|email',
-                'password' => 'required|string|min:6',
-                'g-recaptcha-response' => 'required',
+                'password' => 'required|string|min:6'
+                // 'g-recaptcha-response' => 'required',
             ]);
     
             // ✅ Step 2: Verify CAPTCHA from Google
-            $captchaResponse = Http::withoutVerifying()->asForm()->post(
-                'https://www.google.com/recaptcha/api/siteverify',
-                [
-                    'secret' => '6LduRqgsAAAAAGx1OwP1TN86O3IyIao28NQqJ2Ow', // 🔹 Direct secret key
-                    'response' => $request->input('g-recaptcha-response'),
-                    'remoteip' => $request->ip(),
-                ]
-            );
+            // $captchaResponse = Http::withoutVerifying()->asForm()->post(
+            //     'https://www.google.com/recaptcha/api/siteverify',
+            //     [
+            //         'secret' => '6LduRqgsAAAAAGx1OwP1TN86O3IyIao28NQqJ2Ow', // 🔹 Direct secret key
+            //         'response' => $request->input('g-recaptcha-response'),
+            //         'remoteip' => $request->ip(),
+            //     ]
+            // );
     
-            $captchaResult = $captchaResponse->json();
+            // $captchaResult = $captchaResponse->json();
     
-            if (!($captchaResult['success'] ?? false)) {
-                return back()
-                    ->withErrors(['captcha' => 'Captcha verification failed. Try again.'])
-                    ->withInput();
-            }
+            // if (!($captchaResult['success'] ?? false)) {
+            //     return back()
+            //         ->withErrors(['captcha' => 'Captcha verification failed. Try again.'])
+            //         ->withInput();
+            // }
     
             // ✅ Step 3: Normal Login Logic
             if (Auth::attempt($request->only('email', 'password'))) {

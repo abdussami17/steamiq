@@ -200,6 +200,15 @@ class RosterController extends Controller
             ], 500);
         }
     }
+    
+    
+    public function checkinPage(Request $request)
+{
+    return view('roster.checkin', [
+        'roster_id' => $request->query('roster_id'),
+        'checksum'  => $request->query('checksum'),
+    ]);
+}
  
     // =========================================================================
     // PHASE 2 — QR Check-In
@@ -230,6 +239,9 @@ class RosterController extends Controller
             return response()->json([
                 'success' => true,
                 'status'  => 'checked-in',
+                'message' => 'Already checked-in',
+                'event'   => $roster->event->name ?? '',
+                'organization' => $roster->organization->name ?? '',
             ]);
         }
     
@@ -238,6 +250,9 @@ class RosterController extends Controller
         return response()->json([
             'success' => true,
             'status'  => 'checked-in',
+            'message' => 'Successfully checked in',
+            'event'   => $roster->event->name ?? '',
+            'organization' => $roster->organization->name ?? '',
         ]);
     }
  
