@@ -110,6 +110,7 @@
         unknown: 'card-unknown'
     };
 
+    
     return `<span class="card-badges">${cards.map(c =>
         `<span class="card-chip ${map[c.type] || 'card-unknown'}"
             title="${esc((c.type || 'unknown').toUpperCase())}">

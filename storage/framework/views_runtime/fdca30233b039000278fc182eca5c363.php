@@ -151,7 +151,9 @@
             </div>
 
             <?php
-                $activeTab = session('active_tab') ?? 'events-tab';
+             $activeTab = request('tab')
+    ?? session('active_tab')
+    ?? 'events-tab';
             ?>
 
             <div class="tabs" id="eventTabs">
@@ -728,8 +730,11 @@
                                 <i data-lucide="upload"></i> Import Teams
                             </button>
                         <?php endif; ?>
-                        
-                        
+              
+                        <a href="javascript:void(0)" id="exportTeamsBtn" class="btn btn-secondary">
+                            <i data-lucide="download"></i> Export Teams
+                        </a>
+           
 
 
 

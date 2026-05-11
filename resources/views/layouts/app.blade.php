@@ -219,7 +219,22 @@
                                  <span class="nav-chevron"><i data-lucide="chevron-down"></i></span>
                              </button>
                              <div class="dropdown-menu" role="menu">
+
                                  @can('create_event')
+                                 <a href="{{ route('events.index', ['tab' => 'organizations-tab']) }}"
+                                    class="nav-link-custom">
+                                     Organizations
+                                 </a>
+                                 
+                                 <a href="{{ route('events.index', ['tab' => 'teams-tab']) }}"
+                                    class="nav-link-custom">
+                                     Teams
+                                 </a>
+                                 
+                                 <a href="{{ route('events.index', ['tab' => 'players-tab']) }}"
+                                    class="nav-link-custom">
+                                     Players
+                                 </a>
                                      <a href="#" role="menuitem"
                                         data-bs-target="#createEventModal"
                                         data-bs-toggle="modal">

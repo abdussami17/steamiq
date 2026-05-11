@@ -145,7 +145,9 @@
             </div>
 
             @php
-                $activeTab = session('active_tab') ?? 'events-tab';
+             $activeTab = request('tab')
+    ?? session('active_tab')
+    ?? 'events-tab';
             @endphp
 
             <div class="tabs" id="eventTabs">
@@ -721,12 +723,11 @@
                                 <i data-lucide="upload"></i> Import Teams
                             </button>
                         @endcan
-                        {{-- <a href="{{ route('teams.export') }}" class="btn btn-secondary">
-                            <i data-lucide="upload"></i> Export Teams
-                        </a> --}}
-                        {{-- <a href="javascript:void(0)" class="btn btn-secondary assign-card-btn" data-type="team">
-                            <i data-lucide="club"></i> Assign Cards
-                        </a> --}}
+              
+                        <a href="javascript:void(0)" id="exportTeamsBtn" class="btn btn-secondary">
+                            <i data-lucide="download"></i> Export Teams
+                        </a>
+           
 
 
 

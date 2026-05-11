@@ -244,3 +244,52 @@
     });
         })
     </script>
+
+
+<script>
+
+    document.getElementById('exportTeamsBtn').addEventListener('click', async function () {
+    
+        try {
+    
+            const response = await fetch("{{ route('teams.export') }}", {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+    
+            // Convert response to blob
+            const blob = await response.blob();
+    
+            // Create download URL
+            const url = window.URL.createObjectURL(blob);
+    
+            // Create temp link
+            const a = document.createElement('a');
+            a.href = url;
+    
+            // Dynamic filename
+            a.download = 'teams-export.xlsx';
+    
+            document.body.appendChild(a);
+            a.click();
+    
+            // Cleanup
+            a.remove();
+            window.URL.revokeObjectURL(url);
+    
+        } catch (error) {
+    
+            console.error(error);
+            alert('Export failed');
+    
+        }
+    
+    });
+    
+    </script>

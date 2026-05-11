@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Exports\TeamsExport;
 use App\Imports\TeamsImport;
 use App\Models\Group;
@@ -192,13 +193,11 @@ public function getTeams($groupId)
             ]);
         }
     }
-    public function export(Request $request)
+    public function export()
     {
-        $eventId = $request->event_id;
-    
         return Excel::download(
-            new TeamsExport($eventId),
-            'teams.xlsx'
+            new TeamsExport(),
+            'teams-' . now()->format('Y-m-d_H-i-s') . '.xlsx'
         );
     }
     public function bulkDelete(Request $request)

@@ -173,13 +173,15 @@ Route::middleware('auth')->group(function () {
         // ---------------------------------------------------------------------
         // Team Management
         // ---------------------------------------------------------------------
+        Route::get('/teams/export', [TeamController::class, 'export'])
+        ->name('teams.export');
         Route::post('/teams/store',          [TeamController::class, 'store'])->name('teams.store');
         Route::get('/teams-data',            [TeamController::class, 'teamsData'])->name('teams.data');
         Route::get('/view/{team}',           [TeamController::class, 'view'])->name('teams.view');
         Route::get('/teams/{team}',          [TeamController::class, 'edit'])->name('teams.edit');
         Route::post('/teams/update/{team}',  [TeamController::class, 'update'])->name('teams.update');
         Route::delete('/delete/{team}',      [TeamController::class, 'destroy'])->name('teams.destroy');
-        Route::get('/teams-export',          [TeamController::class, 'export'])->name('teams.export');
+
         Route::post('/teams-import',         [TeamController::class, 'import'])->name('teams.import');
         Route::post('/teams/bulk-delete',    [TeamController::class, 'bulkDelete'])->name('teams.bulkDelete');
         Route::get('/teams/import/template', [TeamController::class, 'importTemplate'])->name('teams.import.template');
