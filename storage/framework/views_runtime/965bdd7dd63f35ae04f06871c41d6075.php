@@ -1,6 +1,4 @@
-{{-- ═══════════════════════════════════════════════════════════════════════════
-     IMPORT MODAL
-══════════════════════════════════════════════════════════════════════════════ --}}
+
 <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -14,15 +12,15 @@
 
             <div class="modal-body">
 
-                {{-- Import Form --}}
+                
                 <div id="importForm">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Event <span class="text-danger">*</span></label>
                         <select id="importEventId" class="form-select" required>
                             <option value="">Select Event</option>
-                            @foreach($events as $event)
-                                <option value="{{ $event->id }}">{{ $event->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($event->id); ?>"><?php echo e($event->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
 
@@ -32,7 +30,7 @@
                         <div class="form-text">Accepted: .xlsx, .csv - Max 10 MB</div>
                     </div>
 
-                   {{-- ── Instructions card ── --}}
+                   
                    <div class="alert alert-info d-flex gap-3 align-items-start mb-4" role="alert">
                     <i data-lucide="info" style="width:20px;height:20px;flex-shrink:0;margin-top:2px;"></i>
                     <div>
@@ -47,13 +45,13 @@
                             <li>Accepted formats: <code>.xlsx</code> or <code>.csv</code> · Max size: <strong>5 MB</strong></li>
                         </ul>
                 
-                        {{-- Flow explanation --}}
+                        
                         <div class="bg-light border rounded p-2 mb-2" style="font-size:.8rem;">
                             <strong>How System Processes Your File:</strong><br>
                             Organization → Group → Subgroup → Team → Student → Roster (auto-linked)
                         </div>
                 
-                        {{-- Coach login explanation --}}
+                        
                         <div class="bg-warning-subtle border rounded p-2 mb-2" style="font-size:.8rem;">
                             <strong>Coach Account:</strong><br>
                             If a coach name is provided:
@@ -65,7 +63,7 @@
                             </ul>
                         </div>
                 
-                        {{-- Column reference --}}
+                        
                         <div class="table-responsive mt-2">
                             <table class="table table-sm table-bordered mb-0" style="font-size:.8rem;">
                                 <thead class="table-light">
@@ -169,19 +167,19 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <a href="{{ route('rosters.sample.template') }}" class="btn btn-sm btn-secondary">
+                    <a href="<?php echo e(route('rosters.sample.template')); ?>" class="btn btn-sm btn-secondary">
                         Download Sample Spreadsheet
                     </a>
                 </div>
                 </div>
 
-                {{-- Progress State --}}
+                
                 <div id="importProgress" class="d-none text-center py-4">
                     <div class="spinner-border text-primary mb-3" role="status"></div>
                     <p class="mb-0 fw-semibold" id="importProgressText">Processing...</p>
                 </div>
 
-                {{-- Report --}}
+                
                 <div id="importReport" class="d-none">
                     <h6 class="fw-bold mb-3">Import Report</h6>
 
@@ -220,7 +218,7 @@
                         </div>
                     </div>
 
-                    {{-- Failed rows detail --}}
+                    
                     <div id="reportFailedList" class="d-none">
                         <h6 class="text-danger">Failed Rows</h6>
                         <div class="table-responsive">
@@ -248,4 +246,4 @@
 
         </div>
     </div>
-</div>
+</div><?php /**PATH C:\Users\PC\Downloads\steam-two\resources\views/roster/modal/import.blade.php ENDPATH**/ ?>

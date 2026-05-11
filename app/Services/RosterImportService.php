@@ -25,11 +25,14 @@ class RosterImportService
         'name',
         'age',
         'grade',
+        'gender', 
         'shirt_size',
         'team',
         'group',     
         'coach',
-        'organization'
+        'organization',
+        'pod',   
+        'division'
     ];
 
     /**
@@ -39,11 +42,16 @@ class RosterImportService
         'name',
         'age',
         'grade',
+        'gender', 
+        'player_email', 
         'shirt_size',
         'team',
-        'group',  
+        'group',
+        'subgroup',   
         'coach',
-        'organization'
+        'organization',
+        'pod',   
+        'division'
     ];
 
     /**
@@ -99,14 +107,24 @@ class RosterImportService
                             $organization->save();
                         }
                     }
-// --- 3. Resolve Group ---
-$group = $this->resolveGroup($row['group'], $organization);
+                    $group = $this->resolveGroup($row['group'], $organization, $row['pod'] ?? null);
 
-                    // --- 3. Resolve Team ---
-                    $teamCacheKey = "{$organization->id}_{$group->id}_{$row['team']}";
-
+                    // 1. Resolve SubGroup (optional)
+                    $subGroup = null;
+                    if (!empty($row['subgroup'])) {
+                        $subGroup = $this->resolveSubGroup($row['subgroup'], $group);
+                    }
+                    
+                    // 2. Team cache key updated
+                    $teamCacheKey = "{$organization->id}_{$group->id}_{$subGroup?->id}_{$row['team']}";
+                    
                     if (!isset($teamCache[$teamCacheKey])) {
-                        $teamCache[$teamCacheKey] = $this->resolveTeam($row['team'], $group);
+                        $teamCache[$teamCacheKey] = $this->resolveTeam(
+                            $row['team'],
+                            $group,
+                            $row['division'] ?? null,
+                            $subGroup
+                        );
                     }
                     
                     $team = $teamCache[$teamCacheKey];
@@ -124,8 +142,10 @@ $group = $this->resolveGroup($row['group'], $organization);
                     // --- 5. Create Student ---
                     $student = Student::create([
                         'name'       => $row['name'],
+                        'email'       => $row['player_email'] ?? null, 
                         'age'        => $row['age']        ?? null,
                         'grade'      => $row['grade']      ?? null,
+                        'gender'     => $row['gender'] ?? null, 
                         'shirt_size' => $row['shirt_size'] ?? null,
                         'team_id'    => $team->id,
                     ]);
@@ -270,6 +290,19 @@ $group = $this->resolveGroup($row['group'], $organization);
                 $missing[] = $col;
             }
         }
+        if (!isset($row['division']) || trim($row['division']) === '') {
+            return [
+                'row' => $rowNumber,
+                'reason' => 'Missing required field(s): division',
+            ];
+        }
+        
+        if (!isset($row['pod']) || trim($row['pod']) === '') {
+            return [
+                'row' => $rowNumber,
+                'reason' => 'Missing required field(s): pod',
+            ];
+        }
     
         if (!empty($missing)) {
             return [
@@ -319,21 +352,30 @@ $group = $this->resolveGroup($row['group'], $organization);
 
         return $coach;
     }
-
-    private function resolveTeam(string $teamName, Group $group): Team
+    private function resolveTeam(string $teamName, Group $group, ?string $division = null, $subGroup = null): Team
     {
         return Team::firstOrCreate(
             [
-                'name'     => trim($teamName),
+                'name' => trim($teamName),
                 'group_id' => $group->id,
+                'sub_group_id' => $subGroup?->id,
             ],
             [
-                'division' => 'primary',
+                'division' => strtolower(trim($division ?: 'primary')),
             ]
         );
     }
+    private function resolveSubGroup(string $name, Group $group)
+{
+    return \App\Models\SubGroup::firstOrCreate(
+        [
+            'name' => trim($name),
+            'group_id' => $group->id,
+        ]
+    );
+}
 
-    private function resolveGroup(string $groupName, Organization $organization): Group
+    private function resolveGroup(string $groupName, Organization $organization, ?string $pod = null): Group
     {
         return Group::firstOrCreate(
             [
@@ -341,7 +383,7 @@ $group = $this->resolveGroup($row['group'], $organization);
                 'group_name'      => trim($groupName),
             ],
             [
-                'pod' => 'red',
+                'pod' => trim($pod ?: 'red'),
             ]
         );
     }
@@ -381,6 +423,12 @@ private function resolveRoster(int $eventId, int $organizationId, ?int $coachId 
         return match($h) {
             'group_name' => 'group',
             'team_name' => 'team',
+            'division_name' => 'division',
+            'pod_name' => 'pod',
+            'player_email' => 'player_email',
+            'gender_name' => 'gender',
+            'sub_group' => 'subgroup',
+            'sub_group_name' => 'subgroup',
             default => $h
         };
     }

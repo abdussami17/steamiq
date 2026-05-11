@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Roster;
 use App\Services\RosterImportService;
+use App\Services\RosterPacketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Services\RosterPacketService;
 use Illuminate\Support\Facades\Gate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class RosterController extends Controller
 {
@@ -274,5 +277,62 @@ class RosterController extends Controller
             'organization' => $roster->organization?->name,
             'event'        => $roster->event?->name,
         ]);
+    }
+
+
+    public function download(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // ✅ Correct ORDER (as client demanded)
+        $headers = [
+            'Name',
+            'Age',
+            'Grade',
+            'Gender',
+            'player_email',
+            'Shirt Size',
+            'Team',
+            'Group',
+            'Pod',
+            'Subgroup',
+            'Division',
+            'Coach',
+            'Organization',
+           
+        ];
+
+        // Header row
+        $sheet->fromArray($headers, null, 'A1');
+
+        // Sample data row
+        $sheet->fromArray([
+            'John Doe',
+            12,
+            7,
+            'male',
+            'john@example.com',
+            'M',
+            'Team A',
+            'Group 1',
+            'Red',
+            'Subgroup A',
+            'Primary',
+            'Coach Smith',
+            'ABC School',
+       
+        ], null, 'A2');
+
+        $writer = new Xlsx($spreadsheet);
+
+        $fileName = 'roster_sample_template.xlsx';
+
+        return response()->streamDownload(
+            function () use ($writer) {
+                $writer->save('php://output');
+            },
+            $fileName
+        );
     }
 }

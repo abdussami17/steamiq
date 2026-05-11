@@ -311,7 +311,8 @@ Route::middleware('auth')->group(function () {
 
             // AJAX: fetch roster list data
             Route::get('/list',    [RosterController::class, 'list'])->name('list');
-
+            Route::get('/roster/sample-template', [RosterController::class, 'download'])
+            ->name('sample.template');
             // Import roster (Excel / CSV upload)
             Route::post('/import', [RosterController::class, 'import'])->name('import');
 
