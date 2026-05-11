@@ -35,11 +35,13 @@ class SettingController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|min:6|confirmed',
         ]);
     
         $user->name = $request->name;
         $user->username = $request->username;
+        $user->email = $request->email;
     
         // 🔥 Check current password before updating
         if ($request->filled('password')) {

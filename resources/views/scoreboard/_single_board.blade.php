@@ -80,22 +80,41 @@
                             <td class="td-flg">
                                 {{ $row['flag_totals'] ?? 0 }}
                                 @if(!empty($row['cards']))
-                                    @php
-                                        $cardCounts = [];
-                                        foreach ($row['cards'] as $c) {
-                                            $t = $c['type'] ?? 'unknown';
-                                            $cardCounts[$t] = ($cardCounts[$t] ?? 0) + 1;
-                                        }
-                                    @endphp
-                                    <span class="card-badges" style="margin-left:8px;">
-                                        @foreach($cardCounts as $type => $count)
-                                            @php
-                                                $cls = $type === 'red' ? 'card-red' : ($type === 'yellow' ? 'card-yellow' : ($type === 'orange' ? 'card-orange' : 'card-unknown'));
-                                            @endphp
-                                            <span title="{{ strtoupper($type) }} card" class="card-badge {{ $cls }}">{{ $count }}</span>
-                                        @endforeach
-                                    </span>
-                                @endif
+                                <span class="card-badges">
+                            
+                                    @foreach($row['cards'] as $card)
+                            
+                                        @php
+                                            $type = $card['type'] ?? 'unknown';
+                            
+                                            $cls = match($type) {
+                                                'red' => 'card-red',
+                                                'yellow' => 'card-yellow',
+                                                'orange' => 'card-orange',
+                                                default => 'card-unknown',
+                                            };
+                                        @endphp
+                            
+                                        <span class="card-chip {{ $cls }}"
+                                              title="{{ strtoupper($type) }}">
+                            
+                                            <span class="card-chip-type">1</span>
+                            
+                                            <button type="button"
+                                                    class="card-unassign-btn"
+                                                    data-assignment-id="{{ $card['assignment_id'] }}"
+                                                    data-card-type="{{ $type }}">
+                            
+                                                <i data-lucide="x"></i>
+                            
+                                            </button>
+                            
+                                        </span>
+                            
+                                    @endforeach
+                            
+                                </span>
+                            @endif
                             </td>
                             <td class="td-org">{{ $row['org_name'] }}</td>
                             <td class="td-rank">

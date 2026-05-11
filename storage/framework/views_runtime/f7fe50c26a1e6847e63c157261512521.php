@@ -183,7 +183,10 @@
                                     class="nav-link-custom <?php echo e(request()->routeIs('events.index') ? 'active' : ''); ?>">
                                      Events
                                  </a>
-     
+                                 <a href="<?php echo e(route('rosters.index')); ?>"
+                                 class="nav-link-custom <?php echo e(request()->routeIs('rosters.index') ? 'active' : ''); ?>">
+                                  Roster
+                              </a>
                                  <div class="nav-item" id="dd-boards">
                                      <button class="nav-link-custom dropdown-toggle"
                                              aria-haspopup="true"

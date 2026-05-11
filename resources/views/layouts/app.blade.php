@@ -183,7 +183,10 @@
                                     class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
                                      Events
                                  </a>
-     
+                                 <a href="{{ route('rosters.index') }}"
+                                 class="nav-link-custom {{ request()->routeIs('rosters.index') ? 'active' : '' }}">
+                                  Roster
+                              </a>
                                  <div class="nav-item" id="dd-boards">
                                      <button class="nav-link-custom dropdown-toggle"
                                              aria-haspopup="true"

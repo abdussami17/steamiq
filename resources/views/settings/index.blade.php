@@ -564,6 +564,15 @@
                                                 placeholder="Your full name">
                                         </div>
                                         <div class="col-md-6">
+    <label class="sems-profile-label" for="semsEmailInput">Email</label>
+    <input class="sems-profile-input form-control"
+        id="semsEmailInput"
+        name="email"
+        type="email"
+        value="{{ auth()->user()->email }}"
+        placeholder="Your email address">
+</div>
+                                        <div class="col-md-6">
                                             <label class="sems-profile-label" for="semsUsernameInput">Username</label>
                                             <div class="sems-profile-input-wrap">
                                                 <input class="sems-profile-input form-control" id="semsUsernameInput"

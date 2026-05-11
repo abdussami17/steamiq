@@ -1,7 +1,7 @@
-@extends('layouts.app')
-@section('title', 'STEAM XRS Manager')
 
-@push('styles')
+<?php $__env->startSection('title', 'STEAM XRS Manager'); ?>
+
+<?php $__env->startPush('styles'); ?>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -196,9 +196,9 @@ body{
     box-shadow: 2px 0 6px rgba(0,0,0,0.4);
 }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="pg-page">
 <div class="pg-wrap">
 
@@ -215,13 +215,14 @@ body{
         <div class="pg-selector">
             <span class="pg-sel-lbl">Event</span>
             <select id="pgSel" class="pg-select">
-                @forelse($events as $ev)
-                    <option value="{{ $ev->id }}" {{ $ev->id == $selectedEventId ? 'selected' : '' }}>
-                        {{ $ev->name }}
+                <?php $__empty_1 = true; $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ev): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <option value="<?php echo e($ev->id); ?>" <?php echo e($ev->id == $selectedEventId ? 'selected' : ''); ?>>
+                        <?php echo e($ev->name); ?>
+
                     </option>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <option disabled>No events found</option>
-                @endforelse
+                <?php endif; ?>
             </select>
         </div>
     </div>
@@ -229,19 +230,19 @@ body{
     <div id="pgLoading"><div class="pg-spinner"></div>Loading scoreboard…</div>
 
     <div id="pgOut">
-        @include('scoreboard._boards', [
+        <?php echo $__env->make('scoreboard._boards', [
             'selectedEvent' => $selectedEvent,
             'primaryData'   => $primaryData,
             'juniorData'    => $juniorData,
             'activities'    => $activities,
-        ])
+        ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
     </div>
 
 </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     initCardButtons();
@@ -255,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sel.addEventListener('change', function () {
         loading.style.display = 'block';
         out.style.display = 'none';
-        fetch('{{ route("scoreboard.data") }}?event_id=' + this.value, {
+        fetch('<?php echo e(route("scoreboard.data")); ?>?event_id=' + this.value, {
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
         })
         .then(function(r){ return r.json(); })
@@ -491,4 +492,5 @@ try {
 }
 });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\PC\Downloads\steam-two\resources\views/scoreboard/index.blade.php ENDPATH**/ ?>
