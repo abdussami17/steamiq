@@ -9,6 +9,7 @@ use App\Models\Roster;
 use App\Models\RosterStudent;
 use App\Models\Student;
 use App\Models\Team;
+use App\Models\TournamentSetting;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -25,14 +26,14 @@ class RosterImportService
         'name',
         'age',
         'grade',
-        'gender', 
+        'gender',
         'shirt_size',
         'team',
-        'group',     
+        'group',
         'coach',
         'organization',
-        'pod',   
-        'division'
+        'pod',
+        'division',
     ];
 
     /**
@@ -42,83 +43,127 @@ class RosterImportService
         'name',
         'age',
         'grade',
-        'gender', 
-        'player_email', 
+        'gender',
+        'player_email',
         'shirt_size',
         'team',
         'group',
-        'subgroup',   
+        'subgroup',
         'coach',
         'organization',
-        'pod',   
-        'division'
+        'pod',
+        'division',
     ];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ENTRY POINT
+    // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * Import a roster file for a given event.
      *
      * @param  UploadedFile  $file
      * @param  int           $eventId
-     * @return array{total_rows:int, inserted:int, duplicates:int, failed:array}
+     * @return array{total_rows:int, inserted:int, duplicates:int, skipped:int, failed:array}
      */
     public function import(UploadedFile $file, int $eventId): array
     {
         $event = Event::findOrFail($eventId);
+
+        // Load tournament settings once — null means no constraints apply
+        $settings = TournamentSetting::where('event_id', $eventId)->first();
+
+        $maxPlayersPerTeam = $settings?->players_per_team ?? null;
+        $maxTeams          = $settings?->number_of_teams  ?? null;
 
         $rows   = $this->parseFile($file);
         $report = [
             'total_rows' => count($rows),
             'inserted'   => 0,
             'duplicates' => 0,
+            'skipped'    => 0,
             'failed'     => [],
         ];
 
         // Cache rosters & teams created this run to avoid redundant queries
         $rosterCache = [];  // key: "{event_id}_{organization_id}"
-        $teamCache   = [];  // key: "{organization_id}_{team_name}"
+        $teamCache   = [];  // key: "{organization_id}_{group_id}_{subGroupId}_{team_name}"
+
+        // Live counters so we don't re-query the DB on every row
+        // team_id => student count for this import session + existing DB count
+        $teamPlayerCounts = [];  // team_id => int
 
         foreach ($rows as $index => $row) {
             $rowNumber = $index + 2; // Row 1 = header
 
             try {
                 $validationError = $this->validateRow($row, $rowNumber);
-                Log::info('📌 FINAL ROW BEFORE INSERT:', $row);
                 if ($validationError) {
                     $report['failed'][] = $validationError;
                     continue;
                 }
 
+                $skipReason = null; // set inside transaction via reference
+
                 DB::transaction(function () use (
-                    $row, $event, $rowNumber,
-                    &$rosterCache, &$teamCache, &$report
-                )  {
-                    $coachId = null;
-                    // --- 1. Resolve Organization ---
+                    $row, $event, $rowNumber, $settings,
+                    $maxPlayersPerTeam, $maxTeams,
+                    &$rosterCache, &$teamCache, &$teamPlayerCounts,
+                    &$report, &$skipReason
+                ) {
+                    // ── 1. Resolve Organization ───────────────────────────
                     $organization = $this->resolveOrganization($row['organization'], $event->id);
 
-                    // --- 2. Resolve Coach ---
+                    // ── 2. Resolve Coach ──────────────────────────────────
+                    $coachId = null;
                     if (!empty($row['coach'])) {
-                        $coach = $this->resolveCoach($row['coach']);
+                        $coach   = $this->resolveCoach($row['coach']);
                         $coachId = $coach->id;
-                    
-                        // attach to organization
+
                         if ($organization->coach_id === null) {
                             $organization->coach_id = $coachId;
                             $organization->save();
                         }
                     }
+
+                    // ── 3. Resolve Group ──────────────────────────────────
                     $group = $this->resolveGroup($row['group'], $organization, $row['pod'] ?? null);
 
-                    // 1. Resolve SubGroup (optional)
+                    // ── 4. Resolve SubGroup (optional) ────────────────────
                     $subGroup = null;
                     if (!empty($row['subgroup'])) {
                         $subGroup = $this->resolveSubGroup($row['subgroup'], $group);
                     }
-                    
-                    // 2. Team cache key updated
+
+                    // ── 5. Enforce number_of_teams constraint ─────────────
                     $teamCacheKey = "{$organization->id}_{$group->id}_{$subGroup?->id}_{$row['team']}";
-                    
+
                     if (!isset($teamCache[$teamCacheKey])) {
+                        // Check if this team already exists in DB
+                        $existingTeam = Team::where([
+                            'name'         => trim($row['team']),
+                            'group_id'     => $group->id,
+                            'sub_group_id' => $subGroup?->id,
+                        ])->first();
+
+                        if (!$existingTeam) {
+                            // It's a brand-new team — check the cap
+                            if ($maxTeams !== null) {
+                                $currentTeamCount = Team::whereHas('group.organization', function ($q) use ($event) {
+                                    $q->where('event_id', $event->id);
+                                })->count();
+
+                                if ($currentTeamCount >= $maxTeams) {
+                                    $skipReason = "Row {$rowNumber}: Team limit reached "
+                                        . "({$maxTeams} teams max for this event). "
+                                        . "Team \"{$row['team']}\" was not created. Student skipped.";
+                                    $report['skipped']++;
+                                    $report['failed'][] = ['row' => $rowNumber, 'reason' => $skipReason];
+                                    return; // exit transaction closure — no DB writes
+                                }
+                            }
+                        }
+
                         $teamCache[$teamCacheKey] = $this->resolveTeam(
                             $row['team'],
                             $group,
@@ -126,31 +171,51 @@ class RosterImportService
                             $subGroup
                         );
                     }
-                    
+
                     $team = $teamCache[$teamCacheKey];
 
-                    // --- 4. Duplicate Student Check ---
+                    // ── 6. Enforce players_per_team constraint ────────────
+                    if ($maxPlayersPerTeam !== null) {
+                        // Initialise counter from DB on first encounter
+                        if (!isset($teamPlayerCounts[$team->id])) {
+                            $teamPlayerCounts[$team->id] = Student::where('team_id', $team->id)->count();
+                        }
+
+                        if ($teamPlayerCounts[$team->id] >= $maxPlayersPerTeam) {
+                            $skipReason = "Row {$rowNumber}: Team \"{$team->name}\" is full "
+                                . "({$maxPlayersPerTeam} players max). "
+                                . "Student \"{$row['name']}\" was not added.";
+                            $report['skipped']++;
+                            $report['failed'][] = ['row' => $rowNumber, 'reason' => $skipReason];
+                            return;
+                        }
+                    }
+
+                    // ── 7. Duplicate Student Check ────────────────────────
                     $isDuplicate = Student::where('name', $row['name'])
                         ->where('team_id', $team->id)
                         ->exists();
 
                     if ($isDuplicate) {
                         $report['duplicates']++;
-                        return; // skip — do not insert, do not fail
+                        return;
                     }
 
-                    // --- 5. Create Student ---
+                    // ── 8. Create Student ─────────────────────────────────
                     $student = Student::create([
                         'name'       => $row['name'],
-                        'email'       => $row['player_email'] ?? null, 
-                        'age'        => $row['age']        ?? null,
-                        'grade'      => $row['grade']      ?? null,
-                        'gender'     => $row['gender'] ?? null, 
-                        'shirt_size' => $row['shirt_size'] ?? null,
+                        'email'      => $row['player_email'] ?? null,
+                        'age'        => $row['age']          ?? null,
+                        'grade'      => $row['grade']        ?? null,
+                        'gender'     => $row['gender']       ?? null,
+                        'shirt_size' => $row['shirt_size']   ?? null,
                         'team_id'    => $team->id,
                     ]);
 
-                    // --- 6. Resolve Roster (one per event + organization) ---
+                    // Increment our in-memory counter
+                    $teamPlayerCounts[$team->id] = ($teamPlayerCounts[$team->id] ?? 0) + 1;
+
+                    // ── 9. Resolve Roster ─────────────────────────────────
                     $rosterCacheKey = "{$event->id}_{$organization->id}";
                     if (!isset($rosterCache[$rosterCacheKey])) {
                         $rosterCache[$rosterCacheKey] = $this->resolveRoster(
@@ -161,7 +226,7 @@ class RosterImportService
                     }
                     $roster = $rosterCache[$rosterCacheKey];
 
-                    // --- 7. Create RosterStudent Pivot ---
+                    // ── 10. Create RosterStudent Pivot ────────────────────
                     RosterStudent::firstOrCreate([
                         'roster_id'  => $roster->id,
                         'student_id' => $student->id,
@@ -176,6 +241,7 @@ class RosterImportService
                 Log::error("RosterImport row {$rowNumber} failed", [
                     'row'       => $row,
                     'exception' => $e->getMessage(),
+                    'trace'     => $e->getTraceAsString(),
                 ]);
 
                 $report['failed'][] = [
@@ -200,11 +266,9 @@ class RosterImportService
         $extension = strtolower($file->getClientOriginalExtension());
         $path      = $file->getRealPath();
 
-        if ($extension === 'csv') {
-            return $this->parseCsv($path);
-        }
-
-        return $this->parseXlsx($path);
+        return $extension === 'csv'
+            ? $this->parseCsv($path)
+            : $this->parseXlsx($path);
     }
 
     private function parseCsv(string $path): array
@@ -218,11 +282,12 @@ class RosterImportService
 
         while (($line = fgetcsv($handle)) !== false) {
             if ($headers === null) {
-                Log::info('📌 CSV HEADERS:', $headers);
                 $headers = array_map([$this, 'normalizeHeader'], $line);
-                continue;
-                Log::info('📌 RAW CSV ROW:', $line);
+                Log::info('📌 CSV HEADERS:', $headers);
+                continue; // <-- continue AFTER the log, not before (bug fix)
             }
+
+            Log::info('📌 RAW CSV ROW:', $line);
             $rows[] = $this->mapRowToHeaders($headers, $line);
         }
 
@@ -242,14 +307,17 @@ class RosterImportService
 
         $headers = array_map([$this, 'normalizeHeader'], array_shift($data));
         Log::info('📌 XLSX HEADERS:', $headers);
-        $rows    = [];
+
+        $rows = [];
 
         foreach ($data as $line) {
             Log::info('📌 RAW XLSX ROW:', $line);
+
             // Skip completely empty rows
             if (empty(array_filter($line, fn($v) => $v !== null && $v !== ''))) {
                 continue;
             }
+
             $rows[] = $this->mapRowToHeaders($headers, $line);
         }
 
@@ -268,8 +336,9 @@ class RosterImportService
         foreach (self::ALL_COLUMNS as $col) {
             $value            = $combined[$col] ?? null;
             $normalised[$col] = is_string($value) ? trim($value) : $value;
-            Log::info('📌 MAPPED ROW:', $normalised);
         }
+
+        Log::info('📌 MAPPED ROW:', $normalised);
 
         return $normalised;
     }
@@ -284,41 +353,28 @@ class RosterImportService
     private function validateRow(array $row, int $rowNumber): ?array
     {
         $missing = [];
-    
+
         foreach (self::REQUIRED_COLUMNS as $col) {
-            if (!isset($row[$col]) || trim($row[$col]) === '') {
+            if (!isset($row[$col]) || (is_string($row[$col]) && trim($row[$col]) === '')) {
                 $missing[] = $col;
             }
         }
-        if (!isset($row['division']) || trim($row['division']) === '') {
-            return [
-                'row' => $rowNumber,
-                'reason' => 'Missing required field(s): division',
-            ];
-        }
-        
-        if (!isset($row['pod']) || trim($row['pod']) === '') {
-            return [
-                'row' => $rowNumber,
-                'reason' => 'Missing required field(s): pod',
-            ];
-        }
-    
+
         if (!empty($missing)) {
             return [
                 'row'    => $rowNumber,
                 'reason' => 'Missing required field(s): ' . implode(', ', $missing),
             ];
         }
-    
-        // Age strict numeric
+
+        // Age must be numeric
         if (!is_numeric($row['age'])) {
             return [
                 'row'    => $rowNumber,
-                'reason' => 'Age must be a valid number',
+                'reason' => 'Age must be a valid number. Got: "' . $row['age'] . '"',
             ];
         }
-    
+
         return null;
     }
 
@@ -330,13 +386,11 @@ class RosterImportService
     {
         return Organization::firstOrCreate(
             ['name' => $name, 'event_id' => $eventId],
-            ['name' => $name, 'event_id' => $eventId]
         );
     }
 
     private function resolveCoach(string $name): User
     {
-        // Attempt to find by name; use a safe email derived from name
         $email = $this->nameToEmail($name);
 
         $coach = User::firstOrCreate(
@@ -344,7 +398,6 @@ class RosterImportService
             ['name' => $name, 'password' => bcrypt('password')]
         );
 
-        // Ensure role exists and is assigned
         $role = Role::firstOrCreate(['name' => 'coach', 'guard_name' => 'web']);
         if (!$coach->hasRole('coach')) {
             $coach->assignRole($role);
@@ -352,28 +405,6 @@ class RosterImportService
 
         return $coach;
     }
-    private function resolveTeam(string $teamName, Group $group, ?string $division = null, $subGroup = null): Team
-    {
-        return Team::firstOrCreate(
-            [
-                'name' => trim($teamName),
-                'group_id' => $group->id,
-                'sub_group_id' => $subGroup?->id,
-            ],
-            [
-                'division' => strtolower(trim($division ?: 'primary')),
-            ]
-        );
-    }
-    private function resolveSubGroup(string $name, Group $group)
-{
-    return \App\Models\SubGroup::firstOrCreate(
-        [
-            'name' => trim($name),
-            'group_id' => $group->id,
-        ]
-    );
-}
 
     private function resolveGroup(string $groupName, Organization $organization, ?string $pod = null): Group
     {
@@ -388,51 +419,74 @@ class RosterImportService
         );
     }
 
-private function resolveRoster(int $eventId, int $organizationId, ?int $coachId = null): Roster
-{
-    $roster = Roster::firstOrCreate(
-        [
-            'event_id' => $eventId,
-            'organization_id' => $organizationId,
-        ],
-        [
-            'status' => 'draft',
-        ]
-    );
-
-    // IMPORTANT: update coach if missing
-    if ($coachId && !$roster->coach_id) {
-        $roster->coach_id = $coachId;
-        $roster->save();
+    private function resolveSubGroup(string $name, Group $group): \App\Models\SubGroup
+    {
+        return \App\Models\SubGroup::firstOrCreate([
+            'name'     => trim($name),
+            'group_id' => $group->id,
+        ]);
     }
 
-    return $roster;
-}
+    private function resolveTeam(
+        string $teamName,
+        Group $group,
+        ?string $division = null,
+        $subGroup = null
+    ): Team {
+        return Team::firstOrCreate(
+            [
+                'name'         => trim($teamName),
+                'group_id'     => $group->id,
+                'sub_group_id' => $subGroup?->id,
+            ],
+            [
+                'division' => strtolower(trim($division ?: 'primary')),
+            ]
+        );
+    }
+
+    private function resolveRoster(int $eventId, int $organizationId, ?int $coachId = null): Roster
+    {
+        $roster = Roster::firstOrCreate(
+            [
+                'event_id'        => $eventId,
+                'organization_id' => $organizationId,
+            ],
+            [
+                'status' => 'draft',
+            ]
+        );
+
+        // Update coach if it was missing when the roster was first created
+        if ($coachId && !$roster->coach_id) {
+            $roster->coach_id = $coachId;
+            $roster->save();
+        }
+
+        return $roster;
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
     // HELPERS
     // ─────────────────────────────────────────────────────────────────────────
 
-
     private function normalizeHeader(string $h): string
     {
         $h = strtolower(trim($h));
         $h = str_replace(' ', '_', $h);
-    
-        // alias mapping
-        return match($h) {
-            'group_name' => 'group',
-            'team_name' => 'team',
-            'division_name' => 'division',
-            'pod_name' => 'pod',
-            'player_email' => 'player_email',
-            'gender_name' => 'gender',
-            'sub_group' => 'subgroup',
+
+        return match ($h) {
+            'group_name'     => 'group',
+            'team_name'      => 'team',
+            'division_name'  => 'division',
+            'pod_name'       => 'pod',
+            'player_email'   => 'player_email',
+            'gender_name'    => 'gender',
+            'sub_group'      => 'subgroup',
             'sub_group_name' => 'subgroup',
-            default => $h
+            default          => $h,
         };
     }
-
 
     /**
      * Derive a deterministic email from a coach name for firstOrCreate lookups.

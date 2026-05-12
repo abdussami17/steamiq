@@ -149,9 +149,9 @@ public function getTeams($groupId)
                         : $team->group->pod ?? 'N/A',
                     'subgroup_name' => $team->subgroup->name ?? 'N/A',
                     'division' => $team->division ?? 'N/A',
-                    'group_name' => $team->subgroup
-                        ? $team->subgroup->group->group_name
-                        : ($team->group->group_name ?? 'N/A'),
+                    'group_name' => optional(optional($team->subgroup)->group)->group_name
+                    ?? optional($team->group)->group_name
+                    ?? 'N/A',
                     'members_count' => $membersMap[$team->id] ?? 0,
                     'total_points' => $totalPoints,
                     'profile' => $team->profile ?? null,

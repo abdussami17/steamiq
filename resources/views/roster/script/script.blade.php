@@ -44,9 +44,11 @@
                     <td>${r.uploaded_at ?? '—'}</td>
                     <td>
                         <div class="d-flex gap-2">
-                            <button class="btn btn-icon btn-view viewRosterBtn" data-id="${r.id}">
-                                <i data-lucide="eye"></i>
-                            </button>
+                            <button class="btn btn-icon btn-view viewRosterBtn"
+        data-id="${r.id}"
+        title="View Roster Details">
+    <i data-lucide="eye"></i>
+</button>
                             ${buildPhase2Buttons(r)}
                         </div>
                     </td>
@@ -247,28 +249,41 @@ document.addEventListener('DOMContentLoaded', function () {
             const canGenerate = r.status !== 'checked-in';
      
             const generateBtn = canGenerate
-                ? `<button class="btn btn-icon btn-danger js-generate" data-id="${r.id}" title="Generate Field Packet">
-                       <i data-lucide="file-down"></i>
-                   </button>`
-                : `<button class="btn btn-icon btn-view" disabled title="Already checked-in">
-                       <i data-lucide="file-down"></i>
-                   </button>`;
-     
-            const pdfBtn = r.has_pdf
-                ? `<a href="${r.pdf_url}" target="_blank" class="btn btn-icon btn-delete" title="Download PDF">
-                       <i data-lucide="file-text"></i>
-                   </a>`
-                : `<button class="btn btn-icon btn-view" disabled title="PDF not generated yet">
-                       <i data-lucide="file-text"></i>
-                   </button>`;
-     
-            const qrBtn = r.has_qr
-                ? `<button class="btn btn-icon btn-delete js-show-qr" data-id="${r.id}" title="Show QR Code">
-                       <i data-lucide="qr-code"></i>
-                   </button>`
-                : `<button class="btn btn-icon btn-view" disabled title="QR not generated yet">
-                       <i data-lucide="qr-code"></i>
-                   </button>`;
+    ? `<button class="btn btn-icon btn-danger js-generate"
+            data-id="${r.id}"
+            title="Generate Field Packet PDF">
+           <i data-lucide="file-down"></i>
+       </button>`
+    : `<button class="btn btn-icon btn-view"
+            disabled
+            title="Field Packet Already Checked-In">
+           <i data-lucide="file-down"></i>
+       </button>`;
+
+const pdfBtn = r.has_pdf
+    ? `<a href="${r.pdf_url}"
+          target="_blank"
+          class="btn btn-icon btn-delete"
+          title="Download Generated PDF">
+           <i data-lucide="file-text"></i>
+       </a>`
+    : `<button class="btn btn-icon btn-view"
+            disabled
+            title="PDF Not Generated Yet">
+           <i data-lucide="file-text"></i>
+       </button>`;
+
+const qrBtn = r.has_qr
+    ? `<button class="btn btn-icon btn-delete js-show-qr"
+            data-id="${r.id}"
+            title="View QR Code">
+           <i data-lucide="qr-code"></i>
+       </button>`
+    : `<button class="btn btn-icon btn-view"
+            disabled
+            title="QR Code Not Generated Yet">
+           <i data-lucide="qr-code"></i>
+       </button>`;
      
             return generateBtn + pdfBtn + qrBtn;
         }
@@ -380,6 +395,60 @@ document.addEventListener('DOMContentLoaded', function () {
             `<div class="alert alert-danger mb-0">${err.message}</div>`;
     });
 }
+
+// =========================================================================
+// GAME CARD EXPORT — zero Phase 1/2 code touched above
+// =========================================================================
+
+document.getElementById('exportGameCardBtn').addEventListener('click', function () {
+    const btn = this;
+    const originalHtml = btn.innerHTML;
+
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Exporting...';
+
+    // Build URL respecting current event filter
+    const eventId  = document.getElementById('filterEvent').value;
+    const url      = new URL('{{ route("rosters.export.game-cards") }}', window.location.origin);
+    if (eventId) url.searchParams.set('event_id', eventId);
+
+    fetch(url, {
+        method: 'GET',
+        headers: { 'X-CSRF-TOKEN': CSRF },
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Export failed. Server returned ' + response.status);
+        return response.blob();
+    })
+    .then(blob => {
+        // Derive filename from Content-Disposition if available, else fallback
+        const now       = new Date();
+        const ts        = now.getFullYear().toString()
+                        + String(now.getMonth()+1).padStart(2,'0')
+                        + String(now.getDate()).padStart(2,'0');
+        const suffix    = eventId ? `_event${eventId}` : '_all';
+        const filename  = `game_cards${suffix}_${ts}.xlsx`;
+
+        // Trigger browser download without page reload
+        const blobUrl  = URL.createObjectURL(blob);
+        const anchor   = document.createElement('a');
+        anchor.href     = blobUrl;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(blobUrl);
+    })
+    .catch(err => {
+        alert('Export error: ' + err.message);
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+        lucide.createIcons();
+    });
+});
      
     })();
     </script>

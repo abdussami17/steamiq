@@ -15,9 +15,15 @@
                 </span>
                 Roster Management
             </h2>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i data-lucide="import"></i> Import Roster
-            </button>
+<div class="d-flex gap-2">
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+        <i data-lucide="import"></i> Import Roster
+    </button>
+    
+<button class="btn btn-secondary" id="exportGameCardBtn">
+<i data-lucide="layout-template"></i> Create Game Card
+</button>
+</div>
         </div>
     <div class="spreadsheet-container">
         <div class="spreadsheet-toolbar">

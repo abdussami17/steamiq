@@ -309,6 +309,8 @@ Route::middleware('auth')->group(function () {
             // Roster listing page (UI)
             Route::get('/',        [RosterController::class, 'index'])->name('index');
 
+            // Inside the rosters prefix group, after existing static routes:
+Route::get('/export/game-cards', [RosterController::class, 'exportGameCards'])->name('export.game-cards');
             // AJAX: fetch roster list data
             Route::get('/list',    [RosterController::class, 'list'])->name('list');
             Route::get('/roster/sample-template', [RosterController::class, 'download'])

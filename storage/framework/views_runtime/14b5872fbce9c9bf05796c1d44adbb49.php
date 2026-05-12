@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<title>Field Packet — {{ $roster->organization?->name }}</title>
+<title>Field Packet — <?php echo e($roster->organization?->name); ?></title>
 <style>
     /* ─────────────────────────────────────────────────────────────────
        DOMPDF NOTES:
@@ -240,56 +240,58 @@
 </head>
 <body>
 
-    {{-- ── Header ──────────────────────────────────────────────────────── --}}
+    
     <table class="header-table" cellspacing="0" cellpadding="0">
         <tr>
             <td style="width:65%">
-                <div class="org-name">{{ $roster->organization?->name ?? 'Organization' }}</div>
-                <div class="event-name">{{ $roster->event?->name ?? 'Event' }}</div>
+                <div class="org-name"><?php echo e($roster->organization?->name ?? 'Organization'); ?></div>
+                <div class="event-name"><?php echo e($roster->event?->name ?? 'Event'); ?></div>
             </td>
             <td style="width:35%" class="header-right">
 
-                @if(!empty($qrBase64))
+                <?php if(!empty($qrBase64)): ?>
                 <div style="text-align:right; margin-top:10px;">
-                    <img src="{{ $qrBase64 }}" style="width:120px; height:120px;">
+                    <img src="<?php echo e($qrBase64); ?>" style="width:120px; height:120px;">
                 </div>
-            @endif
+            <?php endif; ?>
             
-                <span class="badge-status">{{ strtoupper($roster->status) }}</span><br/>
-                Roster #{{ $roster->id }}<br/>
-                Generated: {{ $generatedAt }}
+                <span class="badge-status"><?php echo e(strtoupper($roster->status)); ?></span><br/>
+                Roster #<?php echo e($roster->id); ?><br/>
+                Generated: <?php echo e($generatedAt); ?>
+
             
             </td>
         </tr>
     </table>
 
-    {{-- ── Meta row ─────────────────────────────────────────────────────── --}}
+    
     <table class="meta-table" cellspacing="0" cellpadding="0">
         <tr>
-            <td><span class="meta-label">Coach:</span> {{ $roster->organization?->coach?->name ?? '—' }}</td>
-            <td><span class="meta-label">Total Players:</span> {{ $roster->students->count() }}</td>
-            <td><span class="meta-label">Teams:</span> {{ count($grouped) }}</td>
-            <td><span class="meta-label">Event:</span> {{ $roster->event?->name ?? '—' }}</td>
+            <td><span class="meta-label">Coach:</span> <?php echo e($roster->organization?->coach?->name ?? '—'); ?></td>
+            <td><span class="meta-label">Total Players:</span> <?php echo e($roster->students->count()); ?></td>
+            <td><span class="meta-label">Teams:</span> <?php echo e(count($grouped)); ?></td>
+            <td><span class="meta-label">Event:</span> <?php echo e($roster->event?->name ?? '—'); ?></td>
         </tr>
     </table>
 
-    {{-- ── Student table grouped by team ──────────────────────────────── --}}
-    @php $globalIndex = 1; @endphp
+    
+    <?php $globalIndex = 1; ?>
 
-    @foreach($grouped as $teamName => $students)
+    <?php $__currentLoopData = $grouped; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $teamName => $students): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
     <div class="team-section">
 
-        {{-- Team heading --}}
+        
         <table class="team-heading-table" cellspacing="0" cellpadding="0">
             <tr>
-                <td>{{ $teamName }}</td>
+                <td><?php echo e($teamName); ?></td>
                 <td class="team-count-cell">
-                    {{ count($students) }} player{{ count($students) !== 1 ? 's' : '' }}
+                    <?php echo e(count($students)); ?> player<?php echo e(count($students) !== 1 ? 's' : ''); ?>
+
                 </td>
             </tr>
         </table>
 
-        {{-- Students --}}
+        
         <table class="roster-table" cellspacing="0" cellpadding="0">
             <thead>
                 <tr>
@@ -303,36 +305,36 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($students as $i => $student)
-                <tr class="{{ $i % 2 === 0 ? 'odd' : 'even' }}">
-                    <td class="idx-cell center">{{ $globalIndex++ }}</td>
-                    <td><span class="student-name">{{ $student->name }}</span></td>
-                    <td class="center">{{ $student->age ?? '—' }}</td>
-                    <td class="center">{{ $student->grade ?? '—' }}</td>
-                    <td>{{ $student->team?->name ?? '—' }}</td>
+                <?php $__currentLoopData = $students; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $student): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <tr class="<?php echo e($i % 2 === 0 ? 'odd' : 'even'); ?>">
+                    <td class="idx-cell center"><?php echo e($globalIndex++); ?></td>
+                    <td><span class="student-name"><?php echo e($student->name); ?></span></td>
+                    <td class="center"><?php echo e($student->age ?? '—'); ?></td>
+                    <td class="center"><?php echo e($student->grade ?? '—'); ?></td>
+                    <td><?php echo e($student->team?->name ?? '—'); ?></td>
                     <td class="center">
-                        @if($student->shirt_size)
-                            <span class="shirt-badge">{{ strtoupper($student->shirt_size) }}</span>
-                        @else
+                        <?php if($student->shirt_size): ?>
+                            <span class="shirt-badge"><?php echo e(strtoupper($student->shirt_size)); ?></span>
+                        <?php else: ?>
                             —
-                        @endif
+                        <?php endif; ?>
                     </td>
                     <td class="center"><span class="check-box"></span></td>
                 </tr>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </tbody>
         </table>
 
     </div>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-    {{-- ── Footer ──────────────────────────────────────────────────────── --}}
+    
     <table class="footer-table" cellspacing="0" cellpadding="0">
         <tr>
-            <td>Steam XR Sports Field Packet &mdash; Roster #{{ $roster->id }} &mdash; {{ $roster->organization?->name }}</td>
-            <td class="right">{{ $generatedAt }}</td>
+            <td>Steam XR Sports Field Packet &mdash; Roster #<?php echo e($roster->id); ?> &mdash; <?php echo e($roster->organization?->name); ?></td>
+            <td class="right"><?php echo e($generatedAt); ?></td>
         </tr>
     </table>
 
 </body>
-</html>
+</html><?php /**PATH C:\Users\PC\Downloads\steam-two\resources\views/roster/pdf/field_packet.blade.php ENDPATH**/ ?>

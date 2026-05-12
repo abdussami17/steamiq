@@ -78,56 +78,43 @@ class RosterPacketService
     // ─────────────────────────────────────────────────────────────────────────
     // PDF
     // ─────────────────────────────────────────────────────────────────────────
-
     private function generatePdf(Roster $roster, array $grouped): string
     {
+        $qrFilePath = public_path("roster/qrcodes/{$roster->id}.svg");
+    
+        // 🔥 IMPORTANT: convert QR to base64 so DomPDF can render it
+        $qrBase64 = null;
+    
+        if (file_exists($qrFilePath)) {
+            $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($qrFilePath));
+        }
+    
         $pdf = Pdf::loadView('roster.pdf.field_packet', [
             'roster'      => $roster,
             'grouped'     => $grouped,
             'generatedAt' => now()->format('M d, Y H:i'),
+            'qrBase64'    => $qrBase64, // ✅ send base64 instead of path
         ])
         ->setPaper('a4', 'landscape')
         ->setOptions([
-            /*
-             * FIX: Use DejaVu fonts — they are bundled with DomPDF and render
-             * correctly. Do NOT set defaultFont to Arial/Helvetica; those are
-             * not embedded and DomPDF will fall back to a bitmap glyph that
-             * looks blurry and cuts off at the right margin.
-             */
-            'defaultFont'          => 'DejaVu Sans',
-
-            /*
-             * FIX: Higher DPI = crisper text and borders. 150 is the sweet
-             * spot for A4 landscape — readable but not slow to generate.
-             */
-            'dpi'                  => 150,
-
-            /*
-             * FIX: chroot must be set so DomPDF resolves relative asset paths
-             * correctly and doesn't silently truncate the page content.
-             */
-            'chroot'               => public_path(),
-
+            'defaultFont' => 'DejaVu Sans',
+            'dpi' => 150,
+            'chroot' => public_path(),
             'isHtml5ParserEnabled' => true,
-            'isRemoteEnabled'      => false,
-
-            /*
-             * FIX: Enable font subsetting so glyphs outside Latin-1 (em-dash,
-             * checkmark symbol in the template) render properly.
-             */
+            'isRemoteEnabled' => true, // 🔥 IMPORTANT change
             'isFontSubsettingEnabled' => true,
         ]);
-
+    
         $relativePath = self::PDF_DIR . "/{$roster->id}.pdf";
-
+    
         $filePath = public_path('roster/pdfs/' . $roster->id . '.pdf');
-
+    
         if (!file_exists(dirname($filePath))) {
             mkdir(dirname($filePath), 0777, true);
         }
-        
+    
         file_put_contents($filePath, $pdf->output());
-
+    
         return $relativePath;
     }
 
