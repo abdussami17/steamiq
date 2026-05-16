@@ -202,44 +202,85 @@ class RosterController extends Controller
         ]);
     }
 
-    /**
-     * POST /rosters/checkin  (AJAX / QR scanner endpoint)
-     */
-    public function checkin(Request $request): JsonResponse
-    {
-        $rosterId = $request->input('roster_id');
-        $checksum = $request->input('checksum');
-
-        if (!$rosterId || !$checksum) {
-            return response()->json(['message' => 'Invalid payload'], 422);
-        }
-
-        $roster = Roster::findOrFail($rosterId);
-
-        if (! $this->packetService->verifyChecksum($roster, $checksum)) {
-            return response()->json(['message' => 'Invalid QR code.'], 403);
-        }
-
-        if ($roster->isCheckedIn()) {
-            return response()->json([
-                'success'      => true,
-                'status'       => 'checked-in',
-                'message'      => 'Already checked-in',
-                'event'        => $roster->event->name ?? '',
-                'organization' => $roster->organization->name ?? '',
-            ]);
-        }
-
-        $this->packetService->checkIn($roster);
-
-        return response()->json([
-            'success'      => true,
-            'status'       => 'checked-in',
-            'message'      => 'Successfully checked in',
-            'event'        => $roster->event->name ?? '',
-            'organization' => $roster->organization->name ?? '',
-        ]);
+public function checkin(Request $request): JsonResponse
+{
+    $rosterId = $request->input('roster_id');
+    $checksum = $request->input('checksum');
+ 
+    if (!$rosterId || !$checksum) {
+        return response()->json(['message' => 'Invalid payload'], 422);
     }
+ 
+    $roster = Roster::with([
+        'event',
+        'organization',
+        // No custom ->select() — let Eloquent do its default select so the
+        // BelongsToMany JOIN doesn't cause ambiguous-column errors.
+        // withPivot('attendance_status') is declared on the relation in Roster.php,
+        // so the value arrives as $student->pivot->attendance_status.
+        'students' => fn ($q) => $q->with('team')->orderBy('students.name'),
+    ])->findOrFail($rosterId);
+ 
+    if (! $this->packetService->verifyChecksum($roster, $checksum)) {
+        return response()->json(['message' => 'Invalid QR code.'], 403);
+    }
+ 
+    return response()->json([
+        'success'            => true,
+        'already_checked_in' => $roster->isCheckedIn(),
+        'roster_id'          => $roster->id,
+        'checksum'           => $checksum,
+        'event'              => $roster->event->name         ?? '',
+        'organization'       => $roster->organization->name  ?? '',
+        'students'           => $roster->students->map(fn ($s) => [
+            'id'                => $s->id,
+            'name'              => $s->name,
+            'age'               => $s->age   ?? '—',
+            'grade'             => $s->grade ?? '—',
+            'team'              => $s->team?->name ?? '—',
+            // attendance_status is on the pivot, not the students table
+            'attendance_status' => $s->pivot->attendance_status ?? 'absent',
+        ]),
+    ]);
+}
+ 
+/**
+ * POST /checkin/submit
+ * Receives present_ids (array of students.id), saves selective attendance.
+ */
+public function checkinSubmit(Request $request): JsonResponse
+{
+    $rosterId   = $request->input('roster_id');
+    $checksum   = $request->input('checksum');
+    $presentIds = $request->input('present_ids', []);
+ 
+    if (!$rosterId || !$checksum) {
+        return response()->json(['message' => 'Invalid payload'], 422);
+    }
+ 
+    // ── Log exactly what arrived from the blade ───────────────────────────
+    \Log::info("checkinSubmit received — Roster #{$rosterId}", [
+        'present_ids_from_blade' => $presentIds,
+        'present_count'          => count($presentIds),
+    ]);
+ 
+    $roster = Roster::with('event', 'organization')->findOrFail($rosterId);
+ 
+    if (! $this->packetService->verifyChecksum($roster, $checksum)) {
+        return response()->json(['message' => 'Invalid QR code.'], 403);
+    }
+ 
+    $this->packetService->checkInSelective($roster, array_map('intval', $presentIds));
+ 
+    return response()->json([
+        'success'       => true,
+        'status'        => 'checked-in',
+        'message'       => 'Check-in submitted successfully.',
+        'present_count' => count($presentIds),
+        'event'         => $roster->event->name         ?? '',
+        'organization'  => $roster->organization->name  ?? '',
+    ]);
+}
 
     // =========================================================================
     // PHASE 2 — QR modal viewer

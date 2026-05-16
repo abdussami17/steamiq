@@ -42,11 +42,6 @@ Route::get('/clear-cache', function () {
 // MUST be defined BEFORE any wildcard or auth-wrapped roster routes
 // =============================================================================
 
-// GET  /checkin  → renders the check-in blade page (shows spinner → result)
-Route::get('/checkin', [RosterController::class, 'checkinPage'])->name('checkin.page');
-
-// POST /checkin  → processes the check-in AJAX request from the blade page
-Route::post('/checkin', [RosterController::class, 'checkin'])->name('checkin');
 
 // =============================================================================
 // GUEST ROUTES (Unauthenticated only — redirects away if already logged in)
@@ -79,6 +74,15 @@ Route::get('/leaderboard-datas',         [LeaderboardController::class, 'data'])
 // =============================================================================
 
 Route::middleware('auth')->group(function () {
+    // GET  /checkin  → renders the check-in blade page (shows spinner → result)
+Route::get('/checkin', [RosterController::class, 'checkinPage'])->name('checkin.page');
+
+// POST /checkin  → processes the check-in AJAX request from the blade page
+Route::post('/checkin', [RosterController::class, 'checkin'])->name('checkin');
+
+Route::post('/checkin/submit', [RosterController::class, 'checkinSubmit'])->name('checkin.submit');
+
+
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

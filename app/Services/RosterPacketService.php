@@ -218,4 +218,63 @@ class RosterPacketService
     {
         return url("roster/qrcodes/{$rosterId}.svg");
     }
+
+    /**
+ * Selective check-in: marks the roster "checked-in".
+ * Students whose IDs are in $presentIds → "present".
+ * All other students in this roster → "absent".
+ *
+ * @param  Roster  $roster
+ * @param  int[]   $presentIds  Array of RosterStudent IDs marked present by admin
+ */
+public function checkInSelective(Roster $roster, array $presentStudentIds): void
+{
+    $rosterId = $roster->id;
+ 
+    // ── Log exactly what we received ──────────────────────────────────────
+    Log::info("checkInSelective START — Roster #{$rosterId}", [
+        'received_present_student_ids' => $presentStudentIds,
+        'present_count_received'       => count($presentStudentIds),
+    ]);
+ 
+    // ── Mark roster checked-in ────────────────────────────────────────────
+    $roster->update(['status' => 'checked-in']);
+ 
+    // ── Mark present ──────────────────────────────────────────────────────
+    $markedPresent = 0;
+    if (!empty($presentStudentIds)) {
+        $markedPresent = RosterStudent::where('roster_id', $rosterId)
+            ->whereIn('student_id', $presentStudentIds)   // ← student_id FK, not PK
+            ->update(['attendance_status' => 'present']);
+    }
+ 
+    // ── Mark absent ───────────────────────────────────────────────────────
+    $markedAbsent = RosterStudent::where('roster_id', $rosterId)
+        ->when(
+            !empty($presentStudentIds),
+            fn ($q) => $q->whereNotIn('student_id', $presentStudentIds)  // ← student_id FK
+        )
+        ->update(['attendance_status' => 'absent']);
+ 
+    // ── Log the actual DB outcome ─────────────────────────────────────────
+    // Re-query so the log reflects what actually landed in the database.
+    $dbPresent = RosterStudent::where('roster_id', $rosterId)
+        ->where('attendance_status', 'present')
+        ->pluck('student_id')
+        ->toArray();
+ 
+    $dbAbsent = RosterStudent::where('roster_id', $rosterId)
+        ->where('attendance_status', 'absent')
+        ->pluck('student_id')
+        ->toArray();
+ 
+    Log::info("checkInSelective DONE — Roster #{$rosterId}", [
+        'rows_marked_present'       => $markedPresent,
+        'rows_marked_absent'        => $markedAbsent,
+        'db_present_student_ids'    => $dbPresent,
+        'db_absent_student_ids'     => $dbAbsent,
+        'db_present_count'          => count($dbPresent),
+        'db_absent_count'           => count($dbAbsent),
+    ]);
+}
 }
