@@ -167,10 +167,12 @@
                                      <a href="<?php echo e(route('bracket.index')); ?>" role="menuitem">Tournament Bracket</a>
                                  </div>
                              </div>
-                             <a href="<?php echo e(route('rosters.index')); ?>"
-                             class="nav-link-custom <?php echo e(request()->routeIs('rosters.index') ? 'active' : ''); ?>">
-                              Roster
-                          </a>
+                       <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('show_roster')): ?>
+                       <a href="<?php echo e(route('rosters.index')); ?>"
+                       class="nav-link-custom <?php echo e(request()->routeIs('rosters.index') ? 'active' : ''); ?>">
+                        Roster
+                    </a>
+                    <?php endif; ?>
                              <a href="<?php echo e(route('scoring.index')); ?>"
                                 class="nav-link-custom <?php echo e(request()->routeIs('scoring.index') ? 'active' : ''); ?>">
                                  Scoring
@@ -183,10 +185,7 @@
                                     class="nav-link-custom <?php echo e(request()->routeIs('events.index') ? 'active' : ''); ?>">
                                      Events
                                  </a>
-                                 <a href="<?php echo e(route('rosters.index')); ?>"
-                                 class="nav-link-custom <?php echo e(request()->routeIs('rosters.index') ? 'active' : ''); ?>">
-                                  Roster
-                              </a>
+                               
                                  <div class="nav-item" id="dd-boards">
                                      <button class="nav-link-custom dropdown-toggle"
                                              aria-haspopup="true"

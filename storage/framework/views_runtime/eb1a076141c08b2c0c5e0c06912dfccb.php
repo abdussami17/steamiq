@@ -7,7 +7,7 @@
      
         // ── AJAX: load roster table ───────────────────────────────────────────
         function loadRosters(eventId = '') {
-            const url = new URL('{{ route("rosters.list") }}', window.location.origin);
+            const url = new URL('<?php echo e(route("rosters.list")); ?>', window.location.origin);
             if (eventId) url.searchParams.set('event_id', eventId);
      
             fetch(url)
@@ -155,7 +155,7 @@
      
             setImportLoading(true);
      
-            fetch('{{ route("rosters.import") }}', {
+            fetch('<?php echo e(route("rosters.import")); ?>', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF },
                 body: formData,
@@ -469,7 +469,7 @@ btn.innerHTML =
 const eventId = document.getElementById('filterEvent').value;
 
 const url = new URL(
-    '{{ route("rosters.export.game-cards") }}',
+    '<?php echo e(route("rosters.export.game-cards")); ?>',
     window.location.origin
 );
 
@@ -542,4 +542,4 @@ fetch(url, {
 });
      
     })();
-    </script>
+    </script><?php /**PATH C:\Users\PC\Desktop\steam-two\resources\views/roster/script/script.blade.php ENDPATH**/ ?>

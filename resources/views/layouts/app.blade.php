@@ -167,10 +167,12 @@
                                      <a href="{{ route('bracket.index') }}" role="menuitem">Tournament Bracket</a>
                                  </div>
                              </div>
-                             <a href="{{ route('rosters.index') }}"
-                             class="nav-link-custom {{ request()->routeIs('rosters.index') ? 'active' : '' }}">
-                              Roster
-                          </a>
+                       @can('show_roster')
+                       <a href="{{ route('rosters.index') }}"
+                       class="nav-link-custom {{ request()->routeIs('rosters.index') ? 'active' : '' }}">
+                        Roster
+                    </a>
+                    @endcan
                              <a href="{{ route('scoring.index') }}"
                                 class="nav-link-custom {{ request()->routeIs('scoring.index') ? 'active' : '' }}">
                                  Scoring
@@ -183,10 +185,7 @@
                                     class="nav-link-custom {{ request()->routeIs('events.index') ? 'active' : '' }}">
                                      Events
                                  </a>
-                                 <a href="{{ route('rosters.index') }}"
-                                 class="nav-link-custom {{ request()->routeIs('rosters.index') ? 'active' : '' }}">
-                                  Roster
-                              </a>
+                               
                                  <div class="nav-item" id="dd-boards">
                                      <button class="nav-link-custom dropdown-toggle"
                                              aria-haspopup="true"

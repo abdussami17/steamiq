@@ -311,147 +311,111 @@ class RosterController extends Controller
             'students.team.group',
             'students.team.subGroup',
         ]);
-
+    
         if ($request->filled('event_id')) {
             $query->where('event_id', $request->integer('event_id'));
         }
-
+        
+        // Selected roster export
+        if ($request->filled('roster_ids')) {
+            $query->whereIn('id', $request->roster_ids);
+        }
         $rosters = $query->get();
-
-        $spreadsheet = new Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Game Cards');
-
-        // ── Headers ────────────────────────────────────────────────────────
-        // NOTE: GuardianPassword column removed — never export hashed passwords.
+    
+        // CSV Headers
         $headers = [
-            'FirstName', 'LastName', 'Gender', 'Birthday', 'Religion',
-            'BloodGroup', 'Caste', 'CategoryID', 'Roll', 'RegisterNo',
-            'AdmissionDate', 'GuardianName', 'GuardianRelation',
-            'GuardianMobileNo', 'GuardianEmail', 'GuardianUsername',
+            'FirstName',
+            'LastName',
+            'Gender',
+            'Birthday',
+            'Religion',
+            'BloodGroup',
+            'Caste',
+            'CategoryID',
+            'Roll',
+            'RegisterNo',
+            'AdmissionDate',
+            'GuardianName',
+            'GuardianRelation',
+            'GuardianMobileNo',
+            'GuardianEmail',
+            'GuardianUsername',
         ];
-
-        $sheet->fromArray($headers, null, 'A1');
-
-        // ── Header styling ─────────────────────────────────────────────────
-        $headerStyle = [
-            'font' => [
-                'bold'  => true,
-                'color' => ['argb' => 'FFFFFFFF'],
-                'name'  => 'Arial',
-                'size'  => 11,
-            ],
-            'fill' => [
-                'fillType'   => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF1F4E78'],
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical'   => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                    'color'       => ['argb' => 'FFB8CCE4'],
-                ],
-            ],
-        ];
-
-        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers));
-        $sheet->getStyle("A1:{$lastCol}1")->applyFromArray($headerStyle);
-        $sheet->getRowDimension(1)->setRowHeight(20);
-
-        // ── Data rows ──────────────────────────────────────────────────────
-        $rowIndex = 2;
-
-        foreach ($rosters as $roster) {
-            foreach ($roster->students as $student) {
-                $nameParts = explode(' ', trim($student->name ?? ''), 2);
-                $firstName = $nameParts[0] ?? '';
-                $lastName  = $nameParts[1] ?? '';
-
-                $team     = $student->team;
-                $group    = $team?->group;
-                $subGroup = $team?->subGroup;
-                $org      = $roster->organization;
-                $coach    = $org?->coach;
-                $event    = $roster->event;
-
-                $row = [
-                    $firstName,
-                    $lastName,
-                    $student->gender ?? '',
-                    $student->dob
-                        ? \Carbon\Carbon::parse($student->dob)->format('Y-m-d')
-                        : '',
-                    $group?->group_name ?? '',      // Religion  → group name
-                    $team?->name ?? '',             // BloodGroup → team name
-                    $org?->name ?? '',              // Caste      → org name
-                    $subGroup?->name ?? '',         // CategoryID → subgroup name
-                    $student->id ?? '',             // Roll       → student PK
-                    $event?->id ?? '',              // RegisterNo → event id
-                    $roster->created_at
-                        ? $roster->created_at->format('Y-m-d')
-                        : '',
-                    $coach?->name ?? '',            // GuardianName  → coach name
-                    'Coach',                        // GuardianRelation
-                    '',                             // GuardianMobileNo (not stored)
-                    $student->email ?? '',          // GuardianEmail → student email
-                    $coach?->email ?? '',           // GuardianUsername → coach email
-                    // ⚠️  GuardianPassword intentionally removed — NEVER export passwords
-                ];
-
-                $sheet->fromArray($row, null, "A{$rowIndex}");
-
-                // Alternating row fill
-                if ($rowIndex % 2 === 0) {
-                    $sheet->getStyle("A{$rowIndex}:{$lastCol}{$rowIndex}")
-                        ->getFill()
-                        ->setFillType(Fill::FILL_SOLID)
-                        ->getStartColor()->setARGB('FFD9E1F2');
-                }
-
-                // Row borders
-                $sheet->getStyle("A{$rowIndex}:{$lastCol}{$rowIndex}")
-                    ->getBorders()
-                    ->getAllBorders()
-                    ->setBorderStyle(Border::BORDER_THIN)
-                    ->getColor()->setARGB('FFB8CCE4');
-
-                $sheet->getStyle("A{$rowIndex}:{$lastCol}{$rowIndex}")
-                    ->getFont()
-                    ->setName('Arial')
-                    ->setSize(10);
-
-                $rowIndex++;
-            }
-        }
-
-        // ── Auto-size columns ──────────────────────────────────────────────
-        foreach (range(1, count($headers)) as $colIdx) {
-            $sheet->getColumnDimensionByColumn($colIdx)->setAutoSize(true);
-        }
-
-        // ── Freeze pane & auto-filter ──────────────────────────────────────
-        $sheet->freezePane('A2');
-        $sheet->setAutoFilter("A1:{$lastCol}1");
-
-        // ── Stream response ────────────────────────────────────────────────
+    
         $eventSuffix = $request->filled('event_id')
             ? '_event' . $request->integer('event_id')
             : '_all';
+    
+        $fileName = 'game_cards' . $eventSuffix . '_' . now()->format('Ymd_His') . '.csv';
+    
+        return response()->streamDownload(function () use ($rosters, $headers) {
+    
+            $handle = fopen('php://output', 'w');
+    
+            // UTF-8 BOM for Excel support
+            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+    
+            // Header row
+            $paddedHeaders = array_map(function ($header) {
+                return str_pad($header, 25, ' ');
+            }, $headers);
+            
+            fputcsv($handle, $paddedHeaders);
+    
+            // Data rows
+            foreach ($rosters as $roster) {
+    
+                foreach ($roster->students as $student) {
+    
+                    $nameParts = explode(' ', trim($student->name ?? ''), 2);
+    
+                    $firstName = $nameParts[0] ?? '';
+                    $lastName  = $nameParts[1] ?? '';
+    
+                    $team  = $student->team;
+$group = $team?->group;
 
-        $fileName = 'game_cards' . $eventSuffix . '_' . now()->format('Ymd_His') . '.xlsx';
-        $writer   = new Xlsx($spreadsheet);
+$subGroupName = $team && $team->subGroup
+    ? trim((string) $team->subGroup->name)
+    : '';
 
-        return response()->streamDownload(
-            fn () => $writer->save('php://output'),
-            $fileName,
-            [
-                'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'Cache-Control'       => 'max-age=0',
-                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-            ]
-        );
+$org   = $roster->organization;
+$coach = $org?->coach;
+$event = $roster->event;
+
+$row = [
+    $firstName,
+    $lastName,
+    $student->gender ?? '',
+    $student->dob
+        ? \Carbon\Carbon::parse($student->dob)->format('Y-m-d')
+        : '',
+    $group?->group_name ?? '',
+    $team?->name ?? '',
+    $org?->name ?? '',
+    $subGroupName,
+    $student->id ?? '',
+    $event?->id ?? '',
+    $roster->created_at
+        ? $roster->created_at->format('F d, Y')
+        : '',
+    $coach?->name ?? '',
+    'Coach',
+    '',
+    $student->email ?? '',
+    $coach?->email ?? '',
+];
+    
+                    fputcsv($handle, $row);
+                }
+            }
+    
+            fclose($handle);
+    
+        }, $fileName, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Cache-Control'       => 'no-store, no-cache',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
     }
 }

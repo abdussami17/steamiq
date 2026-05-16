@@ -34,6 +34,10 @@ class PermissionSeeder extends Seeder
 
             ['name' => 'create_score', 'label' => 'Create Score'],
             ['name' => 'edit_score', 'label' => 'Edit Score'],
+            ['name' => 'show_roster', 'label' => 'Show Roster'],
+            ['name' => 'import_roster', 'label' => 'Import Roster'],
+            ['name' => 'create_game_card', 'label' => 'Create Game Card'],
+
         ];
 
         foreach ($permissions as $perm) {

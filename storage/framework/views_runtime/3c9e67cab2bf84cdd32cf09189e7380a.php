@@ -1,12 +1,12 @@
-<div class="modal fade" id="editUserModal{{ $us->id }}" tabindex="-1">
+<div class="modal fade" id="editUserModal<?php echo e($us->id); ?>" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="POST" action="{{ route('users.update', $us->id) }}">
-                @csrf
-                @method('PUT')
+            <form method="POST" action="<?php echo e(route('users.update', $us->id)); ?>">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit User - {{ $us->name }}</h5>
+                    <h5 class="modal-title">Edit User - <?php echo e($us->name); ?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -15,13 +15,13 @@
                     <!-- Name -->
                     <div class="mb-3">
                         <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-input" value="{{ $us->name }}" required>
+                        <input type="text" name="name" class="form-input" value="<?php echo e($us->name); ?>" required>
                     </div>
 
                     <!-- Username -->
                     <div class="mb-3">
                         <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-input" value="{{ $us->username }}" required>
+                        <input type="text" name="username" class="form-input" value="<?php echo e($us->username); ?>" required>
                     </div>
 
                     <!-- Role -->
@@ -31,18 +31,19 @@
                         <select name="role" class="form-input">
                             <option value="">-- No Role --</option>
                     
-                            @foreach($roles as $role)
+                            <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     
-                                @if($role->name !== 'admin')
+                                <?php if($role->name !== 'admin'): ?>
                     
-                                    <option value="{{ $role->name }}"
-                                        {{ $us->hasRole($role->name) ? 'selected' : '' }}>
-                                        {{ ucfirst($role->name) }}
+                                    <option value="<?php echo e($role->name); ?>"
+                                        <?php echo e($us->hasRole($role->name) ? 'selected' : ''); ?>>
+                                        <?php echo e(ucfirst($role->name)); ?>
+
                                     </option>
                     
-                                @endif
+                                <?php endif; ?>
                     
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
                     <!-- Password -->
@@ -74,4 +75,4 @@
             </form>
         </div>
     </div>
-</div>
+</div><?php /**PATH C:\Users\PC\Desktop\steam-two\resources\views/settings/modals/edit-user.blade.php ENDPATH**/ ?>

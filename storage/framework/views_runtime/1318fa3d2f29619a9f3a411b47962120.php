@@ -1,7 +1,7 @@
-@extends('layouts.app')
 
-@section('title', 'Roster Management')
-@push('styles')
+
+<?php $__env->startSection('title', 'Roster Management'); ?>
+<?php $__env->startPush('styles'); ?>
 <style>
 #exportGameCardBtn:disabled{
     color: rgb(31, 41, 55) !important;
@@ -9,13 +9,13 @@
 }
 </style>
     
-@endpush
+<?php $__env->stopPush(); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container">
 
 <section class="section">
-        {{-- ── Header ─────────────────────────────────────────────────────── --}}
+        
 
         <div class="section-header">
             <h2 class="section-title">
@@ -25,18 +25,18 @@
                 Roster Management
             </h2>
 <div class="d-flex gap-2">
-@can('import_roster')
+<?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('import_roster')): ?>
 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
     <i data-lucide="import"></i> Import Roster
 </button>
     
-@endcan
-    {{-- ── NEW: Create Game Card export button ──────────────────────────────── --}}
-@can('create_game_card')
+<?php endif; ?>
+    
+<?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('create_game_card')): ?>
 <button class="btn btn-secondary" id="exportGameCardBtn" disabled>
     <i data-lucide="layout-template"></i> Create Game Card
     </button>
-@endcan
+<?php endif; ?>
 </div>
         </div>
     <div class="spreadsheet-container">
@@ -45,9 +45,9 @@
                 <label class="form-label">Filter by Event:</label>
                 <select id="filterEvent" class="form-select " style="max-width: 300px">
                     <option value="">All Events</option>
-                    @foreach($events as $event)
-                        <option value="{{ $event->id }}">{{ $event->name }}</option>
-                    @endforeach
+                    <?php $__currentLoopData = $events; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($event->id); ?>"><?php echo e($event->name); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
             </div>
          
@@ -93,9 +93,7 @@
     
 
  
-{{-- ═══════════════════════════════════════════════════════════════════════════
-     GENERATE PACKET PROGRESS TOAST (Phase 2)
-══════════════════════════════════════════════════════════════════════════════ --}}
+
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
     <div id="packetToast" class="toast align-items-center border-0" role="alert" aria-atomic="true">
         <div class="d-flex">
@@ -109,14 +107,15 @@
 </div>
 
 
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('modals')
-    @include('roster.modal.import')
-    @include('roster.modal.view')
-    @include('roster.modal.qr-code')
+<?php $__env->startPush('modals'); ?>
+    <?php echo $__env->make('roster.modal.import', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('roster.modal.view', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->make('roster.modal.qr-code', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-@endpush
-@push('scripts')
-@include('roster.script.script')
-@endpush
+<?php $__env->stopPush(); ?>
+<?php $__env->startPush('scripts'); ?>
+<?php echo $__env->make('roster.script.script', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php $__env->stopPush(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\PC\Desktop\steam-two\resources\views/roster/index.blade.php ENDPATH**/ ?>
